@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
-# Default example
+# Max example
 
-This deploys the module in its simplest form.
+This example deploys the module with all configurations of namespace that haven't been covered in other examples.
 
 ```hcl
 terraform {
@@ -28,10 +28,11 @@ provider "azurerm" {
   }
 }
 
-locals {
-  prefix = "default"
+data "azurerm_client_config" "current" {}
 
-  skus = ["Basic", "Standard", "Premium"]
+locals {
+  prefix = "max"
+  skus   = ["Basic", "Standard", "Premium"]
 }
 
 module "regions" {
@@ -53,7 +54,7 @@ module "naming" {
 
 resource "azurerm_resource_group" "example" {
   name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
-  location = module.regions.regions[random_integer.region_index.result].name
+  location = "westeurope" # This test case in Premium SKU is not supported in some of the recommended regions. Pinned to an specific one to make the test more reliable. #module.regions.regions[random_integer.region_index.result].name
 }
 
 module "servicebus" {
@@ -61,9 +62,45 @@ module "servicebus" {
 
   for_each = toset(local.skus)
 
-  resource_group_name = azurerm_resource_group.example.name
-  location            = azurerm_resource_group.example.location
-  name                = "${module.naming.servicebus_namespace.name_unique}-${each.value}-${local.prefix}"
+  sku                                     = each.value
+  resource_group_name                     = azurerm_resource_group.example.name
+  location                                = azurerm_resource_group.example.location
+  name                                    = "${module.naming.servicebus_namespace.name_unique}-${each.value}-${local.prefix}"
+  capacity                                = 2
+  local_auth_enabled                      = true
+  minimum_tls_version                     = "1.2"
+  public_network_access_enabled           = true
+  premium_messaging_partitions            = 2
+  zone_redundant                          = true
+  enable_telemetry                        = true
+  private_endpoints_manage_dns_zone_group = true
+
+  authorization_rules = {
+    testRule = {
+      send   = true
+      listen = true
+      manage = true
+    }
+  }
+
+  tags = {
+    environment = "testing"
+    department  = "engineering"
+  }
+
+  role_assignments = {
+    key = {
+      skip_service_principal_aad_check = false
+      role_definition_id_or_name       = "Contributor"
+      description                      = "This is a test role assignment"
+      principal_id                     = data.azurerm_client_config.current.object_id
+    }
+  }
+
+  lock = {
+    kind = "CanNotDelete"
+    name = "Testing name CanNotDelete"
+  }
 }
 ```
 
@@ -92,6 +129,7 @@ The following resources are used by this module:
 
 - [azurerm_resource_group.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
+- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs

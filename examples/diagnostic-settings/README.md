@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
-# Default example
+# Diagnostic settings example
 
-This deploys the module in its simplest form.
+This example deploys the module configured with multiple combinations of diagnostic settings.
 
 ```hcl
 terraform {
@@ -29,9 +29,8 @@ provider "azurerm" {
 }
 
 locals {
-  prefix = "default"
-
-  skus = ["Basic", "Standard", "Premium"]
+  prefix = "diag"
+  skus   = ["Basic", "Standard", "Premium"]
 }
 
 module "regions" {
@@ -53,7 +52,40 @@ module "naming" {
 
 resource "azurerm_resource_group" "example" {
   name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
-  location = module.regions.regions[random_integer.region_index.result].name
+  location = "westeurope" # This test case in Premium SKU is not supported in some of the recommended regions. Pinned to an specific one to make the test more reliable. #module.regions.regions[random_integer.region_index.result].name
+}
+
+resource "azurerm_storage_account" "example" {
+  name = "${module.naming.storage_account.name_unique}${local.prefix}"
+
+  account_replication_type = "ZRS"
+  account_tier             = "Standard"
+  resource_group_name      = azurerm_resource_group.example.name
+  location                 = azurerm_resource_group.example.location
+}
+
+resource "azurerm_log_analytics_workspace" "example" {
+  name = "${module.naming.log_analytics_workspace.name_unique}-${local.prefix}"
+
+  resource_group_name = azurerm_resource_group.example.name
+  location            = azurerm_resource_group.example.location
+}
+
+resource "azurerm_eventhub_namespace" "example" {
+  name = "${module.naming.eventhub_namespace.name_unique}-${local.prefix}"
+
+  sku                 = "Basic"
+  resource_group_name = azurerm_resource_group.example.name
+  location            = azurerm_resource_group.example.location
+}
+
+resource "azurerm_eventhub" "example" {
+  name = "diagnosticshub"
+
+  partition_count     = 2
+  message_retention   = 1
+  resource_group_name = azurerm_resource_group.example.name
+  namespace_name      = azurerm_eventhub_namespace.example.name
 }
 
 module "servicebus" {
@@ -61,9 +93,40 @@ module "servicebus" {
 
   for_each = toset(local.skus)
 
+  sku                 = each.value
   resource_group_name = azurerm_resource_group.example.name
   location            = azurerm_resource_group.example.location
   name                = "${module.naming.servicebus_namespace.name_unique}-${each.value}-${local.prefix}"
+
+  diagnostic_settings = {
+    diagnostic1 = {
+      log_groups    = ["allLogs"]
+      metric_groups = ["AllMetrics"]
+
+      name                           = "diagtest1"
+      log_analytics_destination_type = "Dedicated"
+      workspace_resource_id          = azurerm_log_analytics_workspace.example.id
+    }
+
+    diagnostic2 = {
+      log_groups    = ["audit"]
+      metric_groups = ["AllMetrics"]
+
+      name                                     = "diagtest2"
+      log_analytics_destination_type           = "Dedicated"
+      event_hub_name                           = azurerm_eventhub.example.name
+      event_hub_authorization_rule_resource_id = "${azurerm_eventhub_namespace.example.id}/authorizationRules/RootManageSharedAccessKey"
+    }
+
+    diagnostic3 = {
+      log_categories = ["ApplicationMetricsLogs", "RuntimeAuditLogs", "VNetAndIPFilteringLogs", "OperationalLogs"]
+      metric_groups  = ["AllMetrics"]
+
+      name                           = "diagtest3"
+      log_analytics_destination_type = "Dedicated"
+      storage_account_resource_id    = azurerm_storage_account.example.id
+    }
+  }
 }
 ```
 
@@ -90,7 +153,11 @@ The following providers are used by this module:
 
 The following resources are used by this module:
 
+- [azurerm_eventhub.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/eventhub) (resource)
+- [azurerm_eventhub_namespace.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/eventhub_namespace) (resource)
+- [azurerm_log_analytics_workspace.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace) (resource)
 - [azurerm_resource_group.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
+- [azurerm_storage_account.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 
 <!-- markdownlint-disable MD013 -->

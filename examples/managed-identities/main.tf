@@ -23,9 +23,8 @@ provider "azurerm" {
 }
 
 locals {
-  prefix = "default"
-
-  skus = ["Basic", "Standard", "Premium"]
+  prefix = "mi"
+  skus   = ["Basic", "Standard", "Premium"]
 }
 
 module "regions" {
@@ -50,12 +49,25 @@ resource "azurerm_resource_group" "example" {
   location = module.regions.regions[random_integer.region_index.result].name
 }
 
+resource "azurerm_user_assigned_identity" "example" {
+  name = "example-${local.prefix}"
+
+  resource_group_name = azurerm_resource_group.example.name
+  location            = azurerm_resource_group.example.location
+}
+
 module "servicebus" {
   source = "../../"
 
   for_each = toset(local.skus)
 
+  sku                 = each.value
   resource_group_name = azurerm_resource_group.example.name
   location            = azurerm_resource_group.example.location
   name                = "${module.naming.servicebus_namespace.name_unique}-${each.value}-${local.prefix}"
+
+  managed_identities = {
+    system_assigned            = true
+    user_assigned_resource_ids = [azurerm_user_assigned_identity.example.id]
+  }
 }

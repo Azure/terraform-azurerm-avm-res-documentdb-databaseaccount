@@ -11,6 +11,8 @@ permissions:
   contents: read
   id-token: write
 
+concurrency: e2e-tests
+
 jobs:
   getexamples:
     if: github.event.repository.name != 'terraform-azurerm-avm-template'
@@ -27,7 +29,7 @@ jobs:
 
   testexamples:
     if: github.event.repository.name != 'terraform-azurerm-avm-template'
-    runs-on: [ self-hosted, 1ES.Pool=029722365641ae52e6893ff331a621ecbcf8da7d ]
+    runs-on: [ self-hosted, 1ES.Pool=b1caa3c33767a0e06d423064be43099a8983a229 ]
     needs: getexamples
     environment: test
     env:

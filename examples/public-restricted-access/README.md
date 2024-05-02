@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
-# Default example
+# Public restricted access example
 
-This deploys the module in its simplest form.
+This example deploys the module with public network access enabled, but restricted to specific IP addresses and subnets using service endpoints.
 
 ```hcl
 terraform {
@@ -29,9 +29,7 @@ provider "azurerm" {
 }
 
 locals {
-  prefix = "default"
-
-  skus = ["Basic", "Standard", "Premium"]
+  prefix = "resPub"
 }
 
 module "regions" {
@@ -56,14 +54,43 @@ resource "azurerm_resource_group" "example" {
   location = module.regions.regions[random_integer.region_index.result].name
 }
 
+resource "azurerm_virtual_network" "example" {
+  name = "${module.naming.virtual_network.name_unique}-${local.prefix}"
+
+  address_space       = ["10.0.0.0/16"]
+  resource_group_name = azurerm_resource_group.example.name
+  location            = azurerm_resource_group.example.location
+}
+
+resource "azurerm_subnet" "example" {
+  name = module.naming.subnet.name_unique
+
+  address_prefixes     = ["10.0.0.0/24"]
+  service_endpoints    = ["Microsoft.ServiceBus"]
+  resource_group_name  = azurerm_resource_group.example.name
+  virtual_network_name = azurerm_virtual_network.example.name
+}
+
 module "servicebus" {
   source = "../../"
 
-  for_each = toset(local.skus)
+  sku                           = "Premium"
+  resource_group_name           = azurerm_resource_group.example.name
+  location                      = azurerm_resource_group.example.location
+  name                          = "${module.naming.servicebus_namespace.name_unique}-${local.prefix}"
+  public_network_access_enabled = true
 
-  resource_group_name = azurerm_resource_group.example.name
-  location            = azurerm_resource_group.example.location
-  name                = "${module.naming.servicebus_namespace.name_unique}-${each.value}-${local.prefix}"
+  network_rule_config = {
+    trusted_services_allowed = true
+    default_action           = "Deny"
+    cidr_or_ip_rules         = ["168.125.123.255", "170.0.0.0/24"]
+
+    network_rules = [
+      {
+        subnet_id = azurerm_subnet.example.id
+      }
+    ]
+  }
 }
 ```
 
@@ -91,6 +118,8 @@ The following providers are used by this module:
 The following resources are used by this module:
 
 - [azurerm_resource_group.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
+- [azurerm_subnet.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
+- [azurerm_virtual_network.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 
 <!-- markdownlint-disable MD013 -->

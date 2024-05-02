@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
-# Default example
+# Queue example
 
-This deploys the module in its simplest form.
+This example deploys the module with multiple combinations of queues.
 
 ```hcl
 terraform {
@@ -28,10 +28,11 @@ provider "azurerm" {
   }
 }
 
-locals {
-  prefix = "default"
+data "azurerm_client_config" "current" {}
 
-  skus = ["Basic", "Standard", "Premium"]
+locals {
+  prefix = "queues"
+  skus   = ["Basic", "Standard", "Premium"]
 }
 
 module "regions" {
@@ -61,9 +62,61 @@ module "servicebus" {
 
   for_each = toset(local.skus)
 
+  sku                 = each.value
   resource_group_name = azurerm_resource_group.example.name
   location            = azurerm_resource_group.example.location
   name                = "${module.naming.servicebus_namespace.name_unique}-${each.value}-${local.prefix}"
+
+  queues = {
+    forwardQueue = {
+
+    }
+
+    fromForwardQueue = {
+      requires_session                  = false
+      forward_to                        = "forwardQueue"
+      forward_dead_lettered_messages_to = "forwardQueue"
+    }
+
+    enableExpressQueue = {
+      enable_express               = true
+      requires_duplicate_detection = false
+    }
+
+    testQueue = {
+      auto_delete_on_idle                     = "P7D"
+      dead_lettering_on_message_expiration    = true
+      default_message_ttl                     = "PT5M"
+      duplicate_detection_history_time_window = "PT5M"
+      enable_batched_operations               = true
+      enable_express                          = false
+      enable_partitioning                     = true
+      lock_duration                           = "PT1M"
+      requires_duplicate_detection            = true
+      requires_session                        = true
+      max_delivery_count                      = 100
+      max_message_size_in_kilobytes           = 1024
+      max_size_in_megabytes                   = 1024
+      status                                  = "Active"
+
+      role_assignments = {
+        key = {
+          skip_service_principal_aad_check = false
+          role_definition_id_or_name       = "Contributor"
+          description                      = "This is a test role assignment"
+          principal_id                     = data.azurerm_client_config.current.object_id
+        }
+      }
+
+      authorization_rules = {
+        testRule = {
+          send   = true
+          listen = true
+          manage = true
+        }
+      }
+    }
+  }
 }
 ```
 
@@ -92,6 +145,7 @@ The following resources are used by this module:
 
 - [azurerm_resource_group.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
+- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs

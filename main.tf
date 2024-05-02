@@ -1,34 +1,59 @@
-# TODO: insert resources here.
-data "azurerm_resource_group" "parent" {
-  count = var.location == null ? 1 : 0
+resource "azurerm_cosmosdb_account" "this" {
+  name                  = var.name
 
-  name = var.resource_group_name
-}
+  tags = var.tags
+  location                   = var.location
+  minimal_tls_version = var.minimum_tls_version
+  resource_group_name        = var.resource_group_name
+  local_authentication_disabled = var.local_auth_enabled
+  public_network_access_enabled = var.public_network_access_enabled
 
-# TODO: Replace this dummy resource azurerm_resource_group.TODO with your module resource
-resource "azurerm_resource_group" "TODO" {
-  location = coalesce(var.location, local.resource_group_location)
-  name     = var.name # calling code must supply the name
-}
+  analytical_storage_enabled         = true
+  access_key_metadata_writes_enabled = true
+  automatic_failover_enabled         = true
+  create_mode = "Default"
+  free_tier_enabled = true
+  ip_range_filter = ""
+  is_virtual_network_filter_enabled = true
+  key_vault_key_id = ""
+  
+  mongo_server_version = ""
+  multiple_write_locations_enabled = true
+  network_acl_bypass_for_azure_services = true
+  partition_merge_enabled = true
+  network_acl_bypass_ids = ""
+  
+  default_identity_type = join("=", ["UserAssignedIdentity", azurerm_user_assigned_identity.example.id])
+  offer_type            = "Standard"
+  kind                  = "MongoDB"
 
-# required AVM resources interfaces
-resource "azurerm_management_lock" "this" {
-  count = var.lock.kind != "None" ? 1 : 0
+  capabilities {
+    name = "EnableMongo"
+  }
 
-  lock_level = var.lock.kind
-  name       = coalesce(var.lock.name, "lock-${var.name}")
-  scope      = azurerm_resource_group.TODO.id # TODO: Replace this dummy resource azurerm_resource_group.TODO with your module resource
-}
+  consistency_policy {
+    consistency_level = "Strong"
+  }
 
-resource "azurerm_role_assignment" "this" {
-  for_each = var.role_assignments
+  geo_location {
+    location          = "westus"
+    failover_priority = 0
+  }
 
-  principal_id                           = each.value.principal_id
-  scope                                  = azurerm_resource_group.TODO.id # TODO: Replace this dummy resource azurerm_resource_group.TODO with your module resource
-  condition                              = each.value.condition
-  condition_version                      = each.value.condition_version
-  delegated_managed_identity_resource_id = each.value.delegated_managed_identity_resource_id
-  role_definition_id                     = strcontains(lower(each.value.role_definition_id_or_name), lower(local.role_definition_resource_substring)) ? each.value.role_definition_id_or_name : null
-  role_definition_name                   = strcontains(lower(each.value.role_definition_id_or_name), lower(local.role_definition_resource_substring)) ? null : each.value.role_definition_id_or_name
-  skip_service_principal_aad_check       = each.value.skip_service_principal_aad_check
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.example.id]
+  }
+
+  backup {
+    type = ""
+  }
+
+  capacity {
+    total_throughput_limit = 1000
+  }
+
+  virtual_network_rule {
+    
+  }
 }

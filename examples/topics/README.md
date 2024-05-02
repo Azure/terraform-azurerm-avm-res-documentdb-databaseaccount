@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
-# Default example
+# Topics example
 
-This deploys the module in its simplest form.
+This example deploys the module with multiple combinations of topics.
 
 ```hcl
 terraform {
@@ -28,10 +28,11 @@ provider "azurerm" {
   }
 }
 
-locals {
-  prefix = "default"
+data "azurerm_client_config" "current" {}
 
-  skus = ["Basic", "Standard", "Premium"]
+locals {
+  prefix = "topics"
+  skus   = ["Standard", "Premium"]
 }
 
 module "regions" {
@@ -61,9 +62,71 @@ module "servicebus" {
 
   for_each = toset(local.skus)
 
+  sku                 = each.value
   resource_group_name = azurerm_resource_group.example.name
   location            = azurerm_resource_group.example.location
   name                = "${module.naming.servicebus_namespace.name_unique}-${each.value}-${local.prefix}"
+
+  topics = {
+    forwardTopic = {
+    }
+
+    enableExpressTopic = {
+      enable_express               = true
+      requires_duplicate_detection = false
+    }
+
+    testTopic = {
+      auto_delete_on_idle                     = "P7D"
+      default_message_ttl                     = "PT5M"
+      duplicate_detection_history_time_window = "PT5M"
+      enable_batched_operations               = true
+      enable_express                          = false
+      enable_partitioning                     = true
+      requires_duplicate_detection            = null
+      max_message_size_in_kilobytes           = 1024
+      max_size_in_megabytes                   = 1024
+      status                                  = "Active"
+      support_ordering                        = true
+
+      role_assignments = {
+        key = {
+          skip_service_principal_aad_check = false
+          role_definition_id_or_name       = "Contributor"
+          description                      = "This is a test role assignment"
+          principal_id                     = data.azurerm_client_config.current.object_id
+        }
+      }
+
+      subscriptions = {
+        testSubscription = {
+          dead_lettering_on_filter_evaluation_error = true
+          dead_lettering_on_message_expiration      = true
+          default_message_ttl                       = "PT5M"
+          enable_batched_operations                 = true
+          lock_duration                             = "PT1M"
+          max_delivery_count                        = 100
+          status                                    = "Active"
+          auto_delete_on_idle                       = "P7D"
+          requires_session                          = true
+        }
+
+        fromForwardSubscription = {
+          requires_session                  = false
+          forward_to                        = "forwardTopic"
+          forward_dead_lettered_messages_to = "forwardTopic"
+        }
+      }
+
+      authorization_rules = {
+        testRule = {
+          send   = true
+          listen = true
+          manage = true
+        }
+      }
+    }
+  }
 }
 ```
 
@@ -92,6 +155,7 @@ The following resources are used by this module:
 
 - [azurerm_resource_group.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
+- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
