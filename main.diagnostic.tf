@@ -3,7 +3,7 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
 
   name = coalesce(each.value.name, "diag-${var.name}")
 
-  target_resource_id = azurerm_servicebus_namespace.this.id
+  target_resource_id = azurerm_cosmosdb_account.this
 
   eventhub_name                  = each.value.event_hub_name
   log_analytics_workspace_id     = each.value.workspace_resource_id

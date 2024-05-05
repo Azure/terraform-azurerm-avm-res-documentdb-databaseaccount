@@ -2,7 +2,7 @@ locals {
   none_lock_kind = "None"
 
   pe_locks = {
-    for pe_name, pe_params in var.var.private_endpoints :
+    for pe_name, pe_params in var.private_endpoints :
     "${local.private_endpoint_scope_type}|${pe_name}" => {
       pe_name    = pe_name
       scope_type = local.private_endpoint_scope_type

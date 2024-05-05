@@ -19,11 +19,12 @@ locals {
     } : {}
   }
 
-  account_scope_type          = "Namespace"
+  account_scope_type          = "Account"
   private_endpoint_scope_type = "PrivateEndpoint"
 
   consistent_prefix_consistency = "ConsistentPrefix"
   periodic_backup_policy        = "Periodic"
+  continuous_backup_policy      = "Continuous"
 
   trimmed_ip_range_filter    = [for value in var.ip_range_filter : trimspace(value)]
   normalized_ip_range_filter = length(local.trimmed_ip_range_filter) > 0 ? join(",", local.trimmed_ip_range_filter) : null

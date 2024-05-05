@@ -24,8 +24,6 @@ provider "azurerm" {
 
 locals {
   prefix = "default"
-
-  skus = ["Basic", "Standard", "Premium"]
 }
 
 module "regions" {
@@ -50,12 +48,16 @@ resource "azurerm_resource_group" "example" {
   location = module.regions.regions[random_integer.region_index.result].name
 }
 
-module "servicebus" {
+module "cosmos" {
   source = "../../"
-
-  for_each = toset(local.skus)
 
   resource_group_name = azurerm_resource_group.example.name
   location            = azurerm_resource_group.example.location
-  name                = "${module.naming.servicebus_namespace.name_unique}-${each.value}-${local.prefix}"
+  name                = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
+  geo_locations = [ 
+    {
+      failover_priority = 0
+      location          = azurerm_resource_group.example.location
+    } 
+  ]
 }

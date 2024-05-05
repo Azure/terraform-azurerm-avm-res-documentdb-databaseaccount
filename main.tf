@@ -11,7 +11,7 @@ resource "azurerm_cosmosdb_account" "this" {
   analytical_storage_enabled = var.analytical_storage_enabled
 
   automatic_failover_enabled       = var.automatic_failover_enabled
-  multiple_write_locations_enabled = var.multiple_write_locations_enabled
+  multiple_write_locations_enabled = var.backup.type == local.periodic_backup_policy ? var.multiple_write_locations_enabled : false
 
   local_authentication_disabled      = var.local_authentication_disabled
   access_key_metadata_writes_enabled = var.access_key_metadata_writes_enabled
@@ -56,7 +56,7 @@ resource "azurerm_cosmosdb_account" "this" {
 
   backup {
     type                = var.backup.type
-    tier                = var.backup.type != local.periodic_backup_policy ? var.backup.tier : null
+    tier                = var.backup.type == local.continuous_backup_policy ? var.backup.tier : null
     interval_in_minutes = var.backup.type == local.periodic_backup_policy ? var.backup.interval_in_minutes : null
     retention_in_hours  = var.backup.type == local.periodic_backup_policy ? var.backup.retention_in_hours : null
     storage_redundancy  = var.backup.type == local.periodic_backup_policy ? var.backup.storage_redundancy : null
@@ -100,6 +100,13 @@ resource "azurerm_cosmosdb_account" "this" {
 
     content {
       name = capabilities.value.name
+    }
+  }
+
+  lifecycle {
+    precondition {
+      condition = var.backup.type == local.continuous_backup_policy && var.multiple_write_locations_enabled == false
+      error_message = "Continuous backup mode and multiple write locations cannot be enabled together."
     }
   }
 }
