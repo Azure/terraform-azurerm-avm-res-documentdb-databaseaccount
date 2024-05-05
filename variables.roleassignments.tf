@@ -43,9 +43,9 @@ variable "role_assignments" {
   validation {
     condition = alltrue([
       for k, v in var.role_assignments :
-      v.role_definition_id_or_name != null
+      trimspace(v.role_definition_id_or_name) != null
     ])
-    error_message = "Role definition id or name must be set"
+    error_message = "'role_definition_id_or_name' must be set and not empty value"
   }
 
   validation {
@@ -53,6 +53,6 @@ variable "role_assignments" {
       for k, v in var.role_assignments :
       can(regex("^([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})$", v.principal_id))
     ])
-    error_message = "principal_id must be a valid GUID"
+    error_message = "'principal_id' must be a valid GUID"
   }
 }

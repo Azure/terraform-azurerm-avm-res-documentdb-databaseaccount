@@ -25,6 +25,6 @@ variable "lock" {
 
   validation {
     condition     = var.lock == null ? true : var.lock.kind == null ? false : contains(["CanNotDelete", "ReadOnly"], var.lock.kind)
-    error_message = "Lock kind must be either `CanNotDelete` or `ReadOnly`."
+    error_message = "'kind' must be either 'CanNotDelete' or 'ReadOnly'."
   }
 }

@@ -19,25 +19,18 @@ locals {
     } : {}
   }
 
-  topic_scope_type            = "Topic"
-  queue_scope_type            = "Queue"
-  namespace_scope_type        = "Namespace"
+  account_scope_type          = "Namespace"
   private_endpoint_scope_type = "PrivateEndpoint"
 
-  basic_sku_name    = "Basic"
-  premium_sku_name  = "Premium"
-  standard_sku_name = "Standard"
+  consistent_prefix_consistency = "ConsistentPrefix"
+  periodic_backup_policy        = "Periodic"
 
-  smallest_premium_max_message_size_in_kilobytes = 1024
-  biggest_premium_max_message_size_in_kilobytes  = 102400
+  trimmed_ip_range_filter    = [for value in var.ip_range_filter : trimspace(value)]
+  normalized_ip_range_filter = length(local.trimmed_ip_range_filter) > 0 ? join(",", local.trimmed_ip_range_filter) : null
 
-  normalized_capacity = var.sku != local.premium_sku_name ? 0 : coalesce(var.capacity, 1)
+  normalized_cmk_default_identity_type = var.customer_managed_key != null ? "UserAssignedIdentity=${var.customer_managed_key.user_assigned_identity.resource_id}" : null
 
-  normalized_zone_redundant = var.sku != local.premium_sku_name ? false : coalesce(var.zone_redundant, true)
+  cmk_keyvault_name = var.customer_managed_key != null ? element(split("/", var.customer_managed_key.key_vault_resource_id), 8) : null
 
-  normalized_premium_messaging_partitions = var.sku != local.premium_sku_name ? 0 : coalesce(var.premium_messaging_partitions, 1)
-
-  customer_managed_key_keyvault_name = var.customer_managed_key != null ? element(split("/", var.customer_managed_key.key_vault_resource_id), 8) : null
-
-  normalized_cmk_key_url = var.customer_managed_key != null ? "https://${local.customer_managed_key_keyvault_name}.vault.azure.net/keys/${var.customer_managed_key.key_name}/${var.customer_managed_key.key_version != null ? var.customer_managed_key.key_version : ""}" : null
+  normalized_cmk_key_url = var.customer_managed_key != null ? "https://${local.cmk_keyvault_name}.vault.azure.net/keys/${var.customer_managed_key.key_name}" : null
 }

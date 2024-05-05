@@ -57,7 +57,7 @@ variable "diagnostic_settings" {
         c == null ? false : contains(["AllMetrics"], c)
       ])
     ])
-    error_message = "The metric_categories parameter if specified can only be `AllMetrics`."
+    error_message = "The metric_categories parameter if specified can only be 'AllMetrics'."
   }
 
   validation {
@@ -68,7 +68,7 @@ variable "diagnostic_settings" {
         c == null ? false : contains(["allLogs", "audit"], c)
       ])
     ])
-    error_message = "The log_groups parameter if specified can only be `allLogs` and `audit`."
+    error_message = "The 'log_groups' parameter if specified can only be 'allLogs' and 'audit'."
   }
 
   validation {
@@ -79,7 +79,7 @@ variable "diagnostic_settings" {
         contains(["ApplicationMetricsLogs", "RuntimeAuditLogs", "VNetAndIPFilteringLogs", "OperationalLogs"], c)
       ])
     ])
-    error_message = "The log_categories parameter if specified can only be `ApplicationMetricsLogs`, `RuntimeAuditLogs`, `VNetAndIPFilteringLogs` or `OperationalLogs`."
+    error_message = "The 'log_categories' parameter if specified can only be 'ApplicationMetricsLogs', 'RuntimeAuditLogs', 'VNetAndIPFilteringLogs' or 'OperationalLogs'."
   }
 
   validation {
@@ -87,7 +87,7 @@ variable "diagnostic_settings" {
       for _, v in var.diagnostic_settings :
       contains(["Dedicated", "AzureDiagnostics"], v.log_analytics_destination_type)
     ])
-    error_message = "Log analytics destination type must be one of: 'Dedicated', 'AzureDiagnostics'."
+    error_message = "'log_analytics_destination_type' must be one of: 'Dedicated', 'AzureDiagnostics'."
   }
 
   validation {
@@ -97,7 +97,7 @@ variable "diagnostic_settings" {
         v.workspace_resource_id != null || v.storage_account_resource_id != null || (v.event_hub_name != null && v.event_hub_authorization_rule_resource_id != null) || v.marketplace_partner_resource_id != null
       ]
     )
-    error_message = "At least one of `workspace_resource_id`, `storage_account_resource_id`, `marketplace_partner_resource_id`, or `event_hub_authorization_rule_resource_id` and `event_hub_name` together, must be set."
+    error_message = "At least one of 'workspace_resource_id', 'storage_account_resource_id', 'marketplace_partner_resource_id', or 'event_hub_authorization_rule_resource_id' and 'event_hub_name' together, must be set."
   }
 
   validation {
@@ -105,7 +105,7 @@ variable "diagnostic_settings" {
       for _, v in var.diagnostic_settings :
       v.log_categories != null || v.log_groups != null || v.metric_categories != null
     ])
-    error_message = "At least one of `log_categories`, `log_groups`, or `metric_categories` must be set."
+    error_message = "At least one of 'log_categories', 'log_groups', or 'metric_categories' must be set."
   }
 
   validation {
@@ -113,7 +113,7 @@ variable "diagnostic_settings" {
       for _, v in var.diagnostic_settings :
       v.storage_account_resource_id == null || can(regex("^/subscriptions/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/resourceGroups/.+/providers/Microsoft.Storage/storageAccounts/.+$", v.storage_account_resource_id))
     ])
-    error_message = "The storage_account_resource_id if specified must have the format /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Storage/storageAccounts/{storageAccountName}"
+    error_message = "The 'storage_account_resource_id' if specified must have the format '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Storage/storageAccounts/{storageAccountName}'"
   }
 
   validation {
@@ -121,7 +121,7 @@ variable "diagnostic_settings" {
       for _, v in var.diagnostic_settings :
       v.workspace_resource_id == null || can(regex("^/subscriptions/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/resourceGroups/.+/providers/Microsoft.OperationalInsights/workspaces/.+$", v.workspace_resource_id))
     ])
-    error_message = "The workspace_resource_id if specified must have the format /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.OperationalInsights/workspaces/{workspaceName}"
+    error_message = "The 'workspace_resource_id' if specified must have the format '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.OperationalInsights/workspaces/{workspaceName}'"
   }
 
   validation {
@@ -129,6 +129,6 @@ variable "diagnostic_settings" {
       for _, v in var.diagnostic_settings :
       v.event_hub_authorization_rule_resource_id == null || can(regex("^/subscriptions/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/resourceGroups/.+/providers/Microsoft.EventHub/namespaces/.+/authorizationRules/.+$", v.event_hub_authorization_rule_resource_id))
     ])
-    error_message = "The event_hub_authorization_rule_resource_id if specified must have the format /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EventHub/namespaces/{eventHubNamespaceName}/authorizationRules/{authorizationRuleName}"
+    error_message = "The 'event_hub_authorization_rule_resource_id' if specified must have the format '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EventHub/namespaces/{eventHubNamespaceName}/authorizationRules/{authorizationRuleName}'"
   }
 }
