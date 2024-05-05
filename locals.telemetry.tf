@@ -1,5 +1,5 @@
 locals {
-  module_name = "servicebus-namespace"
+  module_name = "documentdb-databaseaccount"
 
   module_type = "res"
   # This constructs the ARM deployment name that is used for the telemetry.

@@ -16,12 +16,12 @@ locals {
     if try(v.lock.kind, local.none_lock_kind) != local.none_lock_kind
   }
 
-  namespace_lock = var.lock != null ? {
+  account_lock = var.lock != null ? {
     (local.account_scope_type) = {
       lock       = var.lock
       scope_type = local.account_scope_type
     }
   } : {}
 
-  total_locks = merge(local.filtered_pe_locks, local.namespace_lock)
+  total_locks = merge(local.filtered_pe_locks, local.account_lock)
 }

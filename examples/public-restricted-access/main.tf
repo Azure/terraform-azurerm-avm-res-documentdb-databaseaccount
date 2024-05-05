@@ -23,7 +23,7 @@ provider "azurerm" {
 }
 
 locals {
-  prefix = "resPub"
+  prefix = "respub"
 }
 
 module "regions" {
@@ -60,7 +60,7 @@ resource "azurerm_subnet" "example" {
   name = module.naming.subnet.name_unique
 
   address_prefixes     = ["10.0.0.0/24"]
-  service_endpoints    = ["Microsoft.ServiceBus"]
+  service_endpoints    = ["Microsoft.AzureCosmosDB"]
   resource_group_name  = azurerm_resource_group.example.name
   virtual_network_name = azurerm_virtual_network.example.name
 }
@@ -72,15 +72,15 @@ module "cosmos" {
   location                      = azurerm_resource_group.example.location
   name                          = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
   public_network_access_enabled = true
-  geo_locations = [ 
+  geo_locations = [
     {
       failover_priority = 0
       location          = azurerm_resource_group.example.location
-    } 
+    }
   ]
 
   network_acl_bypass_for_azure_services = true
-  ip_range_filter = ["168.125.123.255", "170.0.0.0/24"]
+  ip_range_filter                       = ["168.125.123.255", "170.0.0.0/24"]
   virtual_network_rules = [
     {
       subnet_id = azurerm_subnet.example.id

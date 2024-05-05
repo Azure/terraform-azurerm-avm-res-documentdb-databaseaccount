@@ -71,6 +71,8 @@ variable "virtual_network_rules" {
 
   - `subnet_id` - (Required) - The ID of the virtual network subnet.
 
+  > Note: Remember to enable Microsoft.AzureCosmosDB service endpoint on the subnet.
+
   Example inputs:
   ```hcl
   virtual_network_rule = [

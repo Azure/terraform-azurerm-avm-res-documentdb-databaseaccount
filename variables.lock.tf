@@ -12,7 +12,7 @@ variable "lock" {
   - `kind` - (Required) - The type of lock. Possible values are `CanNotDelete` and `ReadOnly`.
   - `name` - (Optional) - The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
 
-  > Note: If you use `ReadOnly` kind lock, you must configure Terraform to use EntraId authentication, as the access of the namespace keys will be blocked thus terraform won't be to do its job.
+  > Note: If you use `ReadOnly` kind lock, you must configure Terraform to use EntraId authentication, as the access of the account keys will be blocked thus terraform won't be to do its job.
 
   Example Inputs:
   ```hcl

@@ -27,7 +27,7 @@ variable "diagnostic_settings" {
   - `event_hub_name`                           - (Optional) - The name of the event hub. If none is specified, the default event hub will be selected.
   - `marketplace_partner_resource_id`          - (Optional) - The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic LogsLogs.
 
-  > Note: See more in CLI: az monitor diagnostic-settings categories list --resource {serviceBusNamespaceResourceId}
+  > Note: See more in CLI: az monitor diagnostic-settings categories list --resource {cosmosAccountResourceId}
 
   Example Inputs:
   ```hcl
