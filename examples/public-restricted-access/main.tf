@@ -65,24 +65,25 @@ resource "azurerm_subnet" "example" {
   virtual_network_name = azurerm_virtual_network.example.name
 }
 
-module "servicebus" {
+module "cosmos" {
   source = "../../"
 
-  sku                           = "Premium"
   resource_group_name           = azurerm_resource_group.example.name
   location                      = azurerm_resource_group.example.location
-  name                          = "${module.naming.servicebus_namespace.name_unique}-${local.prefix}"
+  name                          = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
   public_network_access_enabled = true
+  geo_locations = [ 
+    {
+      failover_priority = 0
+      location          = azurerm_resource_group.example.location
+    } 
+  ]
 
-  network_rule_config = {
-    trusted_services_allowed = true
-    default_action           = "Deny"
-    cidr_or_ip_rules         = ["168.125.123.255", "170.0.0.0/24"]
-
-    network_rules = [
-      {
-        subnet_id = azurerm_subnet.example.id
-      }
-    ]
-  }
+  network_acl_bypass_for_azure_services = true
+  ip_range_filter = ["168.125.123.255", "170.0.0.0/24"]
+  virtual_network_rules = [
+    {
+      subnet_id = azurerm_subnet.example.id
+    }
+  ]
 }

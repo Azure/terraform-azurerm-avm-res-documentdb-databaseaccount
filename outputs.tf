@@ -1,6 +1,6 @@
 output "resource" {
   value       = azurerm_cosmosdb_account.this
-  description = "The cosmos db account created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/servicebus_namespace.html#attributes-reference"
+  description = "The cosmos db account created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_account#attributes-reference"
   sensitive   = true
 }
 

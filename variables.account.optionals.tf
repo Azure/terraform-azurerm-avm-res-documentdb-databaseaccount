@@ -170,7 +170,7 @@ variable "capacity" {
   }
 }
 
-variable "analytical_storage" {
+variable "analytical_storage_config" {
   type = object({
     schema_type = string
   })
@@ -182,14 +182,14 @@ variable "analytical_storage" {
 
   Example inputs:
   ```hcl
-  analytical_storage = {
+  analytical_storage_config = {
     schema_type = "WellDefined"
   }
   ```
   DESCRIPTION
 
   validation {
-    condition     = var.analytical_storage != null ? contains(["WellDefined", "FullFidelity"], var.analytical_storage.schema_type) : true
+    condition     = var.analytical_storage_config != null ? contains(["WellDefined", "FullFidelity"], var.analytical_storage_config.schema_type) : true
     error_message = "The 'schema_type' value must be 'WellDefined' or 'FullFidelity'."
   }
 }

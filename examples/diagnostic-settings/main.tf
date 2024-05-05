@@ -46,7 +46,7 @@ module "naming" {
 
 resource "azurerm_resource_group" "example" {
   name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
-  location = "westeurope" # This test case in Premium SKU is not supported in some of the recommended regions. Pinned to an specific one to make the test more reliable. #module.regions.regions[random_integer.region_index.result].name
+  location = "northeurope" 
 }
 
 resource "azurerm_storage_account" "example" {
@@ -82,20 +82,23 @@ resource "azurerm_eventhub" "example" {
   namespace_name      = azurerm_eventhub_namespace.example.name
 }
 
-module "servicebus" {
+module "cosmos" {
   source = "../../"
 
-  for_each = toset(local.skus)
-
-  sku                 = each.value
   resource_group_name = azurerm_resource_group.example.name
   location            = azurerm_resource_group.example.location
-  name                = "${module.naming.servicebus_namespace.name_unique}-${each.value}-${local.prefix}"
+  name                = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
+  geo_locations = [ 
+    {
+      failover_priority = 0
+      location          = azurerm_resource_group.example.location
+    } 
+  ]
 
   diagnostic_settings = {
     diagnostic1 = {
       log_groups    = ["allLogs"]
-      metric_groups = ["AllMetrics"]
+      metric_groups = ["Requests"]
 
       name                           = "diagtest1"
       log_analytics_destination_type = "Dedicated"
@@ -104,7 +107,7 @@ module "servicebus" {
 
     diagnostic2 = {
       log_groups    = ["audit"]
-      metric_groups = ["AllMetrics"]
+      metric_groups = ["Requests"]
 
       name                                     = "diagtest2"
       log_analytics_destination_type           = "Dedicated"
@@ -113,8 +116,8 @@ module "servicebus" {
     }
 
     diagnostic3 = {
-      log_categories = ["ApplicationMetricsLogs", "RuntimeAuditLogs", "VNetAndIPFilteringLogs", "OperationalLogs"]
-      metric_groups  = ["AllMetrics"]
+      log_categories = ["DataPlaneRequests", "MongoRequests", "CassandraRequests",  "GremlinRequests", "QueryRuntimeStatistics", "PartitionKeyStatistics", "PartitionKeyRUConsumption", "ControlPlaneRequests",  "TableApiRequests"]
+      metric_groups  = ["Requests"]
 
       name                           = "diagtest3"
       log_analytics_destination_type = "Dedicated"

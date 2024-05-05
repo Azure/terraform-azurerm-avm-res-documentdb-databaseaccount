@@ -109,14 +109,18 @@ resource "time_sleep" "wait_for_rbac_before_key_operations" {
   depends_on = [azurerm_role_assignment.crypto_officer, azurerm_role_assignment.crypto_service_encryption_user]
 }
 
-module "servicebus" {
+module "cosmos" {
   source = "../../"
 
-  infrastructure_encryption_enabled = false
-  sku                               = "Premium"
-  resource_group_name               = azurerm_resource_group.example.name
-  location                          = azurerm_resource_group.example.location
-  name                              = "${module.naming.servicebus_namespace.name_unique}-${local.prefix}"
+  resource_group_name = azurerm_resource_group.example.name
+  location            = azurerm_resource_group.example.location
+  name                = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
+  geo_locations = [ 
+    {
+      failover_priority = 0
+      location          = azurerm_resource_group.example.location
+    } 
+  ]
 
   managed_identities = {
     user_assigned_resource_ids = [azurerm_user_assigned_identity.example.id]

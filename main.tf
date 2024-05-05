@@ -67,10 +67,10 @@ resource "azurerm_cosmosdb_account" "this" {
   }
 
   dynamic "analytical_storage" {
-    for_each = var.analytical_storage != null ? [1] : []
+    for_each = var.analytical_storage_config != null ? [1] : []
 
     content {
-      schema_type = var.analytical_storage.schema_type
+      schema_type = var.analytical_storage_config.schema_type
     }
   }
 
