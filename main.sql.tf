@@ -146,3 +146,12 @@ resource "azurerm_cosmosdb_sql_trigger" "example" {
 
   container_id = azurerm_cosmosdb_sql_container.this[each.value.container_key].id
 }
+
+resource "azurerm_cosmosdb_sql_dedicated_gateway" "this" {
+  count = var.sql_dedicated_gateway != null && length(var.sql_databases) > 0 ? 1 : 0
+
+  instance_count = var.sql_dedicated_gateway.instance_count
+  instance_size  = var.sql_dedicated_gateway.instance_size
+  
+  cosmosdb_account_id = azurerm_cosmosdb_account.this.id
+}

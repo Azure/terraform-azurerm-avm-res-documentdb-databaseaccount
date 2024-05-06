@@ -1,3 +1,35 @@
+variable "sql_dedicated_gateway" {
+  type = object({
+    instance_size = string
+    instance_count = optional(number, 1)
+  })
+  default = null
+  description = <<DESCRIPTION
+  Defaults to `null`. Manages a SQL Dedicated Gateway within a Cosmos DB Account.
+
+  - `instance_size`  - (Optional) - The instance size for the CosmosDB SQL Dedicated Gateway. Changing this forces a new resource to be created. Possible values are `Cosmos.D4s`, `Cosmos.D8s` and `Cosmos.D16s`
+  - `instance_count` - (Optional) - The instance count for the CosmosDB SQL Dedicated Gateway. Possible value is between `1` and `5`.
+
+  Example inputs: 
+  ```hcl
+  sql_dedicated_gateway = {
+    instance_count = 1
+    instance_size  = "Cosmos.D4s"
+  }
+  ```
+  DESCRIPTION
+
+  validation {
+    condition = try(var.sql_dedicated_gateway.instance_count, null) != null ? var.sql_dedicated_gateway.instance_count >= 1 && var.sql_dedicated_gateway.instance_count <= 5 : true
+    error_message = "The 'instance_count' in the sql_dedicated_gateway value must be between 1 and 5 if specified."
+  }
+
+  validation {
+    condition = try(var.sql_dedicated_gateway.instance_size, null) != null ? can(index(["Cosmos.D4s", "Cosmos.D8s", "Cosmos.D16s"], var.sql_dedicated_gateway.instance_size)) : true
+    error_message = "The 'instance_size' in the sql_dedicated_gateway value must be 'Cosmos.D4s', 'Cosmos.D8s' or 'Cosmos.D16s' if specified."
+  }
+}
+
 variable "sql_databases" {
   type = map(object({
     name       = optional(string, null)
