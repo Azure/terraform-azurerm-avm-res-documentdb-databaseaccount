@@ -129,7 +129,6 @@ module "cosmos" {
   customer_managed_key = {
     key_vault_resource_id = azurerm_key_vault.example.id
     key_name              = azurerm_key_vault_key.example.name
-    key_version           = azurerm_key_vault_key.example.version
 
     user_assigned_identity = {
       resource_id = azurerm_user_assigned_identity.example.id
