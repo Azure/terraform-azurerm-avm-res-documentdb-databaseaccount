@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
-# Max example
+# Serverless example
 
-This example deploys the module with all configurations at the account level which havent been already covered in other examples.
+This deploys the module enabling serverless for the account
 
 ```hcl
 terraform {
@@ -28,10 +28,8 @@ provider "azurerm" {
   }
 }
 
-data "azurerm_client_config" "current" {}
-
 locals {
-  prefix = "max"
+  prefix = "less"
 }
 
 module "regions" {
@@ -59,71 +57,21 @@ resource "azurerm_resource_group" "example" {
 module "cosmos" {
   source = "../../"
 
-  resource_group_name                = azurerm_resource_group.example.name
-  location                           = azurerm_resource_group.example.location
-  name                               = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
-  public_network_access_enabled      = true
-  enable_telemetry                   = true
-  access_key_metadata_writes_enabled = true
-  analytical_storage_enabled         = true
-  automatic_failover_enabled         = true
-  local_authentication_disabled      = true
-  partition_merge_enabled            = false
-  multiple_write_locations_enabled   = true
-
-  cors_rule = {
-    max_age_in_seconds = 3600
-    allowed_origins    = ["*"]
-    exposed_headers    = ["*"]
-    allowed_headers    = ["Authorization"]
-    allowed_methods    = ["GET", "POST", "PUT"]
-  }
-
-  capacity = {
-    total_throughput_limit = 10000
-  }
-
-  analytical_storage_config = {
-    schema_type = "WellDefined"
-  }
-
-  consistency_policy = {
-    consistency_level = "Session"
-  }
-
-  backup = {
-    retention_in_hours  = 8
-    interval_in_minutes = 1440
-    storage_redundancy  = "Geo"
-    type                = "Periodic"
-  }
-
+  resource_group_name = azurerm_resource_group.example.name
+  location            = azurerm_resource_group.example.location
+  name                = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
   geo_locations = [
     {
       failover_priority = 0
-      zone_redundant    = true
       location          = azurerm_resource_group.example.location
     }
   ]
 
-  tags = {
-    environment = "testing"
-    department  = "engineering"
-  }
-
-  role_assignments = {
-    key = {
-      skip_service_principal_aad_check = false
-      role_definition_id_or_name       = "Contributor"
-      description                      = "This is a test role assignment"
-      principal_id                     = data.azurerm_client_config.current.object_id
+  capabilities = [
+    {
+      name = "EnableServerless"
     }
-  }
-
-  lock = {
-    kind = "CanNotDelete"
-    name = "Testing name CanNotDelete"
-  }
+  ]
 }
 ```
 
@@ -152,7 +100,6 @@ The following resources are used by this module:
 
 - [azurerm_resource_group.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
-- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs

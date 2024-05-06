@@ -47,18 +47,50 @@ module "naming" {
 
 resource "azurerm_resource_group" "example" {
   name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
-  location = "northeurope" # This test case in Premium SKU is not supported in some of the recommended regions. Pinned to an specific one to make the test more reliable. #module.regions.regions[random_integer.region_index.result].name
+  location = "northeurope"
 }
 
 module "cosmos" {
   source = "../../"
 
-  resource_group_name                     = azurerm_resource_group.example.name
-  location                                = azurerm_resource_group.example.location
-  name                                    = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
-  public_network_access_enabled           = true
-  enable_telemetry                        = true
-  private_endpoints_manage_dns_zone_group = true
+  resource_group_name                = azurerm_resource_group.example.name
+  location                           = azurerm_resource_group.example.location
+  name                               = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
+  public_network_access_enabled      = true
+  enable_telemetry                   = true
+  access_key_metadata_writes_enabled = true
+  analytical_storage_enabled         = true
+  automatic_failover_enabled         = true
+  local_authentication_disabled      = true
+  partition_merge_enabled            = false
+  multiple_write_locations_enabled   = true
+
+  cors_rule = {
+    max_age_in_seconds = 3600
+    allowed_origins    = ["*"]
+    exposed_headers    = ["*"]
+    allowed_headers    = ["Authorization"]
+    allowed_methods    = ["GET", "POST", "PUT"]
+  }
+
+  capacity = {
+    total_throughput_limit = 10000
+  }
+
+  analytical_storage_config = {
+    schema_type = "WellDefined"
+  }
+
+  consistency_policy = {
+    consistency_level = "Session"
+  }
+
+  backup = {
+    retention_in_hours  = 8
+    interval_in_minutes = 1440
+    storage_redundancy  = "Geo"
+    type                = "Periodic"
+  }
 
   geo_locations = [
     {

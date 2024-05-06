@@ -128,7 +128,7 @@ resource "azurerm_cosmosdb_sql_stored_procedure" "this" {
   container_name      = azurerm_cosmosdb_sql_container.this[each.value.container_key].name
 }
 
-resource "azurerm_cosmosdb_sql_trigger" "example" {
+resource "azurerm_cosmosdb_sql_trigger" "this" {
   for_each = local.sql_container_triggers
 
   name = each.value.trigger_name

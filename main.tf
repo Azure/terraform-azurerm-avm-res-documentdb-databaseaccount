@@ -22,9 +22,8 @@ resource "azurerm_cosmosdb_account" "this" {
   network_acl_bypass_for_azure_services = var.network_acl_bypass_for_azure_services
   is_virtual_network_filter_enabled     = length(var.virtual_network_rules) > 0 ? true : false
 
-  create_mode = "Default"
-  offer_type  = "Standard"
-  kind        = "GlobalDocumentDB"
+  offer_type = "Standard"
+  kind       = "GlobalDocumentDB"
 
   key_vault_key_id      = local.normalized_cmk_key_url
   default_identity_type = local.normalized_cmk_default_identity_type
@@ -105,8 +104,13 @@ resource "azurerm_cosmosdb_account" "this" {
 
   lifecycle {
     precondition {
-      condition     = var.backup.type == local.continuous_backup_policy && var.multiple_write_locations_enabled == false
+      condition     = var.backup.type == local.continuous_backup_policy && var.multiple_write_locations_enabled ? false : true
       error_message = "Continuous backup mode and multiple write locations cannot be enabled together."
+    }
+
+    precondition {
+      condition     = var.analytical_storage_enabled && var.partition_merge_enabled ? false : true
+      error_message = "Analytical storage and partition merge cannot be enabled together."
     }
   }
 }
