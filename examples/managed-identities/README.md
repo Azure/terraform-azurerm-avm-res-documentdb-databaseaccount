@@ -30,7 +30,6 @@ provider "azurerm" {
 
 locals {
   prefix = "mi"
-  skus   = ["Basic", "Standard", "Premium"]
 }
 
 module "regions" {
@@ -52,7 +51,7 @@ module "naming" {
 
 resource "azurerm_resource_group" "example" {
   name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
-  location = module.regions.regions[random_integer.region_index.result].name
+  location = "northeurope"
 }
 
 resource "azurerm_user_assigned_identity" "example" {
@@ -62,15 +61,18 @@ resource "azurerm_user_assigned_identity" "example" {
   location            = azurerm_resource_group.example.location
 }
 
-module "servicebus" {
+module "cosmos" {
   source = "../../"
 
-  for_each = toset(local.skus)
-
-  sku                 = each.value
   resource_group_name = azurerm_resource_group.example.name
   location            = azurerm_resource_group.example.location
-  name                = "${module.naming.servicebus_namespace.name_unique}-${each.value}-${local.prefix}"
+  name                = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
+  geo_locations = [
+    {
+      failover_priority = 0
+      location          = azurerm_resource_group.example.location
+    }
+  ]
 
   managed_identities = {
     system_assigned            = true
@@ -123,6 +125,12 @@ No outputs.
 
 The following Modules are called:
 
+### <a name="module_cosmos"></a> [cosmos](#module\_cosmos)
+
+Source: ../../
+
+Version:
+
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
 Source: Azure/naming/azurerm
@@ -134,12 +142,6 @@ Version: >= 0.3.0
 Source: Azure/regions/azurerm
 
 Version: >= 0.3.0
-
-### <a name="module_servicebus"></a> [servicebus](#module\_servicebus)
-
-Source: ../../
-
-Version:
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

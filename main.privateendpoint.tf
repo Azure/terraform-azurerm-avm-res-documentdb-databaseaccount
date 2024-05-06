@@ -65,7 +65,7 @@ resource "azurerm_private_endpoint" "this_unmanaged_dns_zone_groups" {
     content {
       name = ip_configuration.value.name
 
-      subresource_name   = each.value.subresource_name
+      subresource_name = each.value.subresource_name
       # member_name        = each.value.subresource_name
       private_ip_address = ip_configuration.value.private_ip_address
     }

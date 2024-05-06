@@ -72,6 +72,6 @@ module "cosmos" {
 
   sql_dedicated_gateway = {
     instance_count = 1
-    instance_size = "Cosmos.D4s"
+    instance_size  = "Cosmos.D4s"
   }
 }

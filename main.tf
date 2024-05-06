@@ -105,7 +105,7 @@ resource "azurerm_cosmosdb_account" "this" {
 
   lifecycle {
     precondition {
-      condition = var.backup.type == local.continuous_backup_policy && var.multiple_write_locations_enabled == false
+      condition     = var.backup.type == local.continuous_backup_policy && var.multiple_write_locations_enabled == false
       error_message = "Continuous backup mode and multiple write locations cannot be enabled together."
     }
   }

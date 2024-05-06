@@ -1,9 +1,9 @@
 variable "sql_dedicated_gateway" {
   type = object({
-    instance_size = string
+    instance_size  = string
     instance_count = optional(number, 1)
   })
-  default = null
+  default     = null
   description = <<DESCRIPTION
   Defaults to `null`. Manages a SQL Dedicated Gateway within a Cosmos DB Account.
 
@@ -22,12 +22,12 @@ variable "sql_dedicated_gateway" {
   DESCRIPTION
 
   validation {
-    condition = try(var.sql_dedicated_gateway.instance_count, null) != null ? var.sql_dedicated_gateway.instance_count >= 1 && var.sql_dedicated_gateway.instance_count <= 5 : true
+    condition     = try(var.sql_dedicated_gateway.instance_count, null) != null ? var.sql_dedicated_gateway.instance_count >= 1 && var.sql_dedicated_gateway.instance_count <= 5 : true
     error_message = "The 'instance_count' in the sql_dedicated_gateway value must be between 1 and 5 if specified."
   }
 
   validation {
-    condition = try(var.sql_dedicated_gateway.instance_size, null) != null ? can(index(["Cosmos.D4s", "Cosmos.D8s", "Cosmos.D16s"], var.sql_dedicated_gateway.instance_size)) : true
+    condition     = try(var.sql_dedicated_gateway.instance_size, null) != null ? can(index(["Cosmos.D4s", "Cosmos.D8s", "Cosmos.D16s"], var.sql_dedicated_gateway.instance_size)) : true
     error_message = "The 'instance_size' in the sql_dedicated_gateway value must be 'Cosmos.D4s', 'Cosmos.D8s' or 'Cosmos.D16s' if specified."
   }
 }
@@ -264,9 +264,9 @@ variable "sql_databases" {
   validation {
     condition = alltrue(
       flatten([
-        for db_key, db_params in var.sql_databases : 
+        for db_key, db_params in var.sql_databases :
         [
-          for container_key, container_params in db_params.containers : 
+          for container_key, container_params in db_params.containers :
           trimspace(coalesce(container_params.partition_key_path, " ")) != ""
         ]
       ])
@@ -277,7 +277,7 @@ variable "sql_databases" {
   validation {
     condition = alltrue(
       [
-        for key, value in var.sql_databases : 
+        for key, value in var.sql_databases :
         try(value.default_ttl, null) != null ? value.default_ttl >= -1 && value.default_ttl <= 2147483647 : true
       ]
     )
@@ -287,7 +287,7 @@ variable "sql_databases" {
   validation {
     condition = alltrue(
       [
-        for key, value in var.sql_databases : 
+        for key, value in var.sql_databases :
         try(value.analytical_storage_ttl, null) != null ? value.analytical_storage_ttl >= -1 && value.analytical_storage_ttl <= 2147483647 : true
       ]
     )
@@ -304,7 +304,7 @@ variable "sql_databases" {
   validation {
     condition = alltrue(
       [
-        for db_key, db_params in var.sql_databases : 
+        for db_key, db_params in var.sql_databases :
         db_params.throughput != null ? db_params.throughput % 100 == 0 : true
       ]
     )
@@ -314,7 +314,7 @@ variable "sql_databases" {
   validation {
     condition = alltrue(
       [
-        for key, value in var.sql_databases : 
+        for key, value in var.sql_databases :
         try(value.autoscale_settings.max_throughput, null) != null ? value.autoscale_settings.max_throughput >= 1000 && value.autoscale_settings.max_throughput <= 1000000 : true
       ]
     )
@@ -324,7 +324,7 @@ variable "sql_databases" {
   validation {
     condition = alltrue(
       [
-        for key, value in var.sql_databases : 
+        for key, value in var.sql_databases :
         try(value.autoscale_settings.max_throughput, null) != null ? value.autoscale_settings.max_throughput % 1000 == 0 : true
       ]
     )
@@ -334,19 +334,19 @@ variable "sql_databases" {
   validation {
     condition = alltrue(
       [
-        for key, value in var.sql_databases : 
+        for key, value in var.sql_databases :
         try(value.autoscale_settings.max_throughput, null) != null && value.throughput != null ? false : true
       ]
     )
     error_message = "The 'throughput' and 'autoscale_settings.max_throughput' cannot be specified at the same time at database level."
   }
 
-    validation {
+  validation {
     condition = alltrue(
       flatten([
-        for db_key, db_params in var.sql_databases : 
+        for db_key, db_params in var.sql_databases :
         [
-          for container_key, container_params in db_params.containers : 
+          for container_key, container_params in db_params.containers :
           container_params.throughput != null ? container_params.throughput >= 400 : true
         ]
       ])
@@ -357,9 +357,9 @@ variable "sql_databases" {
   validation {
     condition = alltrue(
       flatten([
-        for db_key, db_params in var.sql_databases : 
+        for db_key, db_params in var.sql_databases :
         [
-          for container_key, container_params in db_params.containers : 
+          for container_key, container_params in db_params.containers :
           container_params.throughput != null ? container_params.throughput % 100 == 0 : true
         ]
       ])
@@ -370,9 +370,9 @@ variable "sql_databases" {
   validation {
     condition = alltrue(
       flatten([
-        for db_key, db_params in var.sql_databases : 
+        for db_key, db_params in var.sql_databases :
         [
-          for container_key, container_params in db_params.containers : 
+          for container_key, container_params in db_params.containers :
           try(container_params.autoscale_settings.max_throughput, null) != null ? container_params.autoscale_settings.max_throughput >= 1000 && container_params.autoscale_settings.max_throughput <= 1000000 : true
         ]
       ])
@@ -383,9 +383,9 @@ variable "sql_databases" {
   validation {
     condition = alltrue(
       flatten([
-        for db_key, db_params in var.sql_databases : 
+        for db_key, db_params in var.sql_databases :
         [
-          for container_key, container_params in db_params.containers : 
+          for container_key, container_params in db_params.containers :
           try(container_params.autoscale_settings.max_throughput, null) != null ? container_params.autoscale_settings.max_throughput % 1000 == 0 : true
         ]
       ])
@@ -396,9 +396,9 @@ variable "sql_databases" {
   validation {
     condition = alltrue(
       flatten([
-        for db_key, db_params in var.sql_databases : 
+        for db_key, db_params in var.sql_databases :
         [
-          for container_key, container_params in db_params.containers : 
+          for container_key, container_params in db_params.containers :
           try(container_params.autoscale_settings.max_throughput, null) != null && container_params.throughput != null ? false : true
         ]
       ])
@@ -409,11 +409,11 @@ variable "sql_databases" {
   validation {
     condition = alltrue(
       flatten([
-        for db_key, db_params in var.sql_databases : 
-          [
-            for container_key, container_params in db_params.containers :
-            try(container_params.conflict_resolution_policy.mode, null) != null ? contains(["Custom", "LastWriterWins"], container_params.conflict_resolution_policy.mode) : true
-          ]
+        for db_key, db_params in var.sql_databases :
+        [
+          for container_key, container_params in db_params.containers :
+          try(container_params.conflict_resolution_policy.mode, null) != null ? contains(["Custom", "LastWriterWins"], container_params.conflict_resolution_policy.mode) : true
+        ]
       ])
     )
     error_message = "The 'conflict_resolution_policy.mode' must be either 'Custom' or 'LastWriterWins' if specified."
@@ -422,11 +422,11 @@ variable "sql_databases" {
   validation {
     condition = alltrue(
       flatten([
-        for db_key, db_params in var.sql_databases : 
-          [
-            for container_key, container_params in db_params.containers :
-            try(container_params.conflict_resolution_policy.mode, "") == "LastWriterWins" ? try(container_params.conflict_resolution_policy.conflict_resolution_path, null) != null : true
-          ]
+        for db_key, db_params in var.sql_databases :
+        [
+          for container_key, container_params in db_params.containers :
+          try(container_params.conflict_resolution_policy.mode, "") == "LastWriterWins" ? try(container_params.conflict_resolution_policy.conflict_resolution_path, null) != null : true
+        ]
       ])
     )
     error_message = "The 'conflict_resolution_path' must be specified when the conflict resolution mode is 'LastWriterWins'."
@@ -435,11 +435,11 @@ variable "sql_databases" {
   validation {
     condition = alltrue(
       flatten([
-        for db_key, db_params in var.sql_databases : 
-          [
-            for container_key, container_params in db_params.containers :
-            try(container_params.conflict_resolution_policy.mode, "") == "Custom" ? try(container_params.conflict_resolution_policy.conflict_resolution_procedure, null) != null : true
-          ]
+        for db_key, db_params in var.sql_databases :
+        [
+          for container_key, container_params in db_params.containers :
+          try(container_params.conflict_resolution_policy.mode, "") == "Custom" ? try(container_params.conflict_resolution_policy.conflict_resolution_procedure, null) != null : true
+        ]
       ])
     )
     error_message = "The 'conflict_resolution_procedure' must be specified when the conflict resolution mode is 'Custom'."
@@ -448,14 +448,14 @@ variable "sql_databases" {
   validation {
     condition = alltrue(
       flatten([
-        for db_key, db_params in var.sql_databases : 
+        for db_key, db_params in var.sql_databases :
+        [
+          for container_key, container_params in db_params.containers :
           [
-            for container_key, container_params in db_params.containers :
-            [
-              for trigger_key, trigger_params in container_params.triggers :
-              contains(["Pre", "Post"], trigger_params.type)
-            ]
+            for trigger_key, trigger_params in container_params.triggers :
+            contains(["Pre", "Post"], trigger_params.type)
           ]
+        ]
       ])
     )
     error_message = "The 'type' in the trigger value must be either 'Pre' or 'Post'."
@@ -464,14 +464,14 @@ variable "sql_databases" {
   validation {
     condition = alltrue(
       flatten([
-        for db_key, db_params in var.sql_databases : 
+        for db_key, db_params in var.sql_databases :
+        [
+          for container_key, container_params in db_params.containers :
           [
-            for container_key, container_params in db_params.containers :
-            [
-              for trigger_key, trigger_params in container_params.triggers :
-              contains(["All", "Create", "Delete", "Replace", "Update"], trigger_params.operation)
-            ]
+            for trigger_key, trigger_params in container_params.triggers :
+            contains(["All", "Create", "Delete", "Replace", "Update"], trigger_params.operation)
           ]
+        ]
       ])
     )
     error_message = "The 'operation' in the trigger value must be either 'All', 'Create', 'Delete', 'Replace', or 'Update'."
@@ -480,14 +480,14 @@ variable "sql_databases" {
   validation {
     condition = alltrue(
       flatten([
-        for db_key, db_params in var.sql_databases : 
+        for db_key, db_params in var.sql_databases :
+        [
+          for container_key, container_params in db_params.containers :
           [
-            for container_key, container_params in db_params.containers :
-            [
-              for trigger_key, trigger_params in container_params.triggers :
-              trimspace(coalesce(trigger_params.body, " ")) != ""
-            ]
+            for trigger_key, trigger_params in container_params.triggers :
+            trimspace(coalesce(trigger_params.body, " ")) != ""
           ]
+        ]
       ])
     )
     error_message = "The 'body' in the trigger value must not be empty."
@@ -496,14 +496,14 @@ variable "sql_databases" {
   validation {
     condition = alltrue(
       flatten([
-        for db_key, db_params in var.sql_databases : 
+        for db_key, db_params in var.sql_databases :
+        [
+          for container_key, container_params in db_params.containers :
           [
-            for container_key, container_params in db_params.containers :
-            [
-              for function_key, function_params in container_params.functions :
-              trimspace(coalesce(function_params.body, " ")) != ""
-            ]
+            for function_key, function_params in container_params.functions :
+            trimspace(coalesce(function_params.body, " ")) != ""
           ]
+        ]
       ])
     )
     error_message = "The 'body' in the function value must not be empty."
@@ -512,14 +512,14 @@ variable "sql_databases" {
   validation {
     condition = alltrue(
       flatten([
-        for db_key, db_params in var.sql_databases : 
+        for db_key, db_params in var.sql_databases :
+        [
+          for container_key, container_params in db_params.containers :
           [
-            for container_key, container_params in db_params.containers :
-            [
-              for stored_key, stored_params in container_params.stored_procedures :
-              trimspace(coalesce(stored_params.body, " ")) != ""
-            ]
+            for stored_key, stored_params in container_params.stored_procedures :
+            trimspace(coalesce(stored_params.body, " ")) != ""
           ]
+        ]
       ])
     )
     error_message = "The 'body' in the stored procedures value must not be empty."
@@ -528,11 +528,11 @@ variable "sql_databases" {
   validation {
     condition = alltrue(
       flatten([
-        for db_key, db_params in var.sql_databases : 
-          [
-            for container_key, container_params in db_params.containers :
-            try(container_params.indexing_policy.indexing_mode, null) != null ? contains(["consistent", "none"], container_params.indexing_policy.indexing_mode) : true
-          ]
+        for db_key, db_params in var.sql_databases :
+        [
+          for container_key, container_params in db_params.containers :
+          try(container_params.indexing_policy.indexing_mode, null) != null ? contains(["consistent", "none"], container_params.indexing_policy.indexing_mode) : true
+        ]
       ])
     )
     error_message = "The 'indexing_mode' in the indexing_policy value must be either 'consistent' or 'none'."
@@ -541,17 +541,17 @@ variable "sql_databases" {
   validation {
     condition = alltrue(
       flatten([
-        for db_key, db_params in var.sql_databases : 
+        for db_key, db_params in var.sql_databases :
+        [
+          for container_key, container_params in db_params.containers :
           [
-            for container_key, container_params in db_params.containers :
+            for composite_index in try(container_params.indexing_policy.composite_indexes, []) :
             [
-              for composite_index in try(container_params.indexing_policy.composite_indexes, []) :
-              [
-                for index in composite_index.indexes :
-                contains(["Ascending", "Descending"], index.order)
-              ]
+              for index in composite_index.indexes :
+              contains(["Ascending", "Descending"], index.order)
             ]
           ]
+        ]
       ])
     )
     error_message = "The 'order' in the composite index value must be either 'Ascending' or 'Descending'."

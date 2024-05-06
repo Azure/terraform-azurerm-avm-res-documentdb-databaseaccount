@@ -45,7 +45,7 @@ module "naming" {
 
 resource "azurerm_resource_group" "example" {
   name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
-  location = "northeurope" 
+  location = "northeurope"
 }
 
 resource "azurerm_storage_account" "example" {
@@ -87,11 +87,11 @@ module "cosmos" {
   resource_group_name = azurerm_resource_group.example.name
   location            = azurerm_resource_group.example.location
   name                = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
-  geo_locations = [ 
+  geo_locations = [
     {
       failover_priority = 0
       location          = azurerm_resource_group.example.location
-    } 
+    }
   ]
 
   diagnostic_settings = {
@@ -115,7 +115,7 @@ module "cosmos" {
     }
 
     diagnostic3 = {
-      log_categories = ["DataPlaneRequests", "MongoRequests", "CassandraRequests",  "GremlinRequests", "QueryRuntimeStatistics", "PartitionKeyStatistics", "PartitionKeyRUConsumption", "ControlPlaneRequests",  "TableApiRequests"]
+      log_categories = ["DataPlaneRequests", "MongoRequests", "CassandraRequests", "GremlinRequests", "QueryRuntimeStatistics", "PartitionKeyStatistics", "PartitionKeyRUConsumption", "ControlPlaneRequests", "TableApiRequests"]
       metric_groups  = ["Requests"]
 
       name                           = "diagtest3"

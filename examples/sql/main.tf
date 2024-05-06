@@ -217,10 +217,10 @@ module "cosmos" {
 
           indexing_policy = {
             indexing_mode = "consistent"
-            
+
             included_paths = [
               {
-                path = "/*" 
+                path = "/hola/?"
               }
             ]
             excluded_paths = [
@@ -237,11 +237,11 @@ module "cosmos" {
               {
                 indexes = [
                   {
-                    path = "/field3"
+                    path  = "/field3"
                     order = "Ascending"
                   },
                   {
-                    path = "/field4"
+                    path  = "/field4"
                     order = "Descending"
                   }
                 ]

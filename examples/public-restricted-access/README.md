@@ -29,7 +29,7 @@ provider "azurerm" {
 }
 
 locals {
-  prefix = "resPub"
+  prefix = "respub"
 }
 
 module "regions" {
@@ -51,7 +51,7 @@ module "naming" {
 
 resource "azurerm_resource_group" "example" {
   name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
-  location = module.regions.regions[random_integer.region_index.result].name
+  location = "northeurope"
 }
 
 resource "azurerm_virtual_network" "example" {
@@ -66,31 +66,37 @@ resource "azurerm_subnet" "example" {
   name = module.naming.subnet.name_unique
 
   address_prefixes     = ["10.0.0.0/24"]
-  service_endpoints    = ["Microsoft.ServiceBus"]
+  service_endpoints    = ["Microsoft.AzureCosmosDB"]
   resource_group_name  = azurerm_resource_group.example.name
   virtual_network_name = azurerm_virtual_network.example.name
 }
 
-module "servicebus" {
+module "cosmos" {
   source = "../../"
 
-  sku                           = "Premium"
   resource_group_name           = azurerm_resource_group.example.name
   location                      = azurerm_resource_group.example.location
-  name                          = "${module.naming.servicebus_namespace.name_unique}-${local.prefix}"
+  name                          = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
   public_network_access_enabled = true
+  geo_locations = [
+    {
+      failover_priority = 0
+      location          = azurerm_resource_group.example.location
+    }
+  ]
 
-  network_rule_config = {
-    trusted_services_allowed = true
-    default_action           = "Deny"
-    cidr_or_ip_rules         = ["168.125.123.255", "170.0.0.0/24"]
-
-    network_rules = [
-      {
-        subnet_id = azurerm_subnet.example.id
-      }
-    ]
-  }
+  network_acl_bypass_for_azure_services = true
+  ip_range_filter = [
+    "168.125.123.255",
+    "170.0.0.0/24",
+    "0.0.0.0",                                                                      #Accept connections from within public Azure datacenters. https://learn.microsoft.com/en-us/azure/cosmos-db/how-to-configure-firewall#allow-requests-from-the-azure-portal
+    "104.42.195.92", "40.76.54.131", "52.176.6.30", "52.169.50.45", "52.187.184.26" #Allow access from the Azure portal. https://learn.microsoft.com/en-us/azure/cosmos-db/how-to-configure-firewall#allow-requests-from-global-azure-datacenters-or-other-sources-within-azure
+  ]
+  virtual_network_rules = [
+    {
+      subnet_id = azurerm_subnet.example.id
+    }
+  ]
 }
 ```
 
@@ -139,6 +145,12 @@ No outputs.
 
 The following Modules are called:
 
+### <a name="module_cosmos"></a> [cosmos](#module\_cosmos)
+
+Source: ../../
+
+Version:
+
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
 Source: Azure/naming/azurerm
@@ -150,12 +162,6 @@ Version: >= 0.3.0
 Source: Azure/regions/azurerm
 
 Version: >= 0.3.0
-
-### <a name="module_servicebus"></a> [servicebus](#module\_servicebus)
-
-Source: ../../
-
-Version:
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

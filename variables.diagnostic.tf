@@ -3,7 +3,7 @@ variable "diagnostic_settings" {
     name                                     = optional(string, null)
     log_categories                           = optional(set(string), [])
     log_groups                               = optional(set(string), ["allLogs"])
-    metric_categories                        = optional(set(string), ["Requests"])
+    metric_categories                        = optional(set(string), ["AllMetrics"])
     log_analytics_destination_type           = optional(string, "Dedicated")
     workspace_resource_id                    = optional(string, null)
     storage_account_resource_id              = optional(string, null)
@@ -76,7 +76,7 @@ variable "diagnostic_settings" {
       for _, v in var.diagnostic_settings :
       alltrue([
         for c in v.log_categories :
-        contains(["DataPlaneRequests", "MongoRequests", "CassandraRequests",  "GremlinRequests", "QueryRuntimeStatistics", "PartitionKeyStatistics", "PartitionKeyRUConsumption", "ControlPlaneRequests",  "TableApiRequests"], c)
+        contains(["DataPlaneRequests", "MongoRequests", "CassandraRequests", "GremlinRequests", "QueryRuntimeStatistics", "PartitionKeyStatistics", "PartitionKeyRUConsumption", "ControlPlaneRequests", "TableApiRequests"], c)
       ])
     ])
     error_message = "The 'log_categories' parameter if specified can only be 'DataPlaneRequests', 'MongoRequests', 'CassandraRequests',  'GremlinRequests', 'QueryRuntimeStatistics', 'PartitionKeyStatistics', 'PartitionKeyRUConsumption', 'ControlPlaneRequests',  'TableApiRequests'."

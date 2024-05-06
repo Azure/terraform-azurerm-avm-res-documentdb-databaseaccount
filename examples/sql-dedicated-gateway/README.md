@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
 # Default example
 
-This deploys the module in its simplest form.
+This deploys the module to use a SQL Dedicated Gateway for NoSQL API accounts
 
 ```hcl
 terraform {
@@ -29,9 +29,7 @@ provider "azurerm" {
 }
 
 locals {
-  prefix = "default"
-
-  skus = ["Basic", "Standard", "Premium"]
+  prefix = "sql-gw"
 }
 
 module "regions" {
@@ -53,17 +51,35 @@ module "naming" {
 
 resource "azurerm_resource_group" "example" {
   name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
-  location = module.regions.regions[random_integer.region_index.result].name
+  location = "northeurope"
 }
 
-module "servicebus" {
+module "cosmos" {
   source = "../../"
 
-  for_each = toset(local.skus)
+  resource_group_name        = azurerm_resource_group.example.name
+  location                   = azurerm_resource_group.example.location
+  name                       = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
+  analytical_storage_enabled = true
 
-  resource_group_name = azurerm_resource_group.example.name
-  location            = azurerm_resource_group.example.location
-  name                = "${module.naming.servicebus_namespace.name_unique}-${each.value}-${local.prefix}"
+  geo_locations = [
+    {
+      failover_priority = 0
+      zone_redundant    = false
+      location          = azurerm_resource_group.example.location
+    }
+  ]
+
+  sql_databases = {
+    database_fixed_througput = {
+      throughput = 400
+    }
+  }
+
+  sql_dedicated_gateway = {
+    instance_count = 1
+    instance_size  = "Cosmos.D4s"
+  }
 }
 ```
 
@@ -100,7 +116,17 @@ No required inputs.
 
 ## Optional Inputs
 
-No optional inputs.
+The following input variables are optional (have default values):
+
+### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
+
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
+If it is set to false, then no telemetry will be collected.
+
+Type: `bool`
+
+Default: `true`
 
 ## Outputs
 
@@ -109,6 +135,12 @@ No outputs.
 ## Modules
 
 The following Modules are called:
+
+### <a name="module_cosmos"></a> [cosmos](#module\_cosmos)
+
+Source: ../../
+
+Version:
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
@@ -121,12 +153,6 @@ Version: >= 0.3.0
 Source: Azure/regions/azurerm
 
 Version: >= 0.3.0
-
-### <a name="module_servicebus"></a> [servicebus](#module\_servicebus)
-
-Source: ../../
-
-Version:
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

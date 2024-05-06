@@ -1,5 +1,5 @@
 <!-- BEGIN_TF_DOCS -->
-# Customer managed with pinned key version key example
+# Customer managed key example
 
 This example deploys the module with a customer managed key configured to point to an specific key version, which doesn't support an auto rotate policy.
 
@@ -115,14 +115,18 @@ resource "time_sleep" "wait_for_rbac_before_key_operations" {
   depends_on = [azurerm_role_assignment.crypto_officer, azurerm_role_assignment.crypto_service_encryption_user]
 }
 
-module "servicebus" {
+module "cosmos" {
   source = "../../"
 
-  infrastructure_encryption_enabled = false
-  sku                               = "Premium"
-  resource_group_name               = azurerm_resource_group.example.name
-  location                          = azurerm_resource_group.example.location
-  name                              = "${module.naming.servicebus_namespace.name_unique}-${local.prefix}"
+  resource_group_name = azurerm_resource_group.example.name
+  location            = azurerm_resource_group.example.location
+  name                = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
+  geo_locations = [
+    {
+      failover_priority = 0
+      location          = azurerm_resource_group.example.location
+    }
+  ]
 
   managed_identities = {
     user_assigned_resource_ids = [azurerm_user_assigned_identity.example.id]
@@ -131,7 +135,6 @@ module "servicebus" {
   customer_managed_key = {
     key_vault_resource_id = azurerm_key_vault.example.id
     key_name              = azurerm_key_vault_key.example.name
-    key_version           = azurerm_key_vault_key.example.version
 
     user_assigned_identity = {
       resource_id = azurerm_user_assigned_identity.example.id
@@ -196,6 +199,12 @@ No outputs.
 
 The following Modules are called:
 
+### <a name="module_cosmos"></a> [cosmos](#module\_cosmos)
+
+Source: ../../
+
+Version:
+
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
 Source: Azure/naming/azurerm
@@ -207,12 +216,6 @@ Version: >= 0.3.0
 Source: Azure/regions/azurerm
 
 Version: >= 0.3.0
-
-### <a name="module_servicebus"></a> [servicebus](#module\_servicebus)
-
-Source: ../../
-
-Version:
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

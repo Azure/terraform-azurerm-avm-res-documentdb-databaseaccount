@@ -30,7 +30,6 @@ provider "azurerm" {
 
 locals {
   prefix = "diag"
-  skus   = ["Basic", "Standard", "Premium"]
 }
 
 module "regions" {
@@ -52,7 +51,7 @@ module "naming" {
 
 resource "azurerm_resource_group" "example" {
   name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
-  location = "westeurope" # This test case in Premium SKU is not supported in some of the recommended regions. Pinned to an specific one to make the test more reliable. #module.regions.regions[random_integer.region_index.result].name
+  location = "northeurope"
 }
 
 resource "azurerm_storage_account" "example" {
@@ -88,20 +87,23 @@ resource "azurerm_eventhub" "example" {
   namespace_name      = azurerm_eventhub_namespace.example.name
 }
 
-module "servicebus" {
+module "cosmos" {
   source = "../../"
 
-  for_each = toset(local.skus)
-
-  sku                 = each.value
   resource_group_name = azurerm_resource_group.example.name
   location            = azurerm_resource_group.example.location
-  name                = "${module.naming.servicebus_namespace.name_unique}-${each.value}-${local.prefix}"
+  name                = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
+  geo_locations = [
+    {
+      failover_priority = 0
+      location          = azurerm_resource_group.example.location
+    }
+  ]
 
   diagnostic_settings = {
     diagnostic1 = {
       log_groups    = ["allLogs"]
-      metric_groups = ["AllMetrics"]
+      metric_groups = ["Requests"]
 
       name                           = "diagtest1"
       log_analytics_destination_type = "Dedicated"
@@ -110,7 +112,7 @@ module "servicebus" {
 
     diagnostic2 = {
       log_groups    = ["audit"]
-      metric_groups = ["AllMetrics"]
+      metric_groups = ["Requests"]
 
       name                                     = "diagtest2"
       log_analytics_destination_type           = "Dedicated"
@@ -119,8 +121,8 @@ module "servicebus" {
     }
 
     diagnostic3 = {
-      log_categories = ["ApplicationMetricsLogs", "RuntimeAuditLogs", "VNetAndIPFilteringLogs", "OperationalLogs"]
-      metric_groups  = ["AllMetrics"]
+      log_categories = ["DataPlaneRequests", "MongoRequests", "CassandraRequests", "GremlinRequests", "QueryRuntimeStatistics", "PartitionKeyStatistics", "PartitionKeyRUConsumption", "ControlPlaneRequests", "TableApiRequests"]
+      metric_groups  = ["Requests"]
 
       name                           = "diagtest3"
       log_analytics_destination_type = "Dedicated"
@@ -177,6 +179,12 @@ No outputs.
 
 The following Modules are called:
 
+### <a name="module_cosmos"></a> [cosmos](#module\_cosmos)
+
+Source: ../../
+
+Version:
+
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
 Source: Azure/naming/azurerm
@@ -188,12 +196,6 @@ Version: >= 0.3.0
 Source: Azure/regions/azurerm
 
 Version: >= 0.3.0
-
-### <a name="module_servicebus"></a> [servicebus](#module\_servicebus)
-
-Source: ../../
-
-Version:
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

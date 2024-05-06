@@ -1,17 +1,16 @@
 <!-- BEGIN_TF_DOCS -->
-# Terraform Azure Service Bus Namespace Module
+# Terraform Azure Cosmos DB Module
 
-This Terraform module is designed to create Azure Service bus namespaces and its related resources, including queues and topics.
+This Terraform module is designed to create Azure Cosmos DB accounts, its related resources and APIs.
 
 > [!WARNING]
 > Major version Zero (0.y.z) is for initial development. Anything MAY change at any time. A module SHOULD NOT be considered stable till at least it is major version one (1.0.0) or greater. Changes will always be via new versions being published and no changes will be made to existing published versions. For more details please go to <https://semver.org/>
 
 ## Features
 
-* Creation of queues.
-* Creation of topics and its subscriptions on it
+* Creation of accounts with NoSQL API with its databases and containers.
 * EntraID authentication instead of access keys
-* Support for customer-managed keys and double encryption with infrastructure encryption.
+* Support for customer-managed keys.
 * Enable private endpoint, providing secure access over a private network.
 * Enable diagnostic settings.
 * Creation of role assignments
@@ -20,19 +19,21 @@ This Terraform module is designed to create Azure Service bus namespaces and its
 
 ## Limitations
 
-* The module does not support configuring failover for premium tiers
-* The module does not support subscription filters when creating topics
+* The module does not support auto rotation of Customer Managed keys (CosmosDB doesnt support it yet)
+* The module does not support yet Gremlin API
+* The module does not support yet MongoDB API
+* The module does not support yet Table API
+* The module does not support yet Cassandra
 
 ## Examples
 * [Use only defaults values](examples/default/main.tf)
-* [Specifying all possible parameters at namespace level](examples/max-namespace/main.tf)
-* [Creation of queues](examples/queues/main.tf)
-* [Creation of topics](examples/topics/main.tf)
+* [Specifying all possible parameters at account level](examples/max-account/main.tf)
+* [Creation of sql api](examples/sql/main.tf)
+* [Creation of sql dedicated gateway](examples/sql-dedicated-gateway/main.tf)
 * [Customer managed key pinning to a specific key version](examples/cmk-pin-key-version/main.tf)
-* [Customer managed key using auto rotation](examples/cmk-with-auto-rotate/main.tf)
 * [Enable diagnostic settings](examples/diagnostic-settings/main.tf)
 * [Enable managed identities](examples/managed-identities/main.tf)
-* [Enable private endpoints](examples/private-endpoints/main.tf)
+* [Enable private endpoints with auto management of dns records](examples/private-endpoints-managed-dns-records/main.tf)
 * [Restrict public network access with access control list and service endpoints](examples/public-restricted-access/main.tf)
 
 <!-- markdownlint-disable MD033 -->
@@ -58,6 +59,13 @@ The following providers are used by this module:
 
 The following resources are used by this module:
 
+- [azurerm_cosmosdb_account.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_account) (resource)
+- [azurerm_cosmosdb_sql_container.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_container) (resource)
+- [azurerm_cosmosdb_sql_database.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_database) (resource)
+- [azurerm_cosmosdb_sql_dedicated_gateway.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_dedicated_gateway) (resource)
+- [azurerm_cosmosdb_sql_function.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_function) (resource)
+- [azurerm_cosmosdb_sql_stored_procedure.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_stored_procedure) (resource)
+- [azurerm_cosmosdb_sql_trigger.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_trigger) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
 - [azurerm_private_endpoint.this_managed_dns_zone_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
@@ -65,15 +73,6 @@ The following resources are used by this module:
 - [azurerm_private_endpoint_application_security_group_association.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint_application_security_group_association) (resource)
 - [azurerm_resource_group_template_deployment.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group_template_deployment) (resource)
 - [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
-- [azurerm_servicebus_namespace.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/servicebus_namespace) (resource)
-- [azurerm_servicebus_namespace_authorization_rule.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/servicebus_namespace_authorization_rule) (resource)
-- [azurerm_servicebus_queue.base_queues](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/servicebus_queue) (resource)
-- [azurerm_servicebus_queue.forward_queues](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/servicebus_queue) (resource)
-- [azurerm_servicebus_queue_authorization_rule.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/servicebus_queue_authorization_rule) (resource)
-- [azurerm_servicebus_subscription.base_topics](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/servicebus_subscription) (resource)
-- [azurerm_servicebus_subscription.forward_topics](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/servicebus_subscription) (resource)
-- [azurerm_servicebus_topic.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/servicebus_topic) (resource)
-- [azurerm_servicebus_topic_authorization_rule.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/servicebus_topic_authorization_rule) (resource)
 - [random_id.telem](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) (resource)
 
 <!-- markdownlint-disable MD013 -->
@@ -81,11 +80,43 @@ The following resources are used by this module:
 
 The following input variables are required:
 
+### <a name="input_geo_locations"></a> [geo\_locations](#input\_geo\_locations)
+
+Description:   Specifies a geo\_location resource, used to define where data should be replicated with the failover\_priority 0 specifying the primary location.
+
+  - `location`          - (Required) - The name of the Azure location where the CosmosDB Account is being created.
+  - `failover_priority` - (Required) - The failover priority of the region. A failover priority of 0 indicates a write region.
+  - `zone_redundant`    - (Optional) - Defaults to `true`. Whether or not the region is zone redundant.  
+
+  Example inputs:
+  ```hcl
+  geo_locations = [
+    {
+      location          = "eastus"
+      failover_priority = 0
+      zone_redundant    = true
+    },
+    {
+      location          = "westus"
+      failover_priority = 1
+      zone_redundant    = true
+    }
+  ]
+```
+
+Type:
+
+```hcl
+set(object({
+    location          = string
+    failover_priority = number
+    zone_redundant    = optional(bool, true)
+  }))
+```
+
 ### <a name="input_location"></a> [location](#input\_location)
 
-Description:   Azure region where the resource should be deployed.  
-  If null, the location will be inferred from the resource group location.  
-  Changing this forces a new resource to be created.  
+Description:   Specifies the supported Azure location where the resource exists. Changing this forces a new resource to be created.  
 
   Example Inputs: eastus  
   See more in CLI: az account list-locations -o table --query "[].name"
@@ -94,12 +125,11 @@ Type: `string`
 
 ### <a name="input_name"></a> [name](#input\_name)
 
-Description:   Specifies the name of the ServiceBus Namespace resource.   
-  Changing this forces a new resource to be created.   
-  Name must only contain letters, numbers, and hyphens and be between 6 and 50 characteres long. Also, it must not start or end with a hyphen.
+Description:   Specifies the name of the CosmosDB Account. Changing this forces a new resource to be created.  
+  The name can contain only lowercase letters, numbers and the '-' character, must be between 3 and 44 characters long, and must not start or end with the character '-'.
 
-  Example Inputs: sb-sharepoint-prod-westus-001  
-  See more: https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules#microsoftservicebus
+  Example Inputs: cosmos-sharepoint-prod-westus-001  
+  See more: https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules#microsoftdocumentdb
 
 Type: `string`
 
@@ -118,45 +148,203 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
-### <a name="input_authorization_rules"></a> [authorization\_rules](#input\_authorization\_rules)
+### <a name="input_access_key_metadata_writes_enabled"></a> [access\_key\_metadata\_writes\_enabled](#input\_access\_key\_metadata\_writes\_enabled)
 
-Description:   Defaults to `{}`. Manages a ServiceBus Namespace authorization Rule within a ServiceBus.
+Description: Defaults to `false`. Is write operations on metadata resources (databases, containers, throughput) via account keys enabled?
 
-  - `name`   - (Optional) - Defaults to `null`. Specifies the name of the ServiceBus Namespace Authorization Rule resource. Changing this forces a new resource to be created. If it is null it will use the map key as the name.
-  - `send`   - (Optional) - Always set to `true` when manage is `true` if not it will default to `false`. Does this Authorization Rule have Listen permissions to the ServiceBus Namespace?
-  - `listen` - (Optional) - Always set to `true` when manage is `true` if not it will default to `false`. Does this Authorization Rule have Send permissions to the ServiceBus Namespace?
-  - `manage` - (Optional) - Defaults to `false`. Does this Authorization Rule have Manage permissions to the ServiceBus Namespace?
+Type: `bool`
 
-  Example Inputs:
+Default: `false`
+
+### <a name="input_analytical_storage_config"></a> [analytical\_storage\_config](#input\_analytical\_storage\_config)
+
+Description:   Defaults to `null`. Configuration related to the analytical storage of this account
+
+  - `schema_type` - (Required) - The schema type of the Analytical Storage for this Cosmos DB account. Possible values are FullFidelity and WellDefined.
+
+  Example inputs:
   ```hcl
-  authorization_rules = {
-    testRule = {
-      send   = true
-      listen = true
-      manage = true
-    }
+  analytical_storage_config = {
+    schema_type = "WellDefined"
   }
 ```
 
 Type:
 
 ```hcl
-map(object({
-    name   = optional(string, null)
-    send   = optional(bool, false)
-    listen = optional(bool, false)
-    manage = optional(bool, false)
-  }))
+object({
+    schema_type = string
+  })
+```
+
+Default: `null`
+
+### <a name="input_analytical_storage_enabled"></a> [analytical\_storage\_enabled](#input\_analytical\_storage\_enabled)
+
+Description: Defaults to `false`. Enable Analytical Storage option for this Cosmos DB account. Enabling and then disabling analytical storage forces a new resource to be created.
+
+Type: `bool`
+
+Default: `false`
+
+### <a name="input_automatic_failover_enabled"></a> [automatic\_failover\_enabled](#input\_automatic\_failover\_enabled)
+
+Description: Defaults to `true`. Enable automatic failover for this Cosmos DB account.
+
+Type: `bool`
+
+Default: `true`
+
+### <a name="input_backup"></a> [backup](#input\_backup)
+
+Description:   Defaults to `{}`. Configures the backup policy for this Cosmos DB account.
+
+  - `type`                - (Optional) - Defaults to `Continuous`. The type of the backup. Possible values are `Continuous` and `Periodic`
+  - `tier`                - (Optional) - Defaults to `Continuous30Days`. Used when `type` is set to `Continuous`. The continuous backup tier. Possible values are `Continuous7Days` and `Continuous30Days`.
+  - `interval_in_minutes` - (Optional) - Defaults to `240`. Used when `type` is set to `Periodic`. The interval in minutes between two backups. Possible values are between `60` and `1440`
+  - `retention_in_hours`  - (Optional) - Defaults to `8`. Used when `type` is set to `Periodic`. The time in hours that each backup is retained. Possible values are between `8` and `720`
+  - `storage_redundancy`  - (Optional) - Defaults to `Geo`. Used when `type` is set to `Periodic`. The storage redundancy is used to indicate the type of backup residency. Possible values are `Geo`, `Local` and `Zone`
+
+  Example inputs:
+  ```hcl
+  # For Continuous Backup
+  backup = {
+    type = "Continuous"
+    tier = "Continuous30Days"
+  }
+
+  # For Periodic Backup
+  backup = {
+    type                = "Periodic"
+    storage_redundancy  = "Geo"
+    interval_in_minutes = 240
+    retention_in_hours  = 8
+  }
+```
+
+Type:
+
+```hcl
+object({
+    retention_in_hours  = optional(number, 8)
+    interval_in_minutes = optional(number, 240)
+    storage_redundancy  = optional(string, "Geo")
+    type                = optional(string, "Continuous")
+    tier                = optional(string, "Continuous30Days")
+  })
 ```
 
 Default: `{}`
 
+### <a name="input_capabilities"></a> [capabilities](#input\_capabilities)
+
+Description:   Defaults to `[]`. The capabilities which should be enabled for this Cosmos DB account.
+
+  - `name` - (Required) - The capability to enable - Possible values are `AllowSelfServeUpgradeToMongo36`, `DisableRateLimitingResponses`, `EnableAggregationPipeline`, `EnableCassandra`, `EnableGremlin`, `EnableMongo`, `EnableMongo16MBDocumentSupport`, `EnableMongoRetryableWrites`, `EnableMongoRoleBasedAccessControl`, `EnablePartialUniqueIndex`, `EnableServerless`, `EnableTable`, `EnableTtlOnCustomPath`, `EnableUniqueCompoundNestedDocs`, `MongoDBv3.4` and `mongoEnableDocLevelTTL`.
+
+  Example inputs:
+  ```hcl
+  capabilities = [
+    {
+      name = "DisableRateLimitingResponses"
+    }
+  ]
+```
+
+Type:
+
+```hcl
+set(object({
+    name = string
+  }))
+```
+
+Default: `[]`
+
 ### <a name="input_capacity"></a> [capacity](#input\_capacity)
 
-Description:   Always set to `0` for Standard and Basic. Defaults to `1` for Premium. Specifies the capacity.   
-  When sku is Premium, capacity can be 1, 2, 4, 8 or 16.
+Description:   Defaults to `{}`. Configures the throughput limit for this Cosmos DB account.
 
-Type: `number`
+  - `total_throughput_limit` - (Optional) - Defaults to `-1`. The total throughput limit imposed on this Cosmos DB account (RU/s). Possible values are at least -1. -1 means no limit.
+
+  Example inputs:
+  ```hcl
+  capacity = {
+    total_throughput_limit = -1
+  }
+```
+
+Type:
+
+```hcl
+object({
+    total_throughput_limit = optional(number, -1)
+  })
+```
+
+Default: `{}`
+
+### <a name="input_consistency_policy"></a> [consistency\_policy](#input\_consistency\_policy)
+
+Description:   Defaults to `{}`. Used to define the consistency policy for this CosmosDB account
+
+  - `consistency_level`       - (Optional) - Defaults to `ConsistentPrefix`. The Consistency Level to use for this CosmosDB Account - can be either `BoundedStaleness`, `Eventual`, `Session`, `Strong` or `ConsistentPrefix`.
+  - `max_interval_in_seconds` - (Optional) - Defaults to `5`. Used when `consistency_level` is set to `BoundedStaleness`. When used with the Bounded Staleness consistency level, this value represents the time amount of staleness (in seconds) tolerated. The accepted range for this value is `5` - `86400` (1 day).
+  - `max_staleness_prefix`    - (Optional) - Defaults to `100`. Used when `consistency_level` is set to `BoundedStaleness`. When used with the Bounded Staleness consistency level, this value represents the number of stale requests tolerated. The accepted range for this value is `10` – `2147483647`
+
+  Example inputs:
+  ```hcl
+  consistency_policy = {
+    consistency_level       = "ConsistentPrefix"
+    max_interval_in_seconds = 10
+    max_interval_in_seconds = 100
+  }
+```
+
+Type:
+
+```hcl
+object({
+    max_interval_in_seconds = optional(number, 5)
+    max_staleness_prefix    = optional(number, 100)
+    consistency_level       = optional(string, "ConsistentPrefix")
+  })
+```
+
+Default: `{}`
+
+### <a name="input_cors_rule"></a> [cors\_rule](#input\_cors\_rule)
+
+Description:   Defaults to `null`. Configures the CORS rule for this Cosmos DB account.
+
+  - `allowed_headers`    - (Required) - A list of headers that are allowed to be a part of the cross-origin request.
+  - `allowed_methods`    - (Required) - A list of HTTP headers that are allowed to be executed by the origin. Valid options are `DELETE`, `GET`, `HEAD`, `MERGE`, `POST`, `OPTIONS`, `PUT` or `PATCH`.
+  - `allowed_origins`    - (Required) - A list of origin domains that will be allowed by CORS.
+  - `exposed_headers`    - (Required) - A list of response headers that are exposed to CORS clients.
+  - `max_age_in_seconds` - (Optional) - Defaults to `null`. The number of seconds the client should cache a preflight response. Possible values are between `1` and `2147483647`
+
+  Example inputs:
+  ```hcl
+  cors_rule = {
+    allowed_headers = ["Custom-Header"]
+    allowed_methods = ["POST"]
+    allowed_origins = ["microsoft.com"]
+    exposed_headers = ["Custom-Header"]
+    max_age_in_seconds = 100
+  }
+```
+
+Type:
+
+```hcl
+object({
+    allowed_headers    = set(string)
+    allowed_methods    = set(string)
+    allowed_origins    = set(string)
+    exposed_headers    = set(string)
+    max_age_in_seconds = optional(number, null)
+  })
+```
 
 Default: `null`
 
@@ -166,19 +354,17 @@ Description:   Defaults to `null`. Ignored for Basic and Standard. Defines a cus
 
   - `key_name`               - (Required) - The key name for the customer managed key in the key vault.
   - `key_vault_resource_id`  - (Required) - The full Azure Resource ID of the key\_vault where the customer managed key will be referenced from.
-  - `key_version`            - (Optional) - Defaults to `null`. The version of the key to use if it is null it will use the latest version of the key. It will also auto rotate when the key in the key vault is rotated.
+  - `key_version`            - (Unsupported)
 
   - `user_assigned_identity` - (Required) - The user assigned identity to use when access the key vault
     - `resource_id`          - (Required) - The full Azure Resource ID of the user assigned identity.
 
   > Note: Remember to assign permission to the managed identity to access the key vault key. The Key vault used must have enabled soft delete and purge protection. The minimun required permissions is "Key Vault Crypto Service Encryption User"
-  > Note: If you require to control "infrastructure encryption" use the parameter `infrastructure_encryption_enabled` in the module configuration.
 
   Example Inputs:
   ```hcl
   customer_managed_key = {
     key_name               = "sample-customer-key"
-    key_version            = 03c89971825b4a0d84905c3597512260
     key_vault_resource_id  = "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{keyVaultName}"
     
     user_assigned_identity {
@@ -194,7 +380,7 @@ object({
     key_name              = string
     key_vault_resource_id = string
 
-    key_version = optional(string, null)
+    key_version = optional(string, null) # Not supported in CosmosDB
 
     user_assigned_identity = optional(object({
       resource_id = string
@@ -209,9 +395,9 @@ Default: `null`
 Description:   Defaults to `{}`. A map of diagnostic settings to create. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
   - `name`                                     - (Optional) - The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
-  - `log_categories`                           - (Optional) - Defaults to `[]`. A set of log categories to export. Possible values are: `ApplicationMetricsLogs`, `RuntimeAuditLogs`, `VNetAndIPFilteringLogs` or `OperationalLogs`.
+  - `log_categories`                           - (Optional) - Defaults to `[]`. A set of log categories to export. Possible values are: `DataPlaneRequests`, `MongoRequests`, `CassandraRequests`,  `GremlinRequests`, `QueryRuntimeStatistics`, `PartitionKeyStatistics`, `PartitionKeyRUConsumption`, `ControlPlaneRequests` or `TableApiRequests`.
   - `log_groups`                               - (Optional) - Defaults to `[]` if log\_categories is set, if not it defaults to `["allLogs", "audit"]`. A set of log groups to send to export. Possible values are `allLogs` and `audit`.
-  - `metric_categories`                        - (Optional) - Defaults to `["AllMetrics"]`. A set of metric categories to export.
+  - `metric_categories`                        - (Optional) - Defaults to `["Requests"]`. A set of metric categories to export.
   - `log_analytics_destination_type`           - (Optional) - Defaults to `Dedicated`. The destination log analytics workspace table for the diagnostic setting. Possible values are `Dedicated` and `AzureDiagnostics`. Defaults to `Dedicated`.
   - `workspace_resource_id`                    - (Optional) - The resource ID of the log analytics workspace to send logs and metrics to.
   - `storage_account_resource_id`              - (Optional) - The resource ID of the storage account to send logs and metrics to.
@@ -219,7 +405,7 @@ Description:   Defaults to `{}`. A map of diagnostic settings to create. The map
   - `event_hub_name`                           - (Optional) - The name of the event hub. If none is specified, the default event hub will be selected.
   - `marketplace_partner_resource_id`          - (Optional) - The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic LogsLogs.
 
-  > Note: See more in CLI: az monitor diagnostic-settings categories list --resource {serviceBusNamespaceResourceId}
+  > Note: See more in CLI: az monitor diagnostic-settings categories list --resource {cosmosAccountResourceId}
 
   Example Inputs:
   ```hcl
@@ -230,9 +416,9 @@ Description:   Defaults to `{}`. A map of diagnostic settings to create. The map
       name                                     = "diagnostics"
       event_hub_authorization_rule_resource_id = "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.EventHub/namespaces/{eventHubNamespaceName}/authorizationRules/{authorizationRuleName}"
 
-      #log_categories = ["ApplicationMetricsLogs", "RuntimeAuditLogs", "VNetAndIPFilteringLogs", "OperationalLogs"]
+      #log_categories = ["DataPlaneRequests", "MongoRequests", "CassandraRequests",  "GremlinRequests", "QueryRuntimeStatistics", "PartitionKeyStatistics", "PartitionKeyRUConsumption", "ControlPlaneRequests",  "TableApiRequests"]
 
-      metric_categories           = ["AllMetrics"]
+      metric_categories           = ["Requests"]
       log_groups                  = ["allLogs", "audit"]
       workspace_resource_id       = "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.OperationalInsights/workspaces/{workspaceName}"
       storage_account_resource_id = "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Storage/storageAccounts/{storageAccountName}"
@@ -247,7 +433,7 @@ map(object({
     name                                     = optional(string, null)
     log_categories                           = optional(set(string), [])
     log_groups                               = optional(set(string), ["allLogs"])
-    metric_categories                        = optional(set(string), ["AllMetrics"])
+    metric_categories                        = optional(set(string), ["Requests"])
     log_analytics_destination_type           = optional(string, "Dedicated")
     workspace_resource_id                    = optional(string, null)
     storage_account_resource_id              = optional(string, null)
@@ -269,21 +455,32 @@ Type: `bool`
 
 Default: `true`
 
-### <a name="input_infrastructure_encryption_enabled"></a> [infrastructure\_encryption\_enabled](#input\_infrastructure\_encryption\_enabled)
+### <a name="input_free_tier_enabled"></a> [free\_tier\_enabled](#input\_free\_tier\_enabled)
 
-Description: Defaults to true. Used to specify whether enable Infrastructure Encryption (Double Encryption). Changing this forces a new resource to be created. Requires customer\_managed\_key.
-
-Type: `bool`
-
-Default: `true`
-
-### <a name="input_local_auth_enabled"></a> [local\_auth\_enabled](#input\_local\_auth\_enabled)
-
-Description: Defaults to `true`. Whether or not SAS authentication is enabled for the Service Bus namespace.
+Description: Defaults to `false`. Enable the Free Tier pricing option for this Cosmos DB account. Defaults to false. Changing this forces a new resource to be created.
 
 Type: `bool`
 
-Default: `true`
+Default: `false`
+
+### <a name="input_ip_range_filter"></a> [ip\_range\_filter](#input\_ip\_range\_filter)
+
+Description:   Defaults to `[]`. CosmosDB Firewall Support: This value specifies the set of IP addresses or IP address ranges in CIDR form to be included as the allowed list of client IPs for a given database account.
+
+  > Note: To enable the "Allow access from the Azure portal" behavior, you should add the IP addresses provided by the documentation to this list. https://learn.microsoft.com/en-us/azure/cosmos-db/how-to-configure-firewall#allow-requests-from-the-azure-portal
+  > Note: To enable the "Accept connections from within public Azure datacenters" behavior, you should add 0.0.0.0 to the list, see the documentation for more details. https://learn.microsoft.com/en-us/azure/cosmos-db/how-to-configure-firewall#allow-requests-from-global-azure-datacenters-or-other-sources-within-azure
+
+Type: `set(string)`
+
+Default: `[]`
+
+### <a name="input_local_authentication_disabled"></a> [local\_authentication\_disabled](#input\_local\_authentication\_disabled)
+
+Description: Defaults to `false`. Ignored for non SQL APIs accounts. Disable local authentication and ensure only MSI and AAD can be used exclusively for authentication. Can be set only when using the SQL API.
+
+Type: `bool`
+
+Default: `false`
 
 ### <a name="input_lock"></a> [lock](#input\_lock)
 
@@ -294,7 +491,7 @@ Description:   Defaults to `null`. Controls the Resource Lock configuration for 
   - `kind` - (Required) - The type of lock. Possible values are `CanNotDelete` and `ReadOnly`.
   - `name` - (Optional) - The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
 
-  > Note: If you use `ReadOnly` kind lock, you must configure Terraform to use EntraId authentication, as the access of the namespace keys will be blocked thus terraform won't be to do its job.
+  > Note: If you use `ReadOnly` kind lock, you must configure Terraform to use EntraId authentication, as the access of the account keys will be blocked thus terraform won't be to do its job.
 
   Example Inputs:
   ```hcl
@@ -343,91 +540,92 @@ object({
 
 Default: `{}`
 
-### <a name="input_minimum_tls_version"></a> [minimum\_tls\_version](#input\_minimum\_tls\_version)
+### <a name="input_minimal_tls_version"></a> [minimal\_tls\_version](#input\_minimal\_tls\_version)
 
-Description: Defaults to `1.2`. The minimum supported TLS version for this Service Bus Namespace. Valid values are: 1.0, 1.1 and 1.2.
+Description: Defaults to `Tls12`. Specifies the minimal TLS version for the CosmosDB account. Possible values are: `Tls`, `Tls11`, and `Tls12`
 
 Type: `string`
 
-Default: `"1.2"`
+Default: `"Tls12"`
 
-### <a name="input_network_rule_config"></a> [network\_rule\_config](#input\_network\_rule\_config)
+### <a name="input_multiple_write_locations_enabled"></a> [multiple\_write\_locations\_enabled](#input\_multiple\_write\_locations\_enabled)
 
-Description:   Defaults to `{}`. Ignored for Basic and Standard. Defines the network rules configuration for the resource.
+Description: Defaults to `false`. Ignored when `backup.type` is `Continuous`. Enable multi-region writes for this Cosmos DB account.
 
-  - `trusted_services_allowed` - (Optional) - Are Azure Services that are known and trusted for this resource type are allowed to bypass firewall configuration?
-  - `cidr_or_ip_rules`         - (Optional) - Defaults to `[]`. One or more IP Addresses, or CIDR Blocks which should be able to access the ServiceBus Namespace.
-  - `default_action`           - (Optional) - Defaults to `Allow`. Specifies the default action for the Network Rule Set when a rule (IP, CIDR or subnet) doesn't match. Possible values are `Allow` and `Deny`.
+Type: `bool`
 
-  - `network_rules` - (Optional) - Defaults to `[]`.
-    - `subnet_id`                            - (Required) - The Subnet ID which should be able to access this ServiceBus Namespace.
+Default: `false`
 
-  > Note: Remember to enable Microsoft.KeyVault service endpoint on the subnet.
+### <a name="input_network_acl_bypass_for_azure_services"></a> [network\_acl\_bypass\_for\_azure\_services](#input\_network\_acl\_bypass\_for\_azure\_services)
 
-  Example Inputs:
-  ```hcl
-  network_rule_config = {
-    trusted_services_allowed = true
-    default_action           = "Allow"
-    cidr_or_ip_rules         = ["79.0.0.0", "80.0.0.0/24"]
+Description: Defaults to `false`. If Azure services can bypass ACLs.
 
-    network_rules = [
-      {
-        subnet_id                            = "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{vnetName}/subnets/{subnetName}"
-      }
-    ]
-  }
-```
+Type: `bool`
 
-Type:
+Default: `false`
 
-```hcl
-object({
-    trusted_services_allowed = optional(bool, false)
-    cidr_or_ip_rules         = optional(set(string), [])
-    default_action           = optional(string, "Allow")
+### <a name="input_network_acl_bypass_ids"></a> [network\_acl\_bypass\_ids](#input\_network\_acl\_bypass\_ids)
 
-    network_rules = optional(set(object({
-      subnet_id = string
-    })), [])
-  })
-```
+Description: Defaults to `[]`. The list of resource Ids for Network Acl Bypass for this Cosmos DB account.
 
-Default: `{}`
+Type: `set(string)`
 
-### <a name="input_premium_messaging_partitions"></a> [premium\_messaging\_partitions](#input\_premium\_messaging\_partitions)
+Default: `[]`
 
-Description:   Always set to `0` for Standard and Basic. Defaults to `1` for Premium. Specifies the number of messaging partitions.   
-  Possible values when Premium are 1, 2, and 4. Changing this forces a new resource to be created.
+### <a name="input_partition_merge_enabled"></a> [partition\_merge\_enabled](#input\_partition\_merge\_enabled)
 
-Type: `number`
+Description: Defaults to `false`. Is partition merge on the Cosmos DB account enabled?
 
-Default: `null`
+Type: `bool`
+
+Default: `false`
 
 ### <a name="input_private_endpoints"></a> [private\_endpoints](#input\_private\_endpoints)
 
-Description:   Default to `{}`. Ignored for Basic and Standard. A map of private endpoints to create. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+Description:   Default to `{}`. A map of private endpoints to create. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
-  - `name` - (Optional) The name of the private endpoint. One will be generated if not set.
-  - `role_assignments` - (Optional) A map of role assignments to create on the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time. See `var.role_assignments` for more information.
-  - `lock` - (Optional) The lock level to apply to the private endpoint. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.
-  - `tags` - (Optional) A mapping of tags to assign to the private endpoint.
-  - `subnet_resource_id` - The resource ID of the subnet to deploy the private endpoint in.
-  - `private_dns_zone_group_name` - (Optional) The name of the private DNS zone group. One will be generated if not set.
-  - `private_dns_zone_resource_ids` - (Optional) A set of resource IDs of private DNS zones to associate with the private endpoint. If not set, no zone groups will be created and the private endpoint will not be associated with any private DNS zones. DNS records must be managed external to this module.
-  - `application_security_group_associations` - (Optional) A map of resource IDs of application security groups to associate with the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-  - `private_service_connection_name` - (Optional) The name of the private service connection. One will be generated if not set.
-  - `network_interface_name` - (Optional) The name of the network interface. One will be generated if not set.
-  - `location` - (Optional) The Azure location where the resources will be deployed. Defaults to the location of the resource group.
-  - `resource_group_name` - (Optional) The resource group where the resources will be deployed. Defaults to the resource group of the resource.
-  - `ip_configurations` - (Optional) A map of IP configurations to create on the private endpoint. If not specified the platform will create one. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-    - `name` - The name of the IP configuration.
-    - `private_ip_address` - The private IP address of the IP configuration.
+  - `subnet_resource_id`                      - (Required) - The resource ID of the subnet to deploy the private endpoint in.
+  - `subresource_name`                        - (Required) - The service name of the private endpoint. Possible value are `SQL`, `SqlDedicated`, `Cassandra`, `MongoDB`, `Gremlin` or `Table`.
+  - `name`                                    - (Optional) - The name of the private endpoint. One will be generated if not set.
+  - `private_dns_zone_group_name`             - (Optional) - The name of the private DNS zone group. One will be generated if not set.
+  - `private_dns_zone_resource_ids`           - (Optional) - A set of resource IDs of private DNS zones to associate with the private endpoint. If not set, no zone groups will be created and the private endpoint will not be associated with any private DNS zones. DNS records must be managed external to this module.
+  - `application_security_group_associations` - (Optional) - A map of resource IDs of application security groups to associate with the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+  - `private_service_connection_name`         - (Optional) - The name of the private service connection. One will be generated if not set.
+  - `network_interface_name`                  - (Optional) - The name of the network interface. One will be generated if not set.
+  - `location`                                - (Optional) - The Azure location where the resources will be deployed. Defaults to the location of the resource group.
+  - `resource_group_name`                     - (Optional) - The resource group where the resources will be deployed. Defaults to the resource group of the resource.
+
+  - `ip_configurations` - (Optional) - A map of IP configurations to create on the private endpoint. If not specified the platform will create one. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+    - `name`               - (Required) - The name of the IP configuration.
+    - `private_ip_address` - (Required) - The private IP address of the IP configuration.
+
+  - `role_assignments` - (Optional) - A map of role assignments to create on the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time. See `var.role_assignments` for more information.
+  - `lock`             - (Optional) - The lock level to apply to the private endpoint. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.
+  - `tags`             - (Optional) - A mapping of tags to assign to the private endpoint.
+
+  > Note: See more related to subresource\_name in: https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-overview#private-link-resource
 
 Type:
 
 ```hcl
 map(object({
+    subnet_resource_id = string
+    subresource_name   = string
+
+    name                                    = optional(string, null)
+    private_dns_zone_group_name             = optional(string, "default")
+    private_dns_zone_resource_ids           = optional(set(string), [])
+    application_security_group_associations = optional(map(string), {})
+    private_service_connection_name         = optional(string, null)
+    network_interface_name                  = optional(string, null)
+    location                                = optional(string, null)
+    resource_group_name                     = optional(string, null)
+
+    ip_configurations = optional(map(object({
+      name               = string
+      private_ip_address = string
+    })), {})
+
     tags = optional(map(string), null)
 
     lock = optional(object({
@@ -446,22 +644,6 @@ map(object({
       condition         = optional(string, null) # forced to be here by lint, not supported
       condition_version = optional(string, null) # forced to be here by lint, not supported
     })), {})
-
-    subnet_resource_id = string
-
-    name                                    = optional(string, null)
-    private_dns_zone_group_name             = optional(string, "default")
-    private_dns_zone_resource_ids           = optional(set(string), [])
-    application_security_group_associations = optional(map(string), {})
-    private_service_connection_name         = optional(string, null)
-    network_interface_name                  = optional(string, null)
-    location                                = optional(string, null)
-    resource_group_name                     = optional(string, null)
-
-    ip_configurations = optional(map(object({
-      name               = string
-      private_ip_address = string
-    })), {})
   }))
 ```
 
@@ -477,130 +659,11 @@ Default: `true`
 
 ### <a name="input_public_network_access_enabled"></a> [public\_network\_access\_enabled](#input\_public\_network\_access\_enabled)
 
-Description: Defaults to `true`. Is public network access enabled for the Service Bus Namespace?
+Description: Defaults to `true`. Whether or not public network access is allowed for this CosmosDB account.
 
 Type: `bool`
 
 Default: `true`
-
-### <a name="input_queues"></a> [queues](#input\_queues)
-
-Description:   Defaults to `{}`. A map of queues to create.  
-  The name of the queue must be unique among topics and queues within the namespace.
-
-  - `name`                                    - (Optional) - Defaults to `null`. Specifies the name of the ServiceBus Queue resource. Changing this forces a new resource to be created. If it is null it will use the map key as the name.
-  - `lock_duration`                           - (Optional) - Its minimum and default value is `PT1M` (1 minute). Maximum value is `PT5M` (5 minutes). The ISO 8601 timespan duration of a peek-lock; that is, the amount of time that the message is locked for other receivers.
-  - `max_message_size_in_kilobytes`           - (Optional) - Always set to `256` for Standard and Basic by Azure. It's mininum and also defaults is `1024` with maximum value of `102400` for Premium. Integer value which controls the maximum size of a message allowed on the queue.
-  - `max_size_in_megabytes`                   - (Optional) - Defaults to `1024`. Possible values are `1024`, `2048`, `3072`, `4096`, `5120`, `10240`, `20480`, `40960` and `81920`. Integer value which controls the size of memory allocated for the queue.
-  - `requires_duplicate_detection`            - (Optional) - Always set to `false` for Basic by Azure. It Defaults to `false` for the rest of skus. Boolean flag which controls whether the Queue requires duplicate detection. Changing this forces a new resource to be created.
-  - `requires_session`                        - (Optional) - Always set to `false` for Basic by Azure. It Defaults to `false` for the rest of skus. Boolean flag which controls whether the Queue requires sessions. This will allow ordered handling of unbounded sequences of related messages. With sessions enabled a queue can guarantee first-in-first-out delivery of messages. Changing this forces a new resource to be created.
-  - `default_message_ttl`                     - (Optional) - Defaults to `null`. Mininum value of `PT5S` (5 seconds) and maximum of `P10675198D` (10675198 days). Set `null` for never. The ISO 8601 timespan duration of the TTL of messages sent to this queue. This is the default value used when TTL is not set on message itself.
-  - `dead_lettering_on_message_expiration`    - (Optional) - Defaults to `false`. Boolean flag which controls whether the Queue has dead letter support when a message expires.
-  - `duplicate_detection_history_time_window` - (Optional) - Defaults to `PT10M` (10 minutes). Minimun of `PT20S` (seconds) and Maximun of `P7D` (7 days). The ISO 8601 timespan duration during which duplicates can be detected.
-  - `max_delivery_count`                      - (Optional) - Defaults to `10`. Minimum of `1` and Maximun of `2147483647`. Integer value which controls when a message is automatically dead lettered.
-  - `status`                                  - (Optional) - Defaults to `Active`. The status of the Queue. Possible values are Active, Creating, Deleting, Disabled, ReceiveDisabled, Renaming, SendDisabled, Unknown.
-  - `enable_batched_operations`               - (Optional) - Defaults to `true`. Boolean flag which controls whether server-side batched operations are enabled.
-  - `auto_delete_on_idle`                     - (Optional) - Always set to `null` when Basic. It Defaults to `null` for the rest of skus. Minimum of `PT5M` (5 minutes) and maximum of `P10675198D` (10675198 days). Set `null` for never. The ISO 8601 timespan duration of the idle interval after which the Topic is automatically deleted.
-  - `enable_partitioning`                     - (Optional) - Defaults to `false` for Basic and Standard. For Premium if premium\_messaging\_partitions is greater than `1` it will always be set to true if not it will be set to `false`. Boolean flag which controls whether to enable the queue to be partitioned across multiple message brokers. Changing this forces a new resource to be created.
-  - `enable_express`                          - (Optional) - Always set to `false` for Premium and Basic by Azure. Defaults to `false` for Standard. Boolean flag which controls whether Express Entities are enabled. An express queue holds a message in memory temporarily before writing it to persistent storage. It requires requires\_duplicate\_detection to be set to `false`
-  - `forward_to`                              - (Optional) - Always set to `false` for Basic by Azure. It Defaults to `null` for the rest of skus. The name of a Queue or Topic to automatically forward messages to. It cannot be enabled if requires\_session is enabled.
-  - `forward_dead_lettered_messages_to`       - (Optional) - Defaults to `null`. The name of a Queue or Topic to automatically forward dead lettered messages to
-
-  - `authorization_rules` - (Optional) - Defaults to `{}`.
-    - `name`   - (Optional) - Defaults to `null`. Specifies the name of the Authorization Rule. Changing this forces a new resource to be created. If it is null it will use the map key as the name.
-    - `send`   - (Optional) - Always set to `true` when manage is `true` if not it will default to `false`. Does this Authorization Rule have Listen permissions to the ServiceBus Queue?
-    - `listen` - (Optional) - Always set to `true` when manage is `true` if not it will default to `false`. Does this Authorization Rule have Send permissions to the ServiceBus Queue?
-    - `manage` - (Optional) - Defaults to `false`. Does this Authorization Rule have Manage permissions to the ServiceBus Queue?
-
-  - `role_assignments` - (Optional) - Defaults to `{}`. A map of role assignments to create. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-    - `role_definition_id_or_name`             - (Required) - The ID or name of the role definition to assign to the principal.
-    - `principal_id`                           - (Required) - It's a GUID - The ID of the principal to assign the role to.
-    - `description`                            - (Optional) - Defaults to `null`. The description of the role assignment.
-    - `delegated_managed_identity_resource_id` - (Optional) - Defaults to `null`. The delegated Azure Resource Id which contains a Managed Identity. This field is only used in cross tenant scenario. Changing this forces a new resource to be created.
-    - `skip_service_principal_aad_check`       - (Optional) - Defaults to `false`. If the principal\_id is a newly provisioned Service Principal set this value to true to skip the Azure Active Directory check which may fail due to replication lag. This argument is only valid if the principal\_id is a Service Principal identity.
-
-  Example Inputs:
-  ```hcl
-  queues = {
-    testQueue = {
-      auto_delete_on_idle                     = "P7D"
-      dead_lettering_on_message_expiration    = true
-      default_message_ttl                     = "PT5M"
-      duplicate_detection_history_time_window = "PT5M"
-      enable_batched_operations               = true
-      enable_express                          = true
-      enable_partitioning                     = true
-      lock_duration                           = "PT5M"
-      requires_duplicate_detection            = true
-      requires_session                        = false
-      max_delivery_count                      = 10
-      max_message_size_in_kilobytes           = 1024
-      max_size_in_megabytes                   = 1024
-      status                                  = "Active"
-      forward_to                              = "forwardQueue"
-      forward_dead_lettered_messages_to       = "forwardQueue"
-
-      role_assignments = {
-        "key" = {
-          skip_service_principal_aad_check = false
-          role_definition_id_or_name       = "Contributor"
-          description                      = "This is a test role assignment"
-          principal_id                     = "eb5260bd-41f3-4019-9e03-606a617aec13"
-        }
-      }
-
-      authorization_rules = {
-        testRule = {
-          send   = true
-          listen = true
-          manage = true
-        }
-      }
-    }
-  }
-```
-
-Type:
-
-```hcl
-map(object({
-    name                                    = optional(string, null)
-    max_delivery_count                      = optional(number, 10)
-    enable_batched_operations               = optional(bool, true)
-    requires_duplicate_detection            = optional(bool, false)
-    requires_session                        = optional(bool, false)
-    dead_lettering_on_message_expiration    = optional(bool, false)
-    enable_partitioning                     = optional(bool, null)
-    enable_express                          = optional(bool, null)
-    max_message_size_in_kilobytes           = optional(number, null)
-    default_message_ttl                     = optional(string, null)
-    forward_to                              = optional(string, null)
-    forward_dead_lettered_messages_to       = optional(string, null)
-    auto_delete_on_idle                     = optional(string, null)
-    max_size_in_megabytes                   = optional(number, 1024)
-    lock_duration                           = optional(string, "PT1M")
-    duplicate_detection_history_time_window = optional(string, "PT10M")
-    status                                  = optional(string, "Active")
-
-    authorization_rules = optional(map(object({
-      name   = optional(string, null)
-      send   = optional(bool, false)
-      listen = optional(bool, false)
-      manage = optional(bool, false)
-    })), {})
-
-    role_assignments = optional(map(object({
-      role_definition_id_or_name = string
-      principal_id               = string
-
-      description                            = optional(string, null)
-      skip_service_principal_aad_check       = optional(bool, false)
-      delegated_managed_identity_resource_id = optional(string, null)
-    })), {})
-  }))
-```
-
-Default: `{}`
 
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
@@ -647,14 +710,266 @@ map(object({
 
 Default: `{}`
 
-### <a name="input_sku"></a> [sku](#input\_sku)
+### <a name="input_sql_databases"></a> [sql\_databases](#input\_sql\_databases)
 
-Description:   Defaults to `Standard`. Defines which tier to use. Options are Basic, Standard or Premium.   
-  Please note that setting this field to Premium will force the creation of a new resource.
+Description:   Defaults to `{}`. Manages SQL Databases within a Cosmos DB Account.
 
-Type: `string`
+  - `name`       - (Optional) - Defaults to map key if not specified. Specifies the name of the Cosmos DB SQL Container. Changing this forces a new resource to be created.
+  - `throughput` - (Optional) - Defaults to `null`. The throughput of SQL database (RU/s). Must be set in increments of `100`. The minimum value is `400`. This must be set upon database creation otherwise it cannot be updated without a manual terraform destroy-apply.
 
-Default: `"Standard"`
+  - `autoscale_settings` - (Optional) - Defaults to `null`. This must be set upon database creation otherwise it cannot be updated without a manual terraform destroy-apply.
+    - `max_throughput` - (Required) - The maximum throughput of the SQL database (RU/s). Must be between `1,000` and `1,000,000`. Must be set in increments of `1,000`. Conflicts with `throughput`.
+
+  - `containers` - (Optional) - Defaults to `{}`. Manages SQL Containers within a Cosmos DB Account.
+    - `partition_key_path`     - (Required) - Define a partition key. Changing this forces a new resource to be created.
+    - `name`                   - (Optional) - Defaults to map key if not specified. Specifies the name of the Cosmos DB SQL Container. Changing this forces a new resource to be created.
+    - `throughput`             - (Optional) - Defaults to `null`. The throughput of SQL container (RU/s). Must be set in increments of `100`. The minimum value is `400`. This must be set upon container creation otherwise it cannot be updated without a manual terraform destroy-apply.
+    - `default_ttl`            - (Optional) - Defaults to `null`. The default time to live of SQL container. If missing, items are not expired automatically. If present and the value is set to `-1`, it is equal to infinity, and items don't expire by default. If present and the value is set to some number n - items will expire n seconds after their last modified time.
+    - `analytical_storage_ttl` - (Optional) - Defaults to `null`. The default time to live of Analytical Storage for this SQL container. If present and the value is set to `-1`, it is equal to infinity, and items don't expire by default. If present and the value is set to some number n - items will expire n seconds after their last modified time.
+
+    - `unique_keys` - (Optional) - Defaults to `[]`. The unique keys of the container.
+      - `paths` - (Required) - A list of paths to use for this unique key. Changing this forces a new resource to be created.
+
+    - `autoscale_settings` - (Optional) - Defaults to `null`. This must be set upon database creation otherwise it cannot be updated without a manual terraform destroy-apply.
+      - `max_throughput` - (Required) - The maximum throughput of the SQL container (RU/s). Must be between `1,000` and `1,000,000`. Must be set in increments of `1,000`. Conflicts with `throughput`.
+
+    - `functions` - (Optional) - Defaults to `{}`. Manages SQL User Defined Functions.
+      - `body` - (Required) - Body of the User Defined Function.
+      - `name` - (Optional) - Defaults to map key if not specified. The name which should be used for this SQL User Defined Function. Changing this forces a new SQL User Defined Function to be created.
+
+    - `stored_procedures` - (Optional) - Defaults to `{}`. Manages SQL Stored Procedures within a Cosmos DB Account SQL Database.
+      - `body` - (Required) - The body of the stored procedure.
+      - `name` - (Optional) - Defaults to map key if not specified. Specifies the name of the Cosmos DB SQL Stored Procedure. Changing this forces a new resource to be created.
+
+    - `triggers` - (Optional) -  Defaults to `{}`. Manages SQL Triggers.
+      - `body`      - (Required) - Body of the Trigger.
+      - `type`      - (Required) - Type of the Trigger. Possible values are `Pre` and `Post`.
+      - `operation` - (Required) - The operation the trigger is associated with. Possible values are `All`, `Create`, `Update`, `Delete` and `Replace`.
+      - `name`      - (Optional) - Defaults to map key if not specified. The name which should be used for this SQL Trigger. Changing this forces a new SQL Trigger to be created.
+
+    - `conflict_resolution_policy` - (Optional) - Defaults to `null`. The conflict resolution policy of the container. Changing this forces a new resource to be created.
+      - `mode`                          - (Required) - Indicates the conflict resolution mode. Possible values include: `LastWriterWins` and `Custom`.
+      - `conflict_resolution_path`      - Required if `LastWriterWins` is set as `mode` - The conflict resolution path.
+      - `conflict_resolution_procedure` - Required if `Custom` is set as `mode` - The procedure to resolve conflicts .
+
+    - `indexing_policy` - (Optional) - Defaults to `{}`. The indexing policy of the container.
+      - `indexing_mode` - (Required) - Indicates the indexing mode. Possible values include: `consistent` and `none`
+
+      - `included_paths` - (Optional) - Defaults to `[]`. Either included\_path or excluded\_path must contain the path `/*`
+        - `path` - (Required) - Path for which the indexing behaviour applies to.
+
+      - `excluded_paths` - (Optional) - Defaults to `[]`. Either included\_path or excluded\_path must contain the path `/*`
+        - `path` - (Required) - Path that is excluded from indexing.
+
+      - `composite_indexes` - (Optional) - Defaults to `[]`. The composite indexes of the indexing policy.
+        - `indexes` - (Required) - The indexes of the composite indexes.
+          - `path`  - (Required) - Path for which the indexing behaviour applies to.
+          - `order` - (Required) - Order of the index. Possible values are `Ascending` or `Descending`.
+
+      - `spatial_indexes` - (Optional) - Defaults to `[]`. The spatial indexes of the indexing policy.
+        - `path` - (Required) -  Path for which the indexing behaviour applies to. According to the service design, all spatial types including LineString, MultiPolygon, Point, and Polygon will be applied to the path.
+
+  > Note: Switching between autoscale and manual throughput is not supported via Terraform and must be completed via the Azure Portal and refreshed.
+  > Note: For indexing policy See more in: https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/how-to-manage-indexing-policy?tabs=dotnetv3%2Cpythonv3  
+
+  Example inputs:
+  ```hcl
+  sql_databases = {
+    database1 = {
+      name       = "database1"
+      throughput = 400
+
+      # autoscale_settings = {
+      #   max_throughput = 4000
+      # }
+
+      containers = {
+        container1 = {
+          partition_key_path = "/id"
+          name               = "container1"
+          throughput         = 400
+          default_ttl        = 1000
+          analytical_storage_ttl = 1000
+
+          unique_keys = [
+            {
+              paths = ["/field1", "/field2"]
+            }
+          ]
+
+          # autoscale_settings = {
+          #   max_throughput = 4000
+          # }
+
+          functions = {
+            function1 = {
+              body = "function function1() { }"
+            }
+          }
+
+          stored_procedures = {
+            stored1 = {
+              body = "function stored1() { }"
+            }
+          }
+
+          triggers = {
+            trigger1 = {
+              body      = "function trigger1() { }"
+              type      = "Pre"
+              operation = "All"
+            }
+          }
+
+          conflict_resolution_policy = {
+            mode                     = "LastWriterWins"
+            conflict_resolution_path = "/customProperty"
+          }
+
+          indexing_policy = {
+            indexing_mode = "consistent"
+
+            included_paths = [
+              {
+                path = "/*"
+              }
+            ]
+
+            excluded_paths = [
+              {
+                path = "/excluded/*"
+              }
+            ]
+
+            composite_indexes = [
+              {
+                indexes = [
+                  {
+                    path  = "/field1"
+                    order = "ascending"
+                  }
+                ]
+              }
+            ]
+
+            spatial_indexes = [
+              {
+                path = "/location/*"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+```
+
+Type:
+
+```hcl
+map(object({
+    name       = optional(string, null)
+    throughput = optional(number, null)
+
+    autoscale_settings = optional(object({
+      max_throughput = number
+    }), null)
+
+    containers = optional(map(object({
+      partition_key_path = string
+
+      name                   = optional(string, null)
+      throughput             = optional(number, null)
+      default_ttl            = optional(number, null)
+      analytical_storage_ttl = optional(number, null)
+
+      unique_keys = optional(list(object({
+        paths = set(string)
+      })), [])
+
+      autoscale_settings = optional(object({
+        max_throughput = number
+      }), null)
+
+      functions = optional(map(object({
+        body = string
+        name = optional(string)
+      })), {})
+
+      stored_procedures = optional(map(object({
+        body = string
+        name = optional(string)
+      })), {})
+
+      triggers = optional(map(object({
+        body      = string
+        type      = string
+        operation = string
+        name      = optional(string)
+      })), {})
+
+      conflict_resolution_policy = optional(object({
+        mode                          = string
+        conflict_resolution_path      = optional(string, null)
+        conflict_resolution_procedure = optional(string, null)
+      }), null)
+
+      indexing_policy = optional(object({
+        indexing_mode = string
+
+        included_paths = optional(set(object({
+          path = string
+        })), [])
+
+        excluded_paths = optional(set(object({
+          path = string
+        })), [])
+
+        composite_indexes = optional(set(object({
+          indexes = set(object({
+            path  = string
+            order = string
+          }))
+        })), [])
+
+        spatial_indexes = optional(set(object({
+          path = string
+        })), [])
+      }), null)
+
+    })), {})
+  }))
+```
+
+Default: `{}`
+
+### <a name="input_sql_dedicated_gateway"></a> [sql\_dedicated\_gateway](#input\_sql\_dedicated\_gateway)
+
+Description:   Defaults to `null`. Manages a SQL Dedicated Gateway within a Cosmos DB Account.
+
+  - `instance_size`  - (Optional) - The instance size for the CosmosDB SQL Dedicated Gateway. Changing this forces a new resource to be created. Possible values are `Cosmos.D4s`, `Cosmos.D8s` and `Cosmos.D16s`
+  - `instance_count` - (Optional) - The instance count for the CosmosDB SQL Dedicated Gateway. Possible value is between `1` and `5`.
+
+  > Note: To create a dedicated gateway in a zone redundant region you must request Azure to enable it into your account. See more in: https://learn.microsoft.com/en-us/azure/cosmos-db/dedicated-gateway#provisioning-the-dedicated-gateway
+
+  Example inputs:
+  ```hcl
+  sql_dedicated_gateway = {
+    instance_count = 1
+    instance_size  = "Cosmos.D4s"
+  }
+```
+
+Type:
+
+```hcl
+object({
+    instance_size  = string
+    instance_count = optional(number, 1)
+  })
+```
+
+Default: `null`
 
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
@@ -671,163 +986,32 @@ Type: `map(string)`
 
 Default: `null`
 
-### <a name="input_topics"></a> [topics](#input\_topics)
+### <a name="input_virtual_network_rules"></a> [virtual\_network\_rules](#input\_virtual\_network\_rules)
 
-Description:   Defaults to `{}`. Ignored for Basic. A map of topics to create.  
-  The name of the topic must be unique among topics and queues within the namespace.
+Description:   Defaults to `[]`. Used to define which subnets are allowed to access this CosmosDB account.
 
-  - `name`                                    - (Optional) - Defaults to `null`. Specifies the name of the ServiceBus Topic resource. Changing this forces a new resource to be created. If it is null it will use the map key as the name.
-  - `max_message_size_in_kilobytes`           - (Optional) - Always set to `256` for Standard by Azure. It's mininum and also defaults is `1024` with maximum value of `102400` for Premium. Integer value which controls the maximum size of a message allowed on the Topic.
-  - `max_size_in_megabytes`                   - (Optional) - Defaults to `1024`. Possible values are `1024`, `2048`, `3072`, `4096`, `5120`, `10240`, `20480`, `40960` and `81920`. Integer value which controls the size of memory allocated for the Topic.
-  - `requires_duplicate_detection`            - (Optional) - Defaults to `false`. Boolean flag which controls whether the Topic requires duplicate detection. Changing this forces a new resource to be created.
-  - `default_message_ttl`                     - (Optional) - Defaults to `null`. Mininum value of `PT5S` (5 seconds) and maximum of `P10675198D` (10675198 days). Set `null` for never. The ISO 8601 timespan duration of the TTL of messages sent to this topic. This is the default value used when TTL is not set on message itself.
-  - `duplicate_detection_history_time_window` - (Optional) - Defaults to `PT10M` (10 minutes). Minimun of `PT20S` (seconds) and Maximun of `P7D` (7 days). The ISO 8601 timespan duration during which duplicates can be detected.
-  - `status`                                  - (Optional) - Defaults to `Active`. The status of the Topic. Possible values are Active, Creating, Deleting, Disabled, ReceiveDisabled, Renaming, SendDisabled, Unknown.
-  - `enable_batched_operations`               - (Optional) - Defaults to `true`. Boolean flag which controls whether server-side batched operations are enabled.
-  - `auto_delete_on_idle`                     - (Optional) - Defaults to `null`. Minimum of `PT5M` (5 minutes) and maximum of `P10675198D` (10675198 days). Set `null` for never. The ISO 8601 timespan duration of the idle interval after which the Topic is automatically deleted.
-  - `enable_partitioning`                     - (Optional) - Defaults to `false` for Standard. For Premium if premium\_messaging\_partitions is greater than `1` it will always be set to true if not it will be set to `false`. Boolean flag which controls whether to enable the topic to be partitioned across multiple message brokers. Changing this forces a new resource to be created.
-  - `enable_express`                          - (Optional) - Defaults to `false` for Standard. Always set to `false` for Premium. Boolean flag which controls whether Express Entities are enabled. An express topic holds a message in memory temporarily before writing it to persistent storage.
-  - `support_ordering`                        - (Optional) - Defaults to `false`. Boolean flag which controls whether the Topic supports ordering.
+  - `subnet_id` - (Required) - The ID of the virtual network subnet.
 
-  - `authorization_rules` - (Optional) - Defaults to `{}`.
-    - `name`   - (Optional) - Defaults to `null`. Specifies the name of the ServiceBus Topic Authorization Rule resource. Changing this forces a new resource to be created. If it is null it will use the map key as the name.
-    - `send`   - (Optional) - Always set to `true` when manage is `true` if not it will default to `false`. Does this Authorization Rule have Listen permissions to the ServiceBus Topic?
-    - `listen` - (Optional) - Always set to `true` when manage is `true` if not it will default to `false`. Does this Authorization Rule have Send permissions to the ServiceBus Topic?
-    - `manage` - (Optional) - Defaults to `false`. Does this Authorization Rule have Manage permissions to the ServiceBus Topic?
+  > Note: Remember to enable Microsoft.AzureCosmosDB service endpoint on the subnet.
 
-  - `subscriptions - (Optional) - Defaults to `{}`.
-    - `name`                                      - (Optional) - Defaults to `null`. Specifies the name of the ServiceBus Subscription resource. Changing this forces a new resource to be created. If it is null it will use the map key as the name.
-    - `max\_delivery\_count`                        - (Optional) - Defaults to `10`. Minimum of `1` and Maximun of `2147483647`. Integer value which controls when a message is automatically dead lettered.
-    - `dead\_lettering\_on\_filter\_evaluation\_error` - (Optional) - Defaults to `true`. Boolean flag which controls whether the Subscription has dead letter support on filter evaluation exceptions
-    - `dead\_lettering\_on\_message\_expiration`      - (Optional) - Defaults to `false`. Boolean flag which controls whether the Subscription has dead letter support when a message expires.
-    - `enable\_batched\_operations`                 - (Optional) - Defaults to `true`. Boolean flag which controls whether the Subscription supports batched operations.
-    - `requires\_session`                          - (Optional) - Defaults to `false`. Boolean flag which controls whether this Subscription supports the concept of a session. Changing this forces a new resource to be created.
-    - `forward\_to`                                - (Optional) - Defaults to `null`. The name of a Queue or Topic to automatically forward messages to.
-    - `forward\_dead\_lettered\_messages\_to`         - (Optional) - Defaults to `null`. The name of a Queue or Topic to automatically forward dead lettered messages to
-    - `auto\_delete\_on\_idle`                       - (Optional) - Defaults to `null`. Minimum of `PT5M` (5 minutes) and maximum of `P10675198D` (10675198 days). Set `null` for never. The ISO 8601 timespan duration of the idle interval after which the Topic is automatically deleted.
-    - `default\_message\_ttl`                       - (Optional) - Defaults to `null`. Mininum value of `PT5S` (5 seconds) and maximum of `P10675198D` (10675198 days). Set `null` for never. The ISO 8601 timespan duration of the TTL of messages sent to this queue. This is the default value used when TTL is not set on message itself.
-    - `lock\_duration`                             - (Optional) - Its minimum and default value is `PT1M` (1 minute). Maximum value is `PT5M` (5 minutes). The ISO 8601 timespan duration of a peek-lock; that is, the amount of time that the message is locked for other receivers.
-    - `status`                                    - (Optional) - Defaults to `Active`. The status of the Subscription. Possible values are Active, ReceiveDisabled, Disabled.
-
-  - `role\_assignments - (Optional) - Defaults to `{}`. A map of role assignments to create. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-    - `role_definition_id_or_name`             - (Required) - The ID or name of the role definition to assign to the principal.
-    - `principal_id`                           - (Required) - It's a GUID - The ID of the principal to assign the role to.
-    - `description`                            - (Optional) - Defaults to `null`. The description of the role assignment.
-    - `delegated_managed_identity_resource_id` - (Optional) - Defaults to `null`. The delegated Azure Resource Id which contains a Managed Identity. This field is only used in cross tenant scenario. Changing this forces a new resource to be created.
-    - `skip_service_principal_aad_check`       - (Optional) - Defaults to `false`. If the principal\_id is a newly provisioned Service Principal set this value to true to skip the Azure Active Directory check which may fail due to replication lag. This argument is only valid if the principal\_id is a Service Principal identity.
-
-  Example Inputs:
+  Example inputs:
   ```hcl
-  topics = {
-    testTopic = {
-      auto_delete_on_idle                     = "P7D"
-      default_message_ttl                     = "PT5M"
-      duplicate_detection_history_time_window = "PT5M"
-      enable_batched_operations               = true
-      enable_express                          = false
-      enable_partitioning                     = true
-      requires_duplicate_detection            = true
-      max_message_size_in_kilobytes           = 1024
-      max_size_in_megabytes                   = 1024
-      status                                  = "Active"
-      support_ordering                        = true
-
-      subscriptions = {
-        testSubscription = {
-          dead_lettering_on_filter_evaluation_error = true
-          dead_lettering_on_message_expiration      = true
-          default_message_ttl                       = "PT5M"
-          enable_batched_operations                 = true
-          lock_duration                             = "PT1M"
-          max_delivery_count                        = 100
-          status                                    = "Active"
-          auto_delete_on_idle                       = "P7D"
-          requires_session                          = false
-          forward_dead_lettered_messages_to         = "forwardTopic"
-          forward_to                                = "forwardTopic"
-        }
-      }
-
-      role_assignments = {
-        "key" = {
-          skip_service_principal_aad_check = false
-          role_definition_id_or_name       = "Contributor"
-          description                      = "This is a test role assignment"
-          principal_id                     = "eb5260bd-41f3-4019-9e03-606a617aec13"
-        }
-      }
-      
-      authorization_rules = {
-        testRule = {
-          send   = true
-          listen = true
-          manage = true
-        }
-      }
+  virtual_network_rule = [
+    {
+      subnet_id = "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{vnetName}/subnets/{subnetName}"
     }
-  }
+  ]
 ```
 
 Type:
 
 ```hcl
-map(object({
-    name                                    = optional(string, null)
-    enable_batched_operations               = optional(bool, true)
-    requires_duplicate_detection            = optional(bool, false)
-    enable_partitioning                     = optional(bool, null)
-    enable_express                          = optional(bool, null)
-    support_ordering                        = optional(bool, false)
-    max_message_size_in_kilobytes           = optional(number, null)
-    default_message_ttl                     = optional(string, null)
-    auto_delete_on_idle                     = optional(string, null)
-    max_size_in_megabytes                   = optional(number, 1024)
-    duplicate_detection_history_time_window = optional(string, "PT10M")
-    status                                  = optional(string, "Active")
-
-    authorization_rules = optional(map(object({
-      name   = optional(string, null)
-      send   = optional(bool, false)
-      listen = optional(bool, false)
-      manage = optional(bool, false)
-    })), {})
-
-    subscriptions = optional(map(object({
-      name                                      = optional(string, null)
-      max_delivery_count                        = optional(number, 10)
-      dead_lettering_on_filter_evaluation_error = optional(bool, true)
-      enable_batched_operations                 = optional(bool, true)
-      dead_lettering_on_message_expiration      = optional(bool, false)
-      requires_session                          = optional(bool, false)
-      forward_to                                = optional(string, null)
-      forward_dead_lettered_messages_to         = optional(string, null)
-      auto_delete_on_idle                       = optional(string, null)
-      default_message_ttl                       = optional(string, null)
-      lock_duration                             = optional(string, "PT1M")
-      status                                    = optional(string, "Active")
-    })), {})
-
-    role_assignments = optional(map(object({
-      role_definition_id_or_name = string
-      principal_id               = string
-
-      description                            = optional(string, null)
-      skip_service_principal_aad_check       = optional(bool, false)
-      delegated_managed_identity_resource_id = optional(string, null)
-    })), {})
+set(object({
+    subnet_id = string
   }))
 ```
 
-Default: `{}`
-
-### <a name="input_zone_redundant"></a> [zone\_redundant](#input\_zone\_redundant)
-
-Description:   Always set to `false` for Standard and Basic. Defaults to `true` for Premium. Whether or not this resource is zone redundant.   
-  Changing this forces a new resource to be created.
-
-Type: `bool`
-
-Default: `null`
+Default: `[]`
 
 ## Outputs
 
@@ -835,11 +1019,7 @@ The following outputs are exported:
 
 ### <a name="output_resource"></a> [resource](#output\_resource)
 
-Description: The service bus namespace created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/servicebus_namespace.html#attributes-reference
-
-### <a name="output_resource_authorization_rules"></a> [resource\_authorization\_rules](#output\_resource\_authorization\_rules)
-
-Description: The service bus namespace authorization rules created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/servicebus_namespace_authorization_rule#attributes-reference
+Description: The cosmos db account created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_account#attributes-reference
 
 ### <a name="output_resource_diagnostic_settings"></a> [resource\_diagnostic\_settings](#output\_resource\_diagnostic\_settings)
 
@@ -857,29 +1037,9 @@ Description: A map of the private endpoints created. More info: https://registry
 
 Description: The private endpoint application security group associations created
 
-### <a name="output_resource_queues"></a> [resource\_queues](#output\_resource\_queues)
-
-Description: The service bus queues created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint_application_security_group_association#attributes-reference
-
-### <a name="output_resource_queues_authorization_rules"></a> [resource\_queues\_authorization\_rules](#output\_resource\_queues\_authorization\_rules)
-
-Description: The service bus queues authorization rules created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/servicebus_queue_authorization_rule#attributes-reference
-
 ### <a name="output_resource_role_assignments"></a> [resource\_role\_assignments](#output\_resource\_role\_assignments)
 
 Description: The role assignments created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment#attributes-reference
-
-### <a name="output_resource_topics"></a> [resource\_topics](#output\_resource\_topics)
-
-Description: The service bus topics created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/servicebus_topic.html#attributes-reference
-
-### <a name="output_resource_topics_authorization_rules"></a> [resource\_topics\_authorization\_rules](#output\_resource\_topics\_authorization\_rules)
-
-Description: The service bus topics authorization rules created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/servicebus_topic_authorization_rule#attributes-reference
-
-### <a name="output_resource_topics_subscriptions"></a> [resource\_topics\_subscriptions](#output\_resource\_topics\_subscriptions)
-
-Description: The service bus topic subscriptions created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/servicebus_subscription#attributes-reference
 
 ## Modules
 

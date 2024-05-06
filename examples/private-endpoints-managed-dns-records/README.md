@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
 # Private endpoint example
 
-This example deploys the module with public network access restricted and multiple private endpoint combinations.
+This example deploys the module with public network access restricted and multiple private endpoint combinations. It also configures the auto management of dns records
 
 ```hcl
 terraform {
@@ -53,7 +53,7 @@ module "naming" {
 
 resource "azurerm_resource_group" "example" {
   name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
-  location = module.regions.regions[random_integer.region_index.result].name
+  location = "northeurope"
 }
 
 resource "azurerm_virtual_network" "example" {
@@ -73,7 +73,7 @@ resource "azurerm_subnet" "example" {
 }
 
 resource "azurerm_private_dns_zone" "example" {
-  name                = "privatelink.servicebus.core.windows.net"
+  name                = "privatelink.documents.azure.com"
   resource_group_name = azurerm_resource_group.example.name
 }
 
@@ -92,20 +92,31 @@ resource "azurerm_application_security_group" "example" {
   location            = azurerm_resource_group.example.location
 }
 
-module "servicebus" {
+module "cosmos" {
   source = "../../"
 
-  sku                           = "Premium"
-  resource_group_name           = azurerm_resource_group.example.name
-  location                      = azurerm_resource_group.example.location
-  name                          = "${module.naming.servicebus_namespace.name_unique}-${local.prefix}"
-  public_network_access_enabled = false
+  resource_group_name                     = azurerm_resource_group.example.name
+  location                                = azurerm_resource_group.example.location
+  name                                    = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
+  public_network_access_enabled           = false
+  private_endpoints_manage_dns_zone_group = true
+
+  geo_locations = [
+    {
+      failover_priority = 0
+      location          = azurerm_resource_group.example.location
+    }
+  ]
 
   private_endpoints = {
     max = {
-      name                        = "max"
-      private_dns_zone_group_name = "max_group"
-      subnet_resource_id          = azurerm_subnet.example.id
+      name                            = "max"
+      subresource_name                = "SQL"
+      network_interface_name          = "max_nic1"
+      private_dns_zone_group_name     = "max_dns_group"
+      private_service_connection_name = "max_connection"
+      subnet_resource_id              = azurerm_subnet.example.id
+      private_dns_zone_resource_ids   = [azurerm_private_dns_zone.example.id]
 
       role_assignments = {
         key = {
@@ -130,28 +141,13 @@ module "servicebus" {
       }
     }
 
-    staticIp = {
-      name                   = "staticIp"
-      network_interface_name = "nic1"
-      subnet_resource_id     = azurerm_subnet.example.id
-
-      ip_configurations = {
-        ipconfig1 = {
-          name               = "ipconfig1"
-          private_ip_address = "10.0.0.7"
-        }
-      }
-    }
-
     noDnsGroup = {
-      name               = "noDnsGroup"
+      subresource_name   = "SQL"
       subnet_resource_id = azurerm_subnet.example.id
     }
 
     withDnsGroup = {
-      name                        = "withDnsGroup"
-      private_dns_zone_group_name = "withDnsGroup_group"
-
+      subresource_name              = "SQL"
       subnet_resource_id            = azurerm_subnet.example.id
       private_dns_zone_resource_ids = [azurerm_private_dns_zone.example.id]
     }
@@ -208,6 +204,12 @@ No outputs.
 
 The following Modules are called:
 
+### <a name="module_cosmos"></a> [cosmos](#module\_cosmos)
+
+Source: ../../
+
+Version:
+
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
 Source: Azure/naming/azurerm
@@ -219,12 +221,6 @@ Version: >= 0.3.0
 Source: Azure/regions/azurerm
 
 Version: >= 0.3.0
-
-### <a name="module_servicebus"></a> [servicebus](#module\_servicebus)
-
-Source: ../../
-
-Version:
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

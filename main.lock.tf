@@ -14,7 +14,7 @@ resource "azurerm_management_lock" "this" {
 
   depends_on = [
     azurerm_cosmosdb_account.this,
-    
+
     azurerm_monitor_diagnostic_setting.this, azurerm_role_assignment.this,
     azurerm_private_endpoint_application_security_group_association.this,
     azurerm_private_endpoint.this_managed_dns_zone_groups, azurerm_private_endpoint.this_unmanaged_dns_zone_groups
