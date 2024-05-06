@@ -112,13 +112,6 @@ module "cosmos" {
       subnet_resource_id              = azurerm_subnet.example.id
       private_dns_zone_resource_ids   = [azurerm_private_dns_zone.example.id]
 
-      ip_configurations = {
-        maxIpConfig = {
-          name               = "maxIpConfig"
-          private_ip_address = "10.0.0.6"
-        }
-      }
-
       role_assignments = {
         key = {
           role_definition_id_or_name = "Contributor"
@@ -139,18 +132,6 @@ module "cosmos" {
 
       application_security_group_associations = {
         asg1 = azurerm_application_security_group.example.id
-      }
-    }
-
-    staticIp = {
-      subresource_name   = "SQL"
-      subnet_resource_id = azurerm_subnet.example.id
-
-      ip_configurations = {
-        staticIpConfig = {
-          name               = "staticIpConfig"
-          private_ip_address = "10.0.0.7"
-        }
       }
     }
 
