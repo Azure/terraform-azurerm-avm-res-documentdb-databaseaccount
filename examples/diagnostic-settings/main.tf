@@ -24,7 +24,6 @@ provider "azurerm" {
 
 locals {
   prefix = "diag"
-  skus   = ["Basic", "Standard", "Premium"]
 }
 
 module "regions" {

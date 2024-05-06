@@ -2,7 +2,7 @@
 resource "azurerm_private_endpoint" "this_managed_dns_zone_groups" {
   for_each = var.private_endpoints_manage_dns_zone_group ? var.private_endpoints : {}
 
-  name = coalesce(each.value.name, "pep-${var.name}")
+  name = coalesce(each.value.name, "pep-${each.key}")
 
   subnet_id                     = each.value.subnet_resource_id
   custom_network_interface_name = each.value.network_interface_name
@@ -11,11 +11,11 @@ resource "azurerm_private_endpoint" "this_managed_dns_zone_groups" {
   tags                          = each.value.tags == null ? var.tags : each.value.tags == {} ? {} : each.value.tags
 
   private_service_connection {
-    name = coalesce(each.value.private_service_connection_name, "pse-${var.name}")
+    name = coalesce(each.value.private_service_connection_name, "pse-${each.key}")
 
     is_manual_connection           = false
+    subresource_names              = [each.value.subresource_name]
     private_connection_resource_id = azurerm_cosmosdb_account.this.id
-    subresource_names              = [local.service_name]
   }
 
   dynamic "private_dns_zone_group" {
@@ -32,8 +32,8 @@ resource "azurerm_private_endpoint" "this_managed_dns_zone_groups" {
 
     content {
       name               = ip_configuration.value.name
-      subresource_name   = local.service_name
-      member_name        = local.service_name
+      subresource_name   = each.value.subresource_name
+      member_name        = each.value.subresource_name
       private_ip_address = ip_configuration.value.private_ip_address
     }
   }
@@ -43,7 +43,7 @@ resource "azurerm_private_endpoint" "this_managed_dns_zone_groups" {
 resource "azurerm_private_endpoint" "this_unmanaged_dns_zone_groups" {
   for_each = var.private_endpoints_manage_dns_zone_group == false ? var.private_endpoints : {}
 
-  name = coalesce(each.value.name, "pep-${var.name}")
+  name = coalesce(each.value.name, "pep-${each.key}")
 
   subnet_id                     = each.value.subnet_resource_id
   custom_network_interface_name = each.value.network_interface_name
@@ -52,11 +52,11 @@ resource "azurerm_private_endpoint" "this_unmanaged_dns_zone_groups" {
   tags                          = each.value.tags == null ? var.tags : each.value.tags == {} ? {} : each.value.tags
 
   private_service_connection {
-    name = coalesce(each.value.private_service_connection_name, "pse-${var.name}")
+    name = coalesce(each.value.private_service_connection_name, "pse-${each.key}")
 
     is_manual_connection           = false
+    subresource_names              = [each.value.subresource_name]
     private_connection_resource_id = azurerm_cosmosdb_account.this.id
-    subresource_names              = [local.service_name]
   }
 
   dynamic "ip_configuration" {
@@ -65,8 +65,8 @@ resource "azurerm_private_endpoint" "this_unmanaged_dns_zone_groups" {
     content {
       name = ip_configuration.value.name
 
-      subresource_name   = local.service_name
-      member_name        = local.service_name
+      subresource_name   = each.value.subresource_name
+      # member_name        = each.value.subresource_name
       private_ip_address = ip_configuration.value.private_ip_address
     }
   }

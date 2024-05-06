@@ -26,7 +26,6 @@ data "azurerm_client_config" "current" {}
 
 locals {
   prefix = "max"
-  skus   = ["Basic", "Standard", "Premium"]
 }
 
 module "regions" {
@@ -48,34 +47,26 @@ module "naming" {
 
 resource "azurerm_resource_group" "example" {
   name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
-  location = "westeurope" # This test case in Premium SKU is not supported in some of the recommended regions. Pinned to an specific one to make the test more reliable. #module.regions.regions[random_integer.region_index.result].name
+  location = "northeurope" # This test case in Premium SKU is not supported in some of the recommended regions. Pinned to an specific one to make the test more reliable. #module.regions.regions[random_integer.region_index.result].name
 }
 
-module "servicebus" {
+module "cosmos" {
   source = "../../"
 
-  for_each = toset(local.skus)
-
-  sku                                     = each.value
   resource_group_name                     = azurerm_resource_group.example.name
   location                                = azurerm_resource_group.example.location
-  name                                    = "${module.naming.servicebus_namespace.name_unique}-${each.value}-${local.prefix}"
-  capacity                                = 2
-  local_auth_enabled                      = true
-  minimum_tls_version                     = "1.2"
+  name                                    = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
   public_network_access_enabled           = true
-  premium_messaging_partitions            = 2
-  zone_redundant                          = true
   enable_telemetry                        = true
   private_endpoints_manage_dns_zone_group = true
 
-  authorization_rules = {
-    testRule = {
-      send   = true
-      listen = true
-      manage = true
+  geo_locations = [
+    {
+      failover_priority = 0
+      zone_redundant    = true
+      location          = azurerm_resource_group.example.location
     }
-  }
+  ]
 
   tags = {
     environment = "testing"

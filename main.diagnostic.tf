@@ -1,7 +1,7 @@
 resource "azurerm_monitor_diagnostic_setting" "this" {
   for_each = var.diagnostic_settings
 
-  name = coalesce(each.value.name, "diag-${var.name}")
+  name = coalesce(each.value.name, "diag-${each.key}")
 
   target_resource_id = azurerm_cosmosdb_account.this.id
 
