@@ -61,8 +61,8 @@ resource "azurerm_cosmosdb_sql_container" "this" {
     content {
       mode = each.value.container_params.conflict_resolution_policy.mode
 
-      conflict_resolution_path      = each.value.container_params.conflict_resolution_policy.conflict_resolution_path
-      conflict_resolution_procedure = each.value.container_params.conflict_resolution_policy.conflict_resolution_procedure
+      conflict_resolution_path      = each.value.container_params.conflict_resolution_policy.mode == "LastWriterWins" ? each.value.container_params.conflict_resolution_policy.conflict_resolution_path : null
+      conflict_resolution_procedure = each.value.container_params.conflict_resolution_policy.mode == "Custom" ? "dbs/{${each.value.db_name}}/colls/{${each.value.container_name}}/sprocs/{${each.value.container_params.conflict_resolution_policy.conflict_resolution_procedure}}" : null
     }
   }
 
@@ -133,4 +133,16 @@ resource "azurerm_cosmosdb_sql_stored_procedure" "this" {
   resource_group_name = azurerm_cosmosdb_account.this.resource_group_name
   database_name       = azurerm_cosmosdb_sql_database.this[each.value.db_name].name
   container_name      = azurerm_cosmosdb_sql_container.this[each.value.container_key].name
+}
+
+resource "azurerm_cosmosdb_sql_trigger" "example" {
+  for_each = local.sql_container_triggers
+
+  name = each.value.trigger_name
+
+  body      = each.value.trigger_params.body
+  type      = each.value.trigger_params.type
+  operation = each.value.trigger_params.operation
+
+  container_id = azurerm_cosmosdb_sql_container.this[each.value.container_key].id
 }

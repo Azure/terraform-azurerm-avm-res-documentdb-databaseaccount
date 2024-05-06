@@ -40,6 +40,12 @@ variable "sql_databases" {
         name      = optional(string)
       })), {})
 
+      conflict_resolution_policy = optional(object({
+        mode                          = string
+        conflict_resolution_path      = optional(string, null)
+        conflict_resolution_procedure = optional(string, null)
+      }), null)
+
       indexing_policy = optional(object({
         indexing_mode = optional(string, "consistent")
 
@@ -63,11 +69,6 @@ variable "sql_databases" {
         })), [])
       }), null)
 
-      conflict_resolution_policy = optional(object({
-        mode                          = string
-        conflict_resolution_path      = optional(string, null)
-        conflict_resolution_procedure = optional(string, null)
-      }), null)
     })), {})
   }))
   nullable    = false
@@ -78,9 +79,29 @@ variable "sql_databases" {
 
   validation {
     condition = alltrue(
+      [
+        for key, value in var.sql_databases : 
+        try(value.default_ttl, null) != null ? value.default_ttl >= -1 && value.default_ttl <= 2147483647 : true
+      ]
+    )
+    error_message = "The 'default_ttl' in the database value must be between -1 and 2147483647 if specified."
+  }
+
+  validation {
+    condition = alltrue(
+      [
+        for key, value in var.sql_databases : 
+        try(value.analytical_storage_ttl, null) != null ? value.analytical_storage_ttl >= -1 && value.analytical_storage_ttl <= 2147483647 : true
+      ]
+    )
+    error_message = "The 'analytical_storage_ttl' in the database value must be between -1 and 2147483647 if specified."
+  }
+
+  validation {
+    condition = alltrue(
       [for key, value in var.sql_databases : value.throughput != null ? value.throughput >= 1 : true]
     )
-    error_message = "The 'throughput' in the database value must be greater than 0 if specified."
+    error_message = "The 'throughput' in the database value must be greater than or equal to 1 if specified."
   }
 
   validation {
@@ -127,5 +148,98 @@ variable "sql_databases" {
       ])
     )
     error_message = "The 'conflict_resolution_path' must be specified when the conflict resolution mode is 'LastWriterWins'."
+  }
+
+  validation {
+    condition = alltrue(
+      flatten([
+        for db_key, db_params in var.sql_databases : 
+          [
+            for container_key, container_params in db_params.containers :
+            try(container_params.conflict_resolution_policy.mode, "") == "Custom" ? try(container_params.conflict_resolution_policy.conflict_resolution_procedure, null) != null : true
+          ]
+      ])
+    )
+    error_message = "The 'conflict_resolution_procedure' must be specified when the conflict resolution mode is 'Custom'."
+  }
+
+  validation {
+    condition = alltrue(
+      flatten([
+        for db_key, db_params in var.sql_databases : 
+          [
+            for container_key, container_params in db_params.containers :
+            [
+              for trigger_key, trigger_params in container_params.triggers :
+              contains(["Pre", "Post"], trigger_params.type)
+            ]
+          ]
+      ])
+    )
+    error_message = "The 'type' in the trigger value must be either 'Pre' or 'Post'."
+  }
+
+  validation {
+    condition = alltrue(
+      flatten([
+        for db_key, db_params in var.sql_databases : 
+          [
+            for container_key, container_params in db_params.containers :
+            [
+              for trigger_key, trigger_params in container_params.triggers :
+              contains(["All", "Create", "Delete", "Replace", "Update"], trigger_params.operation)
+            ]
+          ]
+      ])
+    )
+    error_message = "The 'operation' in the trigger value must be either 'All', 'Create', 'Delete', 'Replace', or 'Update'."
+  }
+
+  validation {
+    condition = alltrue(
+      flatten([
+        for db_key, db_params in var.sql_databases : 
+          [
+            for container_key, container_params in db_params.containers :
+            [
+              for trigger_key, trigger_params in container_params.triggers :
+              trimspace(coalesce(trigger_params.body, "")) != ""
+            ]
+          ]
+      ])
+    )
+    error_message = "The 'body' in the trigger value must not be empty."
+  }
+
+  validation {
+    condition = alltrue(
+      flatten([
+        for db_key, db_params in var.sql_databases : 
+          [
+            for container_key, container_params in db_params.containers :
+            [
+              for function_key, function_params in container_params.functions :
+              trimspace(coalesce(function_params.body, "")) != ""
+            ]
+          ]
+      ])
+    )
+    error_message = "The 'body' in the function value must not be empty."
+  }
+
+  validation {
+    condition = alltrue(
+      flatten([
+        for db_key, db_params in var.sql_databases : 
+          [
+            for container_key, container_params in db_params.containers :
+            [
+              for stored_key, stored_params in container_params.stored_procedures :
+              trimspace(coalesce(stored_params.body, "")) != ""
+            ]
+          ]
+      ])
+    )
+    error_message = "The 'body' in the stored procedures value must not be empty."
   }
 }

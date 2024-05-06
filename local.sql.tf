@@ -60,4 +60,24 @@ locals {
     for sql_container_stored_procedure in local.flatten_sql_container_stored_procedures :
     "${sql_container_stored_procedure.db_name}|${sql_container_stored_procedure.container_name}|${sql_container_stored_procedure.stored_name}" => sql_container_stored_procedure
   }
+
+  flatten_sql_container_triggers = flatten(
+    [
+      for sql_container_key, sql_container in local.sql_containers :
+      [
+        for trigger_key, trigger_params in sql_container.container_params.triggers : {
+          trigger_params = trigger_params
+          container_key  = sql_container_key
+          db_name        = sql_container.db_name
+          container_name = sql_container.container_name
+          trigger_name   = coalesce(trigger_params.name, trigger_key)
+        }
+      ]
+    ]
+  )
+
+  sql_container_triggers = {
+    for sql_container_trigger in local.flatten_sql_container_triggers :
+    "${sql_container_trigger.db_name}|${sql_container_trigger.container_name}|${sql_container_trigger.trigger_name}" => sql_container_trigger
+  }
 }

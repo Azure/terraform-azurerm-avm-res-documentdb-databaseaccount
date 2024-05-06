@@ -140,6 +140,21 @@ module "cosmos" {
           }
         }
 
+        container_conflict_resolution_with_stored_procedure = {
+          partition_key_path = "/id"
+
+          conflict_resolution_policy = {
+            mode                          = "Custom"
+            conflict_resolution_procedure = "resolver"
+          }
+
+          stored_procedures = {
+            resolver = {
+              body = "function resolver(incomingItem, existingItem, isTombstone, conflictingItems) { }"
+            }
+          }
+        }
+
         container_with_functions = {
           partition_key_path = "/id"
 
@@ -152,15 +167,28 @@ module "cosmos" {
 
         container_with_stored_procedures = {
           partition_key_path = "/id"
-          
+
           stored_procedures = {
-            helloworld = {
+            empty = {
               body = <<BODY
-                function helloworld() { var context = getContext(); var response = context.getResponse(); response.setBody('Hello, World'); }
+                function empty() { }
               BODY
             }
           }
         }
+
+        container_with_triggers = {
+          partition_key_path = "/id"
+
+          triggers = {
+            testTrigger = {
+              body      = "function testTrigger(){}"
+              operation = "Delete"
+              type      = "Post"
+            }
+          }
+        }
+
       }
     }
   }
