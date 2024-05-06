@@ -27,7 +27,7 @@ jobs:
 
   testexamples:
     if: github.event.repository.name != 'terraform-azurerm-avm-template'
-    runs-on: [ self-hosted, 1ES.Pool=b1caa3c33767a0e06d423064be43099a8983a229 ]
+    runs-on: [ self-hosted, 1ES.Pool=029722365641ae52e6893ff331a621ecbcf8da7d ]
     needs: getexamples
     environment: test
     env:
@@ -44,7 +44,7 @@ jobs:
         shell: bash
         run: |
           set -e
-           MAX_RETRIES=10
+            MAX_RETRIES=10
           RETRY_COUNT=0
           until [ $RETRY_COUNT -ge $MAX_RETRIES ]
           do
