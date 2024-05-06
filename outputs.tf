@@ -4,6 +4,36 @@ output "resource" {
   sensitive   = true
 }
 
+output "sql_databases" {
+  value       = azurerm_cosmosdb_sql_database.this
+  description = "The value of the sql databases created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_database#attributes-reference"
+}
+
+output "sql_containers" {
+  value       = azurerm_cosmosdb_sql_container.this
+  description = "The value of the sql containers created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_container#attributes-reference"
+}
+
+output "sql_dedicated_gateway" {
+  value       = azurerm_cosmosdb_sql_dedicated_gateway.this
+  description = "The value of the sql dedicated gateway created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_dedicated_gateway#attributes-reference"
+}
+
+output "sql_functions" {
+  value       = azurerm_cosmosdb_sql_function.this
+  description = "The value of the sql functions created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_function#attributes-reference"
+}
+
+output "sql_stored_procedures" {
+  value       = azurerm_cosmosdb_sql_stored_procedure.this
+  description = "The value of the sql stored procedures created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_stored_procedure#attributes-reference"
+}
+
+output "sql_triggers" {
+  value       = azurerm_cosmosdb_sql_trigger.this
+  description = "The value of the sql triggers created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_trigger#attributes-reference"
+}
+
 output "resource_diagnostic_settings" {
   value       = azurerm_monitor_diagnostic_setting.this
   description = "The diagnostic settings created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting#attributes-reference"

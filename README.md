@@ -1041,6 +1041,30 @@ Description: The private endpoint application security group associations create
 
 Description: The role assignments created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment#attributes-reference
 
+### <a name="output_sql_containers"></a> [sql\_containers](#output\_sql\_containers)
+
+Description: The value of the sql containers created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_container#attributes-reference
+
+### <a name="output_sql_databases"></a> [sql\_databases](#output\_sql\_databases)
+
+Description: The value of the sql databases created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_database#attributes-reference
+
+### <a name="output_sql_dedicated_gateway"></a> [sql\_dedicated\_gateway](#output\_sql\_dedicated\_gateway)
+
+Description: The value of the sql dedicated gateway created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_dedicated_gateway#attributes-reference
+
+### <a name="output_sql_functions"></a> [sql\_functions](#output\_sql\_functions)
+
+Description: The value of the sql functions created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_function#attributes-reference
+
+### <a name="output_sql_stored_procedures"></a> [sql\_stored\_procedures](#output\_sql\_stored\_procedures)
+
+Description: The value of the sql stored procedures created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_stored_procedure#attributes-reference
+
+### <a name="output_sql_triggers"></a> [sql\_triggers](#output\_sql\_triggers)
+
+Description: The value of the sql triggers created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_trigger#attributes-reference
+
 ## Modules
 
 No modules.

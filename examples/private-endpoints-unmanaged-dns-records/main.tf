@@ -25,7 +25,7 @@ provider "azurerm" {
 data "azurerm_client_config" "current" {}
 
 locals {
-  prefix = "pe-mng"
+  prefix = "pe-umg"
 }
 
 module "regions" {
@@ -93,7 +93,7 @@ module "cosmos" {
   location                                = azurerm_resource_group.example.location
   name                                    = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
   public_network_access_enabled           = false
-  private_endpoints_manage_dns_zone_group = true
+  private_endpoints_manage_dns_zone_group = false
 
   geo_locations = [
     {
