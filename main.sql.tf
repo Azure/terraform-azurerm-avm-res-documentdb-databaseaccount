@@ -15,13 +15,6 @@ resource "azurerm_cosmosdb_sql_database" "this" {
       max_throughput = each.value.autoscale_settings.max_throughput
     }
   }
-
-  lifecycle {
-    precondition {
-      condition     = try(each.value.autoscale_settings.max_throughput, null) != null && each.value.throughput != null ? false : true
-      error_message = "The 'throughput' and 'autoscale_settings.max_throughput' cannot be specified at the same time."
-    }
-  }
 }
 
 resource "azurerm_cosmosdb_sql_container" "this" {
@@ -152,6 +145,6 @@ resource "azurerm_cosmosdb_sql_dedicated_gateway" "this" {
 
   instance_count = var.sql_dedicated_gateway.instance_count
   instance_size  = var.sql_dedicated_gateway.instance_size
-  
+
   cosmosdb_account_id = azurerm_cosmosdb_account.this.id
 }

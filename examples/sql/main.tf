@@ -64,6 +64,14 @@ module "cosmos" {
   ]
 
   sql_databases = {
+    empty_database = {
+      containers = {
+        empty_container = {
+          partition_key_path = "/id"
+        }
+      }
+    }
+
     database_fixed_througput = {
       throughput = 400
     }
@@ -76,9 +84,12 @@ module "cosmos" {
 
     database_and_container_fixed_througput = {
       throughput = 400
-      container_fixed_througput = {
-        partition_key_path = "/id"
-        throughput         = 400
+
+      containers = {
+        container_fixed_througput = {
+          partition_key_path = "/id"
+          throughput         = 400
+        }
       }
     }
 
@@ -86,10 +97,14 @@ module "cosmos" {
       autoscale_settings = {
         max_throughput = 4000
       }
-      container_fixed_througput = {
-        partition_key_path = "/id"
-        autoscale_settings = {
-          max_throughput = 4000
+
+      containers = {
+        container_fixed_througput = {
+          partition_key_path = "/id"
+
+          autoscale_settings = {
+            max_throughput = 4000
+          }
         }
       }
     }
@@ -186,6 +201,52 @@ module "cosmos" {
               operation = "Delete"
               type      = "Post"
             }
+          }
+        }
+
+        container_with_none_index_policy = {
+          partition_key_path = "/id"
+
+          indexing_policy = {
+            indexing_mode = "none"
+          }
+        }
+
+        container_with_consistent_index_policy = {
+          partition_key_path = "/id"
+
+          indexing_policy = {
+            indexing_mode = "consistent"
+            
+            included_paths = [
+              {
+                path = "/*" 
+              }
+            ]
+            excluded_paths = [
+              {
+                path = "/field1/?"
+              }
+            ]
+            spatial_indexes = [
+              {
+                path = "/field2/?"
+              }
+            ]
+            composite_indexes = [
+              {
+                indexes = [
+                  {
+                    path = "/field3"
+                    order = "Ascending"
+                  },
+                  {
+                    path = "/field4"
+                    order = "Descending"
+                  }
+                ]
+              }
+            ]
           }
         }
 

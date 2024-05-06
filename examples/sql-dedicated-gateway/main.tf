@@ -59,6 +59,7 @@ module "cosmos" {
   geo_locations = [
     {
       failover_priority = 0
+      zone_redundant    = false
       location          = azurerm_resource_group.example.location
     }
   ]

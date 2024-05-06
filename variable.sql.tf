@@ -10,6 +10,8 @@ variable "sql_dedicated_gateway" {
   - `instance_size`  - (Optional) - The instance size for the CosmosDB SQL Dedicated Gateway. Changing this forces a new resource to be created. Possible values are `Cosmos.D4s`, `Cosmos.D8s` and `Cosmos.D16s`
   - `instance_count` - (Optional) - The instance count for the CosmosDB SQL Dedicated Gateway. Possible value is between `1` and `5`.
 
+  > Note: To create a dedicated gateway in a zone redundant region you must request Azure to enable it into your account. See more in: https://learn.microsoft.com/en-us/azure/cosmos-db/dedicated-gateway#provisioning-the-dedicated-gateway
+
   Example inputs: 
   ```hcl
   sql_dedicated_gateway = {
@@ -52,7 +54,7 @@ variable "sql_databases" {
       })), [])
 
       autoscale_settings = optional(object({
-        max_throughput = optional(number, null)
+        max_throughput = number
       }), null)
 
       functions = optional(map(object({
@@ -79,7 +81,7 @@ variable "sql_databases" {
       }), null)
 
       indexing_policy = optional(object({
-        indexing_mode = optional(string, "consistent")
+        indexing_mode = string
 
         included_paths = optional(set(object({
           path = string
@@ -108,6 +110,19 @@ variable "sql_databases" {
   description = <<DESCRIPTION
   
   DESCRIPTION
+
+  validation {
+    condition = alltrue(
+      flatten([
+        for db_key, db_params in var.sql_databases : 
+        [
+          for container_key, container_params in db_params.containers : 
+          trimspace(coalesce(container_params.partition_key_path, " ")) != ""
+        ]
+      ])
+    )
+    error_message = "The 'partition_key_path' in the containers value must not be empty."
+  }
 
   validation {
     condition = alltrue(
@@ -154,6 +169,29 @@ variable "sql_databases" {
       ]
     )
     error_message = "The 'max_throughput' in the autoscale_settings value must be a multiple of 1000 if specified."
+  }
+
+  validation {
+    condition = alltrue(
+      [
+        for key, value in var.sql_databases : 
+        try(value.autoscale_settings.max_throughput, null) != null && value.throughput != null ? false : true
+      ]
+    )
+    error_message = "The 'throughput' and 'autoscale_settings.max_throughput' cannot be specified at the same time at database level."
+  }
+
+  validation {
+    condition = alltrue(
+      flatten([
+        for db_key, db_params in var.sql_databases : 
+        [
+          for container_key, container_params in db_params.containers : 
+          try(container_params.autoscale_settings.max_throughput, null) != null && container_params.throughput != null ? false : true
+        ]
+      ])
+    )
+    error_message = "The 'throughput' and 'autoscale_settings.max_throughput' cannot be specified at the same time at container level."
   }
 
   validation {
@@ -235,7 +273,7 @@ variable "sql_databases" {
             for container_key, container_params in db_params.containers :
             [
               for trigger_key, trigger_params in container_params.triggers :
-              trimspace(coalesce(trigger_params.body, "")) != ""
+              trimspace(coalesce(trigger_params.body, " ")) != ""
             ]
           ]
       ])
@@ -251,7 +289,7 @@ variable "sql_databases" {
             for container_key, container_params in db_params.containers :
             [
               for function_key, function_params in container_params.functions :
-              trimspace(coalesce(function_params.body, "")) != ""
+              trimspace(coalesce(function_params.body, " ")) != ""
             ]
           ]
       ])
@@ -267,7 +305,7 @@ variable "sql_databases" {
             for container_key, container_params in db_params.containers :
             [
               for stored_key, stored_params in container_params.stored_procedures :
-              trimspace(coalesce(stored_params.body, "")) != ""
+              trimspace(coalesce(stored_params.body, " ")) != ""
             ]
           ]
       ])
