@@ -108,7 +108,157 @@ variable "sql_databases" {
   nullable    = false
   default     = {}
   description = <<DESCRIPTION
+  Defaults to `{}`. Manages SQL Databases within a Cosmos DB Account.
+
+  - `name`       - (Optional) - Defaults to map key if not specified. Specifies the name of the Cosmos DB SQL Container. Changing this forces a new resource to be created.
+  - `throughput` - (Optional) - Defaults to `null`. The throughput of SQL database (RU/s). Must be set in increments of `100`. The minimum value is `400`. This must be set upon database creation otherwise it cannot be updated without a manual terraform destroy-apply.
+
+  - `autoscale_settings` - (Optional) - Defaults to `null`. This must be set upon database creation otherwise it cannot be updated without a manual terraform destroy-apply.
+    - `max_throughput` - (Required) - The maximum throughput of the SQL database (RU/s). Must be between `1,000` and `1,000,000`. Must be set in increments of `1,000`. Conflicts with `throughput`.
+
+  - `containers` - (Optional) - Defaults to `{}`. Manages SQL Containers within a Cosmos DB Account.
+    - `partition_key_path`     - (Required) - Define a partition key. Changing this forces a new resource to be created.
+    - `name`                   - (Optional) - Defaults to map key if not specified. Specifies the name of the Cosmos DB SQL Container. Changing this forces a new resource to be created.
+    - `throughput`             - (Optional) - Defaults to `null`. The throughput of SQL container (RU/s). Must be set in increments of `100`. The minimum value is `400`. This must be set upon container creation otherwise it cannot be updated without a manual terraform destroy-apply.
+    - `default_ttl`            - (Optional) - Defaults to `null`. The default time to live of SQL container. If missing, items are not expired automatically. If present and the value is set to `-1`, it is equal to infinity, and items don't expire by default. If present and the value is set to some number n - items will expire n seconds after their last modified time.
+    - `analytical_storage_ttl` - (Optional) - Defaults to `null`. The default time to live of Analytical Storage for this SQL container. If present and the value is set to `-1`, it is equal to infinity, and items don't expire by default. If present and the value is set to some number n - items will expire n seconds after their last modified time.
+
+    - `unique_keys` - (Optional) - Defaults to `[]`. The unique keys of the container.
+      - `paths` - (Required) - A list of paths to use for this unique key. Changing this forces a new resource to be created.
+
+    - `autoscale_settings` - (Optional) - Defaults to `null`. This must be set upon database creation otherwise it cannot be updated without a manual terraform destroy-apply.
+      - `max_throughput` - (Required) - The maximum throughput of the SQL container (RU/s). Must be between `1,000` and `1,000,000`. Must be set in increments of `1,000`. Conflicts with `throughput`.
+    
+    - `functions` - (Optional) - Defaults to `{}`. Manages SQL User Defined Functions.
+      - `body` - (Required) - Body of the User Defined Function.
+      - `name` - (Optional) - Defaults to map key if not specified. The name which should be used for this SQL User Defined Function. Changing this forces a new SQL User Defined Function to be created.
+
+    - `stored_procedures` - (Optional) - Defaults to `{}`. Manages SQL Stored Procedures within a Cosmos DB Account SQL Database.
+      - `body` - (Required) - The body of the stored procedure.
+      - `name` - (Optional) - Defaults to map key if not specified. Specifies the name of the Cosmos DB SQL Stored Procedure. Changing this forces a new resource to be created.
+
+    - `triggers` - (Optional) -  Defaults to `{}`. Manages SQL Triggers.
+      - `body`      - (Required) - Body of the Trigger.
+      - `type`      - (Required) - Type of the Trigger. Possible values are `Pre` and `Post`.
+      - `operation` - (Required) - The operation the trigger is associated with. Possible values are `All`, `Create`, `Update`, `Delete` and `Replace`.
+      - `name`      - (Optional) - Defaults to map key if not specified. The name which should be used for this SQL Trigger. Changing this forces a new SQL Trigger to be created.
+
+    - `conflict_resolution_policy` - (Optional) - Defaults to `null`. The conflict resolution policy of the container. Changing this forces a new resource to be created.
+      - `mode`                          - (Required) - Indicates the conflict resolution mode. Possible values include: `LastWriterWins` and `Custom`.
+      - `conflict_resolution_path`      - Required if `LastWriterWins` is set as `mode` - The conflict resolution path.
+      - `conflict_resolution_procedure` - Required if `Custom` is set as `mode` - The procedure to resolve conflicts .
+
+    - `indexing_policy` - (Optional) - Defaults to `{}`. The indexing policy of the container.
+      - `indexing_mode` - (Required) - Indicates the indexing mode. Possible values include: `consistent` and `none`
+
+      - `included_paths` - (Optional) - Defaults to `[]`. Either included_path or excluded_path must contain the path `/*`
+        - `path` - (Required) - Path for which the indexing behaviour applies to.
+
+      - `excluded_paths` - (Optional) - Defaults to `[]`. Either included_path or excluded_path must contain the path `/*`
+        - `path` - (Required) - Path that is excluded from indexing.
+
+      - `composite_indexes` - (Optional) - Defaults to `[]`. The composite indexes of the indexing policy.
+        - `indexes` - (Required) - The indexes of the composite indexes.
+          - `path`  - (Required) - Path for which the indexing behaviour applies to.
+          - `order` - (Required) - Order of the index. Possible values are `Ascending` or `Descending`.
+
+      - `spatial_indexes` - (Optional) - Defaults to `[]`. The spatial indexes of the indexing policy.
+        - `path` - (Required) -  Path for which the indexing behaviour applies to. According to the service design, all spatial types including LineString, MultiPolygon, Point, and Polygon will be applied to the path.
+
+  > Note: Switching between autoscale and manual throughput is not supported via Terraform and must be completed via the Azure Portal and refreshed.
+  > Note: For indexing policy See more in: https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/how-to-manage-indexing-policy?tabs=dotnetv3%2Cpythonv3
   
+  Example inputs:
+  ```hcl
+  sql_databases = {
+    database1 = {
+      name       = "database1"
+      throughput = 400
+
+      # autoscale_settings = {
+      #   max_throughput = 4000
+      # }
+
+      containers = {
+        container1 = {
+          partition_key_path = "/id"
+          name               = "container1"
+          throughput         = 400
+          default_ttl        = 1000
+          analytical_storage_ttl = 1000
+
+          unique_keys = [
+            {
+              paths = ["/field1", "/field2"]
+            }
+          ]
+
+          # autoscale_settings = {
+          #   max_throughput = 4000
+          # }
+
+          functions = {
+            function1 = {
+              body = "function function1() { }"
+            }
+          }
+
+          stored_procedures = {
+            stored1 = {
+              body = "function stored1() { }"
+            }
+          }
+
+          triggers = {
+            trigger1 = {
+              body      = "function trigger1() { }"
+              type      = "Pre"
+              operation = "All"
+            }
+          }
+
+          conflict_resolution_policy = {
+            mode                     = "LastWriterWins"
+            conflict_resolution_path = "/customProperty"
+          }
+
+          indexing_policy = {
+            indexing_mode = "consistent"
+
+            included_paths = [
+              {
+                path = "/*"
+              }
+            ]
+
+            excluded_paths = [
+              {
+                path = "/excluded/*"
+              }
+            ]
+
+            composite_indexes = [
+              {
+                indexes = [
+                  {
+                    path  = "/field1"
+                    order = "ascending"
+                  }
+                ]
+              }
+            ]
+
+            spatial_indexes = [
+              {
+                path = "/location/*"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+  ```
   DESCRIPTION
 
   validation {
@@ -146,9 +296,19 @@ variable "sql_databases" {
 
   validation {
     condition = alltrue(
-      [for key, value in var.sql_databases : value.throughput != null ? value.throughput >= 1 : true]
+      [for key, value in var.sql_databases : value.throughput != null ? value.throughput >= 400 : true]
     )
-    error_message = "The 'throughput' in the database value must be greater than or equal to 1 if specified."
+    error_message = "The 'throughput' in the database value must be greater than or equal to 400 if specified."
+  }
+
+  validation {
+    condition = alltrue(
+      [
+        for db_key, db_params in var.sql_databases : 
+        db_params.throughput != null ? db_params.throughput % 100 == 0 : true
+      ]
+    )
+    error_message = "The 'throughput' value in the 'autoscale_settings' at the database level must be a multiple of 100 if specified."
   }
 
   validation {
@@ -179,6 +339,58 @@ variable "sql_databases" {
       ]
     )
     error_message = "The 'throughput' and 'autoscale_settings.max_throughput' cannot be specified at the same time at database level."
+  }
+
+    validation {
+    condition = alltrue(
+      flatten([
+        for db_key, db_params in var.sql_databases : 
+        [
+          for container_key, container_params in db_params.containers : 
+          container_params.throughput != null ? container_params.throughput >= 400 : true
+        ]
+      ])
+    )
+    error_message = "The 'throughput' value at the container level must be greater than or equal to 400 if specified."
+  }
+
+  validation {
+    condition = alltrue(
+      flatten([
+        for db_key, db_params in var.sql_databases : 
+        [
+          for container_key, container_params in db_params.containers : 
+          container_params.throughput != null ? container_params.throughput % 100 == 0 : true
+        ]
+      ])
+    )
+    error_message = "The 'throughput' value in the 'autoscale_settings' at the container level must be a multiple of 100 if specified."
+  }
+
+  validation {
+    condition = alltrue(
+      flatten([
+        for db_key, db_params in var.sql_databases : 
+        [
+          for container_key, container_params in db_params.containers : 
+          try(container_params.autoscale_settings.max_throughput, null) != null ? container_params.autoscale_settings.max_throughput >= 1000 && container_params.autoscale_settings.max_throughput <= 1000000 : true
+        ]
+      ])
+    )
+    error_message = "The 'max_throughput'value in the 'autoscale_settings' at the container level must be between 1000 and 1000000 if specified."
+  }
+
+  validation {
+    condition = alltrue(
+      flatten([
+        for db_key, db_params in var.sql_databases : 
+        [
+          for container_key, container_params in db_params.containers : 
+          try(container_params.autoscale_settings.max_throughput, null) != null ? container_params.autoscale_settings.max_throughput % 1000 == 0 : true
+        ]
+      ])
+    )
+    error_message = "The 'max_throughput' value in the 'autoscale_settings' at the container level must be a multiple of 1000 if specified."
   }
 
   validation {
@@ -311,5 +523,37 @@ variable "sql_databases" {
       ])
     )
     error_message = "The 'body' in the stored procedures value must not be empty."
+  }
+
+  validation {
+    condition = alltrue(
+      flatten([
+        for db_key, db_params in var.sql_databases : 
+          [
+            for container_key, container_params in db_params.containers :
+            try(container_params.indexing_policy.indexing_mode, null) != null ? contains(["consistent", "none"], container_params.indexing_policy.indexing_mode) : true
+          ]
+      ])
+    )
+    error_message = "The 'indexing_mode' in the indexing_policy value must be either 'consistent' or 'none'."
+  }
+
+  validation {
+    condition = alltrue(
+      flatten([
+        for db_key, db_params in var.sql_databases : 
+          [
+            for container_key, container_params in db_params.containers :
+            [
+              for composite_index in try(container_params.indexing_policy.composite_indexes, []) :
+              [
+                for index in composite_index.indexes :
+                contains(["Ascending", "Descending"], index.order)
+              ]
+            ]
+          ]
+      ])
+    )
+    error_message = "The 'order' in the composite index value must be either 'Ascending' or 'Descending'."
   }
 }

@@ -1,3 +1,3 @@
 # Default example
 
-This deploys the module in its simplest form.
+This example shows the different possible configuration of the NoSQL API.

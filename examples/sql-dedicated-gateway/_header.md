@@ -1,3 +1,3 @@
 # Default example
 
-This deploys the module in its simplest form.
+This deploys the module to use a SQL Dedicated Gateway for NoSQL API accounts
