@@ -11,6 +11,8 @@ permissions:
   contents: read
   id-token: write
 
+concurrency: e2e-tests
+
 jobs:
   getexamples:
     if: github.event.repository.name != 'terraform-azurerm-avm-template'
