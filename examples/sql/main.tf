@@ -142,10 +142,22 @@ module "cosmos" {
 
         container_with_functions = {
           partition_key_path = "/id"
-          
+
           functions = {
             empty = {
               body = "function empty() { return; }"
+            }
+          }
+        }
+
+        container_with_stored_procedures = {
+          partition_key_path = "/id"
+          
+          stored_procedures = {
+            helloworld = {
+              body = <<BODY
+                function helloworld() { var context = getContext(); var response = context.getResponse(); response.setBody('Hello, World'); }
+              BODY
             }
           }
         }

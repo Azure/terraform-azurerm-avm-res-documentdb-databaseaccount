@@ -114,10 +114,23 @@ resource "azurerm_cosmosdb_sql_container" "this" {
   }
 }
 
-resource "azurerm_cosmosdb_sql_function" "example" {
+resource "azurerm_cosmosdb_sql_function" "this" {
   for_each = local.sql_container_functions
 
   name         = each.value.function_name
   body         = each.value.function_params.body
-  container_id = azurerm_cosmosdb_sql_container.this["${each.value.db_name}|${each.value.container_name}"].id
+  container_id = azurerm_cosmosdb_sql_container.this[each.value.container_key].id
+}
+
+resource "azurerm_cosmosdb_sql_stored_procedure" "this" {
+  for_each = local.sql_container_stored_procedures
+
+  name = each.value.stored_name
+
+  body = each.value.stored_params.body
+
+  account_name        = azurerm_cosmosdb_account.this.name
+  resource_group_name = azurerm_cosmosdb_account.this.resource_group_name
+  database_name       = azurerm_cosmosdb_sql_database.this[each.value.db_name].name
+  container_name      = azurerm_cosmosdb_sql_container.this[each.value.container_key].name
 }
