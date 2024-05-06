@@ -32,7 +32,7 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
     for_each = each.value.metric_categories
 
     content {
-      category = metric.value
+      category = metric.value == "AllMetrics" ? "Requests" : null
     }
   }
 }
