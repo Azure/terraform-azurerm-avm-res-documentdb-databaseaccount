@@ -7,23 +7,6 @@ variable "sql_databases" {
       max_throughput = number
     }), null)
 
-    functions = optional(map(object({
-      body = string
-      name = optional(string)
-    })), {})
-
-    stored_procedures = optional(map(object({
-      body = string
-      name = optional(string)
-    })), {})
-
-    triggers = optional(map(object({
-      body      = string
-      type      = string
-      operation = string
-      name      = optional(string)
-    })), {})
-
     containers = optional(map(object({
       partition_key_path = string
 
@@ -39,6 +22,23 @@ variable "sql_databases" {
       autoscale_settings = optional(object({
         max_throughput = optional(number, null)
       }), null)
+
+      functions = optional(map(object({
+        body = string
+        name = optional(string)
+      })), {})
+
+      stored_procedures = optional(map(object({
+        body = string
+        name = optional(string)
+      })), {})
+
+      triggers = optional(map(object({
+        body      = string
+        type      = string
+        operation = string
+        name      = optional(string)
+      })), {})
 
       indexing_policy = optional(object({
         indexing_mode = optional(string, "consistent")

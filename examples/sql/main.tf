@@ -139,6 +139,16 @@ module "cosmos" {
             conflict_resolution_path = "/customProperty"
           }
         }
+
+        container_with_functions = {
+          partition_key_path = "/id"
+          
+          functions = {
+            empty = {
+              body = "function empty() { return; }"
+            }
+          }
+        }
       }
     }
   }
