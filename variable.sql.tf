@@ -425,7 +425,7 @@ variable "sql_databases" {
         for db_key, db_params in var.sql_databases :
         [
           for container_key, container_params in db_params.containers :
-          try(container_params.conflict_resolution_policy.mode, "") == "LastWriterWins" ? try(container_params.conflict_resolution_policy.conflict_resolution_path, null) != null : true
+          try(container_params.conflict_resolution_policy.mode, "") == "LastWriterWins" ? trimspace(try(container_params.conflict_resolution_policy.conflict_resolution_path, "")) != "" : true
         ]
       ])
     )
@@ -438,7 +438,7 @@ variable "sql_databases" {
         for db_key, db_params in var.sql_databases :
         [
           for container_key, container_params in db_params.containers :
-          try(container_params.conflict_resolution_policy.mode, "") == "Custom" ? try(container_params.conflict_resolution_policy.conflict_resolution_procedure, null) != null : true
+          try(container_params.conflict_resolution_policy.mode, "") == "Custom" ? trimspace(try(container_params.conflict_resolution_policy.conflict_resolution_procedure, "")) != "" : true
         ]
       ])
     )
