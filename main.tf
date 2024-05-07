@@ -112,5 +112,10 @@ resource "azurerm_cosmosdb_account" "this" {
       condition     = var.analytical_storage_enabled && var.partition_merge_enabled ? false : true
       error_message = "Analytical storage and partition merge cannot be enabled together."
     }
+
+    precondition {
+      condition     = contains(var.capabilities, "EnableServerless") && length(var.geo_locations) > 1 ? false : true
+      error_message = "Serverless mode can only be enabled in a single region."
+    }
   }
 }
