@@ -62,12 +62,10 @@ module "cosmos" {
   name                       = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
   analytical_storage_enabled = true
 
-  geo_locations = [
-    {
-      failover_priority = 0
-      location          = azurerm_resource_group.example.location
-    }
-  ]
+  sql_dedicated_gateway = {
+    instance_count = 1
+    instance_size  = "Cosmos.D4s"
+  }
 
   sql_databases = {
     empty_database = {

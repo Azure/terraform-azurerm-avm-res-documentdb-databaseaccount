@@ -18,7 +18,7 @@ resource "azurerm_cosmosdb_sql_database" "this" {
 
   lifecycle {
     precondition {
-      condition     = contains(var.capabilities[*].name, "EnableServerless") && each.value.throughput == null && try(each.value.autoscale_settings.max_throughput, null) == null
+      condition     = contains(var.capabilities[*].name, local.serverless_capability) && each.value.throughput == null && try(each.value.autoscale_settings.max_throughput, null) == null
       error_message = "Serverless containers must not specify 'throughput' or 'autoscale_settings.max_throughput' at the database level."
     }
   }
@@ -115,7 +115,7 @@ resource "azurerm_cosmosdb_sql_container" "this" {
 
   lifecycle {
     precondition {
-      condition     = contains(var.capabilities[*].name, "EnableServerless") && each.value.container_params.throughput == null && try(each.value.container_params.autoscale_settings.max_throughput, null) == null
+      condition     = contains(var.capabilities[*].name, local.serverless_capability) && each.value.container_params.throughput == null && try(each.value.container_params.autoscale_settings.max_throughput, null) == null
       error_message = "Serverless containers must not specify 'throughput' or 'autoscale_settings.max_throughput' at the container level."
     }
   }

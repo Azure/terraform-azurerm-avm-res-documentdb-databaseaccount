@@ -24,7 +24,16 @@ locals {
 
   periodic_backup_policy        = "Periodic"
   continuous_backup_policy      = "Continuous"
+  serverless_capability         = "EnableServerless"
   consistent_prefix_consistency = "ConsistentPrefix"
+
+  default_geo_location = toset([{
+    failover_priority = 0
+    zone_redundant    = true
+    location          = var.location
+  }])
+
+  normalized_geo_locations = coalesce(var.geo_locations, local.default_geo_location)
 
   trimmed_ip_range_filter    = [for value in var.ip_range_filter : trimspace(value)]
   normalized_ip_range_filter = length(local.trimmed_ip_range_filter) > 0 ? join(",", local.trimmed_ip_range_filter) : null

@@ -18,7 +18,7 @@ This Terraform module is designed to create Azure Cosmos DB accounts, its relate
 
 ## Limitations
 
-* The module does not support auto rotation of Customer Managed keys (CosmosDB doesnt support it yet)
+* The module does not support auto rotation of Customer Managed keys (CosmosDB doesn't support it yet)
 * The module does not support yet Gremlin API
 * The module does not support yet MongoDB API
 * The module does not support yet Table API

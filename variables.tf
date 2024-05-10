@@ -58,35 +58,3 @@ variable "location" {
   See more in CLI: az account list-locations -o table --query "[].name"
   DESCRIPTION
 }
-
-variable "geo_locations" {
-  type = set(object({
-    location          = string
-    failover_priority = number
-    zone_redundant    = optional(bool, true)
-  }))
-  nullable    = false
-  description = <<DESCRIPTION
-  Specifies a geo_location resource, used to define where data should be replicated with the failover_priority 0 specifying the primary location.
-
-  - `location`          - (Required) - The name of the Azure location where the CosmosDB Account is being created.
-  - `failover_priority` - (Required) - The failover priority of the region. A failover priority of 0 indicates a write region.
-  - `zone_redundant`    - (Optional) - Defaults to `true`. Whether or not the region is zone redundant.
-  
-  Example inputs:
-  ```hcl
-  geo_locations = [
-    {
-      location          = "eastus"
-      failover_priority = 0
-      zone_redundant    = true
-    },
-    {
-      location          = "westus"
-      failover_priority = 1
-      zone_redundant    = true
-    }
-  ]
-  ```
-  DESCRIPTION
-}

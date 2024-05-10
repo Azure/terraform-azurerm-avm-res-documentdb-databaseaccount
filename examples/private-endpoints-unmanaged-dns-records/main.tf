@@ -94,14 +94,6 @@ module "cosmos" {
   name                                    = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
   public_network_access_enabled           = false
   private_endpoints_manage_dns_zone_group = false
-
-  geo_locations = [
-    {
-      failover_priority = 0
-      location          = azurerm_resource_group.example.location
-    }
-  ]
-
   private_endpoints = {
     max = {
       name                            = "max"

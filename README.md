@@ -19,7 +19,7 @@ This Terraform module is designed to create Azure Cosmos DB accounts, its relate
 
 ## Limitations
 
-* The module does not support auto rotation of Customer Managed keys (CosmosDB doesnt support it yet)
+* The module does not support auto rotation of Customer Managed keys (CosmosDB doesn't support it yet)
 * The module does not support yet Gremlin API
 * The module does not support yet MongoDB API
 * The module does not support yet Table API
@@ -79,40 +79,6 @@ The following resources are used by this module:
 ## Required Inputs
 
 The following input variables are required:
-
-### <a name="input_geo_locations"></a> [geo\_locations](#input\_geo\_locations)
-
-Description:   Specifies a geo\_location resource, used to define where data should be replicated with the failover\_priority 0 specifying the primary location.
-
-  - `location`          - (Required) - The name of the Azure location where the CosmosDB Account is being created.
-  - `failover_priority` - (Required) - The failover priority of the region. A failover priority of 0 indicates a write region.
-  - `zone_redundant`    - (Optional) - Defaults to `true`. Whether or not the region is zone redundant.  
-
-  Example inputs:
-  ```hcl
-  geo_locations = [
-    {
-      location          = "eastus"
-      failover_priority = 0
-      zone_redundant    = true
-    },
-    {
-      location          = "westus"
-      failover_priority = 1
-      zone_redundant    = true
-    }
-  ]
-```
-
-Type:
-
-```hcl
-set(object({
-    location          = string
-    failover_priority = number
-    zone_redundant    = optional(bool, true)
-  }))
-```
 
 ### <a name="input_location"></a> [location](#input\_location)
 
@@ -462,6 +428,42 @@ Description: Defaults to `false`. Enable the Free Tier pricing option for this C
 Type: `bool`
 
 Default: `false`
+
+### <a name="input_geo_locations"></a> [geo\_locations](#input\_geo\_locations)
+
+Description:   Default to the region where the account was deployed with zone redundant enabled. Specifies a geo\_location resource, used to define where data should be replicated with the failover\_priority 0 specifying the primary location.
+
+  - `location`          - (Required) - The name of the Azure location where the CosmosDB Account is being created.
+  - `failover_priority` - (Required) - The failover priority of the region. A failover priority of 0 indicates a write region.
+  - `zone_redundant`    - (Optional) - Defaults to `true`. Whether or not the region is zone redundant.  
+
+  Example inputs:
+  ```hcl
+  geo_locations = [
+    {
+      location          = "eastus"
+      failover_priority = 0
+      zone_redundant    = true
+    },
+    {
+      location          = "westus"
+      failover_priority = 1
+      zone_redundant    = true
+    }
+  ]
+```
+
+Type:
+
+```hcl
+set(object({
+    location          = string
+    failover_priority = number
+    zone_redundant    = optional(bool, true)
+  }))
+```
+
+Default: `null`
 
 ### <a name="input_ip_range_filter"></a> [ip\_range\_filter](#input\_ip\_range\_filter)
 

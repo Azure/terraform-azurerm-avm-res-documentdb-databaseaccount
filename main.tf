@@ -35,7 +35,7 @@ resource "azurerm_cosmosdb_account" "this" {
   }
 
   dynamic "geo_location" {
-    for_each = var.geo_locations
+    for_each = local.normalized_geo_locations
 
     content {
       location          = geo_location.value.location
@@ -114,7 +114,7 @@ resource "azurerm_cosmosdb_account" "this" {
     }
 
     precondition {
-      condition     = contains(var.capabilities, "EnableServerless") && length(var.geo_locations) > 1 ? false : true
+      condition     = contains(var.capabilities, "EnableServerless") && length(local.normalized_geo_locations) > 1 ? false : true
       error_message = "Serverless mode can only be enabled in a single region."
     }
   }
