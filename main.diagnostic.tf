@@ -35,4 +35,6 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
       category = metric.value
     }
   }
+
+  depends_on = [time_sleep.wait_60_seconds_for_destroy]
 }

@@ -118,4 +118,14 @@ resource "azurerm_cosmosdb_account" "this" {
       error_message = "Serverless mode can only be enabled in a single region."
     }
   }
+
+
+}
+
+resource "time_sleep" "wait_60_seconds_for_destroy" {
+  destroy_duration = "60s"
+
+  triggers = {
+    account_id = azurerm_cosmosdb_account.this.id
+  }
 }

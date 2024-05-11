@@ -55,6 +55,8 @@ The following providers are used by this module:
 
 - <a name="provider_random"></a> [random](#provider\_random) (~> 3.6)
 
+- <a name="provider_time"></a> [time](#provider\_time)
+
 ## Resources
 
 The following resources are used by this module:
@@ -74,6 +76,7 @@ The following resources are used by this module:
 - [azurerm_resource_group_template_deployment.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group_template_deployment) (resource)
 - [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [random_id.telem](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) (resource)
+- [time_sleep.wait_60_seconds_for_destroy](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
