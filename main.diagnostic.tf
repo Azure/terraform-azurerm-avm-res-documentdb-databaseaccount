@@ -36,5 +36,5 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
     }
   }
 
-  depends_on = [time_sleep.wait_60_seconds_for_destroy]
+  depends_on = [time_sleep.wait_120_seconds_for_destroy]
 }

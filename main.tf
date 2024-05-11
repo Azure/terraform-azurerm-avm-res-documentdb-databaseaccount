@@ -122,8 +122,9 @@ resource "azurerm_cosmosdb_account" "this" {
 
 }
 
-resource "time_sleep" "wait_60_seconds_for_destroy" {
-  destroy_duration = "60s"
+resource "time_sleep" "wait_120_seconds_for_destroy" {
+  count            = length(var.diagnostic_settings) > 0 ? 1 : 0
+  destroy_duration = "120s"
 
   triggers = {
     account_id = azurerm_cosmosdb_account.this.id
