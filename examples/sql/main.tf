@@ -231,7 +231,7 @@ module "cosmos" {
             ]
             excluded_paths = [
               {
-                path = "/field1/?"
+                path = "/*"
               }
             ]
             spatial_indexes = [

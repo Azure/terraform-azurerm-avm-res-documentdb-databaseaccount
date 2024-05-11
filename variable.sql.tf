@@ -556,4 +556,17 @@ variable "sql_databases" {
     )
     error_message = "The 'order' in the composite index value must be either 'Ascending' or 'Descending'."
   }
+
+  validation {
+    condition = alltrue(
+      flatten([
+        for db_key, db_params in var.sql_databases :
+        [
+          for container_key, container_params in db_params.containers :
+          length(try(container_params.indexing_policy.included_paths, [])) > 0 || length(try(container_params.indexing_policy.excluded_paths, [])) > 0 ? contains(container_params.indexing_policy.included_paths[*].path, "/*") || contains(container_params.indexing_policy.excluded_paths[*].path, "/*") : true
+        ]
+      ])
+    )
+    error_message = "Either 'included_paths' or 'excluded_paths' must contain the path '/*' if they are specified"
+  }
 }
