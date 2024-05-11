@@ -29,11 +29,11 @@ This Terraform module is designed to create Azure Cosmos DB accounts, its relate
 * [Use only defaults values](examples/default/main.tf)
 * [Specifying all possible parameters at account level](examples/max-account/main.tf)
 * [Creation of sql api](examples/sql/main.tf)
-* [Creation of sql dedicated gateway](examples/sql-dedicated-gateway/main.tf)
+* [Creation of a serverless account](examples/serverless/main.tf)
 * [Customer managed key pinning to a specific key version](examples/cmk-pin-key-version/main.tf)
-* [Enable diagnostic settings](examples/diagnostic-settings/main.tf)
 * [Enable managed identities](examples/managed-identities/main.tf)
 * [Enable private endpoints with auto management of dns records](examples/private-endpoints-managed-dns-records/main.tf)
+* [Enable private endpoints with auto management of dns records](examples/private-endpoints-unmanaged-dns-records/main.tf)
 * [Restrict public network access with access control list and service endpoints](examples/public-restricted-access/main.tf)
 
 <!-- markdownlint-disable MD033 -->
