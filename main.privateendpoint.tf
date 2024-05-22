@@ -7,8 +7,8 @@ resource "azurerm_private_endpoint" "this_managed_dns_zone_groups" {
   subnet_id                     = each.value.subnet_resource_id
   custom_network_interface_name = each.value.network_interface_name
   location                      = coalesce(each.value.location, var.location)
+  tags                          = each.value.tags == null ? var.tags : each.value.tags
   resource_group_name           = coalesce(each.value.resource_group_name, var.resource_group_name)
-  tags                          = each.value.tags == null ? var.tags : each.value.tags == {} ? {} : each.value.tags
 
   private_service_connection {
     name = coalesce(each.value.private_service_connection_name, "pse-${each.key}")

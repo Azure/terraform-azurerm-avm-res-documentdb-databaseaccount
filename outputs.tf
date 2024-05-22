@@ -1,3 +1,13 @@
+output "name" {
+  value       = azurerm_cosmosdb_account.this.name
+  description = "The name of the cosmos db account created."
+}
+
+output "resource_id" {
+  value       = azurerm_cosmosdb_account.this.id
+  description = "The resource ID of the cosmos db account created."
+}
+
 output "resource" {
   value       = azurerm_cosmosdb_account.this
   description = "The cosmos db account created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_account#attributes-reference"
