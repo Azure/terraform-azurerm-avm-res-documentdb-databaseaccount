@@ -129,11 +129,13 @@ module "cosmos" {
     }
 
     noDnsGroup = {
+      name               = "no-dns-group"
       subresource_name   = "SQL"
       subnet_resource_id = azurerm_subnet.example.id
     }
 
     withDnsGroup = {
+      name                          = "with-dns-group"
       subresource_name              = "SQL"
       subnet_resource_id            = azurerm_subnet.example.id
       private_dns_zone_resource_ids = [azurerm_private_dns_zone.example.id]
