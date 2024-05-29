@@ -56,6 +56,14 @@ module "cosmos" {
   name                       = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
   analytical_storage_enabled = true
 
+  geo_locations = [ #Sql Gateway in a region with zone redundant enabled require a support ticket to allow it
+    {
+      failover_priority = 0
+      zone_redundant    = false
+      location          = azurerm_resource_group.example.location
+    }
+  ]
+
   sql_dedicated_gateway = {
     instance_count = 1
     instance_size  = "Cosmos.D4s"
