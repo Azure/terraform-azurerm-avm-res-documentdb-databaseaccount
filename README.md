@@ -648,6 +648,7 @@ map(object({
       skip_service_principal_aad_check       = optional(bool, false)
       delegated_managed_identity_resource_id = optional(string, null)
 
+      principal_type    = optional(string, null) # forced to be here by lint, not supported
       condition         = optional(string, null) # forced to be here by lint, not supported
       condition_version = optional(string, null) # forced to be here by lint, not supported
     })), {})
@@ -677,11 +678,12 @@ Default: `true`
 Description:   Defaults to `{}`. A map of role assignments to create. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
   - `role_definition_id_or_name`             - (Required) - The ID or name of the role definition to assign to the principal.
-  - `principal_id`                           - (Required) - It's a GUID - The ID of the principal to assign the role to.
-  - `description`                            - (Optional) - Defaults to `null`. The description of the role assignment.
-  - `delegated_managed_identity_resource_id` - (Optional) - Defaults to `null`. The delegated Azure Resource Id which contains a Managed Identity. This field is only used in cross tenant scenario. Changing this forces a new resource to be created.
-  - `skip_service_principal_aad_check`       - (Optional) - Defaults to `false`. If the principal\_id is a newly provisioned Service Principal set this value to true to skip the Azure Active Directory check which may fail due to replication lag. This argument is only valid if the principal\_id is a Service Principal identity.
+  - `principal_id`                           - (Required) - The ID of the principal to assign the role to.
+  - `description`                            - (Optional) - The description of the role assignment.
+  - `skip_service_principal_aad_check`       - (Optional) - If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to false.
+  - `delegated_managed_identity_resource_id` - (Optional) - The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created. This field is only used in cross-tenant scenario.
 
+  - `principal_type`                         - (Unsupported)
   - `condition`                              - (Unsupported)
   - `condition_version`                      - (Unsupported)
 
@@ -703,13 +705,13 @@ Type:
 
 ```hcl
 map(object({
-    role_definition_id_or_name = string
-    principal_id               = string
-
+    role_definition_id_or_name             = string
+    principal_id                           = string
     description                            = optional(string, null)
     skip_service_principal_aad_check       = optional(bool, false)
     delegated_managed_identity_resource_id = optional(string, null)
 
+    principal_type    = optional(string, null) # forced to be here by lint, not supported
     condition         = optional(string, null) # forced to be here by lint, not supported
     condition_version = optional(string, null) # forced to be here by lint, not supported
   }))

@@ -39,6 +39,7 @@ variable "private_endpoints" {
       skip_service_principal_aad_check       = optional(bool, false)
       delegated_managed_identity_resource_id = optional(string, null)
 
+      principal_type    = optional(string, null) # forced to be here by lint, not supported
       condition         = optional(string, null) # forced to be here by lint, not supported
       condition_version = optional(string, null) # forced to be here by lint, not supported
     })), {})
