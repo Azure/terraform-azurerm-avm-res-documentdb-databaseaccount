@@ -62,14 +62,6 @@ module "cosmos" {
   name                       = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
   analytical_storage_enabled = true
 
-  geo_locations = [
-    {
-      failover_priority = 0
-      zone_redundant    = false
-      location          = azurerm_resource_group.example.location
-    }
-  ]
-
   sql_dedicated_gateway = {
     instance_count = 1
     instance_size  = "Cosmos.D4s"
@@ -77,28 +69,36 @@ module "cosmos" {
 
   sql_databases = {
     empty_database = {
+      name = "empty_database"
+
       containers = {
         empty_container = {
+          name               = "empty_container"
           partition_key_path = "/id"
         }
       }
     }
 
     database_fixed_througput = {
+      name       = "database_fixed_througput"
       throughput = 400
     }
 
     database_autoscale_througput = {
+      name = "database_autoscale_througput"
+
       autoscale_settings = {
         max_throughput = 4000
       }
     }
 
     database_and_container_fixed_througput = {
+      name       = "database_and_container_fixed_througput"
       throughput = 400
 
       containers = {
         container_fixed_througput = {
+          name               = "container_fixed_througput"
           partition_key_path = "/id"
           throughput         = 400
         }
@@ -106,12 +106,15 @@ module "cosmos" {
     }
 
     database_and_container_autoscale_througput = {
+      name = "database_and_container_autoscale_througput"
+
       autoscale_settings = {
         max_throughput = 4000
       }
 
       containers = {
         container_fixed_througput = {
+          name               = "container_fixed_througput"
           partition_key_path = "/id"
 
           autoscale_settings = {
@@ -122,36 +125,46 @@ module "cosmos" {
     }
 
     database_containers_tests = {
+      name = "database_containers_tests"
+
       containers = {
         container_fixed_througput = {
+          name               = "container_fixed_througput"
           partition_key_path = "/id"
           throughput         = 400
         }
 
         container_autoscale_througput = {
+          name               = "container_autoscale_througput"
           partition_key_path = "/id"
+
           autoscale_settings = {
             max_throughput = 4000
           }
         }
 
         container_infinite_analytical_ttl = {
+          name                   = "container_infinite_analytical_ttl"
           partition_key_path     = "/id"
           analytical_storage_ttl = -1
         }
 
         container_fixed_analytical_ttl = {
+          name                   = "container_fixed_analytical_ttl"
           partition_key_path     = "/id"
           analytical_storage_ttl = 1000
         }
 
         container_document_ttl = {
+          name               = "container_document_ttl"
           partition_key_path = "/id"
           default_ttl        = 1000
         }
 
         container_unique_keys = {
+          name               = "container_unique_keys"
           partition_key_path = "/id"
+
           unique_keys = [
             {
               paths = ["/field1", "/field2"]
@@ -160,7 +173,9 @@ module "cosmos" {
         }
 
         container_conflict_resolution_with_path = {
+          name               = "container_conflict_resolution_with_path"
           partition_key_path = "/id"
+
           conflict_resolution_policy = {
             mode                     = "LastWriterWins"
             conflict_resolution_path = "/customProperty"
@@ -168,6 +183,7 @@ module "cosmos" {
         }
 
         container_conflict_resolution_with_stored_procedure = {
+          name               = "container_conflict_resolution_with_stored_procedure"
           partition_key_path = "/id"
 
           conflict_resolution_policy = {
@@ -177,26 +193,31 @@ module "cosmos" {
 
           stored_procedures = {
             resolver = {
+              name = "resolver"
               body = "function resolver(incomingItem, existingItem, isTombstone, conflictingItems) { }"
             }
           }
         }
 
         container_with_functions = {
+          name               = "container_with_functions"
           partition_key_path = "/id"
 
           functions = {
             empty = {
+              name = "empty"
               body = "function empty() { return; }"
             }
           }
         }
 
         container_with_stored_procedures = {
+          name               = "container_with_stored_procedures"
           partition_key_path = "/id"
 
           stored_procedures = {
             empty = {
+              name = "empty"
               body = <<BODY
                 function empty() { }
               BODY
@@ -205,10 +226,12 @@ module "cosmos" {
         }
 
         container_with_triggers = {
+          name               = "container_with_triggers"
           partition_key_path = "/id"
 
           triggers = {
             testTrigger = {
+              name      = "testTrigger"
               body      = "function testTrigger(){}"
               operation = "Delete"
               type      = "Post"
@@ -217,6 +240,7 @@ module "cosmos" {
         }
 
         container_with_none_index_policy = {
+          name               = "container_with_none_index_policy"
           partition_key_path = "/id"
 
           indexing_policy = {
@@ -225,6 +249,7 @@ module "cosmos" {
         }
 
         container_with_consistent_index_policy = {
+          name               = "container_with_consistent_index_policy"
           partition_key_path = "/id"
 
           indexing_policy = {
@@ -261,7 +286,6 @@ module "cosmos" {
             ]
           }
         }
-
       }
     }
   }

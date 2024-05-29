@@ -34,7 +34,8 @@ variable "sql_dedicated_gateway" {
 
 variable "sql_databases" {
   type = map(object({
-    name       = optional(string, null)
+    name = string
+
     throughput = optional(number, null)
 
     autoscale_settings = optional(object({
@@ -43,8 +44,8 @@ variable "sql_databases" {
 
     containers = optional(map(object({
       partition_key_path = string
+      name               = string
 
-      name                   = optional(string, null)
       throughput             = optional(number, null)
       default_ttl            = optional(number, null)
       analytical_storage_ttl = optional(number, null)
@@ -59,19 +60,19 @@ variable "sql_databases" {
 
       functions = optional(map(object({
         body = string
-        name = optional(string)
+        name = string
       })), {})
 
       stored_procedures = optional(map(object({
         body = string
-        name = optional(string)
+        name = string
       })), {})
 
       triggers = optional(map(object({
         body      = string
         type      = string
         operation = string
-        name      = optional(string)
+        name      = string
       })), {})
 
       conflict_resolution_policy = optional(object({
@@ -110,7 +111,7 @@ variable "sql_databases" {
   description = <<DESCRIPTION
   Defaults to `{}`. Manages SQL Databases within a Cosmos DB Account.
 
-  - `name`       - (Optional) - Defaults to map key if not specified. Specifies the name of the Cosmos DB SQL Container. Changing this forces a new resource to be created.
+  - `name`       - (Required) - Specifies the name of the Cosmos DB SQL Container. Changing this forces a new resource to be created.
   - `throughput` - (Optional) - Defaults to `null`. The throughput of SQL database (RU/s). Must be set in increments of `100`. The minimum value is `400`. This must be set upon database creation otherwise it cannot be updated without a manual terraform destroy-apply.
 
   - `autoscale_settings` - (Optional) - Defaults to `null`. This must be set upon database creation otherwise it cannot be updated without a manual terraform destroy-apply.
@@ -118,7 +119,7 @@ variable "sql_databases" {
 
   - `containers` - (Optional) - Defaults to `{}`. Manages SQL Containers within a Cosmos DB Account.
     - `partition_key_path`     - (Required) - Define a partition key. Changing this forces a new resource to be created.
-    - `name`                   - (Optional) - Defaults to map key if not specified. Specifies the name of the Cosmos DB SQL Container. Changing this forces a new resource to be created.
+    - `name`                   - (Required) - Specifies the name of the Cosmos DB SQL Container. Changing this forces a new resource to be created.
     - `throughput`             - (Optional) - Defaults to `null`. The throughput of SQL container (RU/s). Must be set in increments of `100`. The minimum value is `400`. This must be set upon container creation otherwise it cannot be updated without a manual terraform destroy-apply.
     - `default_ttl`            - (Optional) - Defaults to `null`. The default time to live of SQL container. If missing, items are not expired automatically. If present and the value is set to `-1`, it is equal to infinity, and items don't expire by default. If present and the value is set to some number n - items will expire n seconds after their last modified time.
     - `analytical_storage_ttl` - (Optional) - Defaults to `null`. The default time to live of Analytical Storage for this SQL container. If present and the value is set to `-1`, it is equal to infinity, and items don't expire by default. If present and the value is set to some number n - items will expire n seconds after their last modified time.
@@ -131,17 +132,17 @@ variable "sql_databases" {
     
     - `functions` - (Optional) - Defaults to `{}`. Manages SQL User Defined Functions.
       - `body` - (Required) - Body of the User Defined Function.
-      - `name` - (Optional) - Defaults to map key if not specified. The name which should be used for this SQL User Defined Function. Changing this forces a new SQL User Defined Function to be created.
+      - `name` - (Required) - The name which should be used for this SQL User Defined Function. Changing this forces a new SQL User Defined Function to be created.
 
     - `stored_procedures` - (Optional) - Defaults to `{}`. Manages SQL Stored Procedures within a Cosmos DB Account SQL Database.
       - `body` - (Required) - The body of the stored procedure.
-      - `name` - (Optional) - Defaults to map key if not specified. Specifies the name of the Cosmos DB SQL Stored Procedure. Changing this forces a new resource to be created.
+      - `name` - (Required) - Specifies the name of the Cosmos DB SQL Stored Procedure. Changing this forces a new resource to be created.
 
     - `triggers` - (Optional) -  Defaults to `{}`. Manages SQL Triggers.
       - `body`      - (Required) - Body of the Trigger.
       - `type`      - (Required) - Type of the Trigger. Possible values are `Pre` and `Post`.
       - `operation` - (Required) - The operation the trigger is associated with. Possible values are `All`, `Create`, `Update`, `Delete` and `Replace`.
-      - `name`      - (Optional) - Defaults to map key if not specified. The name which should be used for this SQL Trigger. Changing this forces a new SQL Trigger to be created.
+      - `name`      - (Required) - The name which should be used for this SQL Trigger. Changing this forces a new SQL Trigger to be created.
 
     - `conflict_resolution_policy` - (Optional) - Defaults to `null`. The conflict resolution policy of the container. Changing this forces a new resource to be created.
       - `mode`                          - (Required) - Indicates the conflict resolution mode. Possible values include: `LastWriterWins` and `Custom`.
@@ -199,18 +200,21 @@ variable "sql_databases" {
 
           functions = {
             function1 = {
+              name = "functionName"
               body = "function function1() { }"
             }
           }
 
           stored_procedures = {
             stored1 = {
+              name = "storedName"
               body = "function stored1() { }"
             }
           }
 
           triggers = {
             trigger1 = {
+              name      = "triggerName"
               body      = "function trigger1() { }"
               type      = "Pre"
               operation = "All"
@@ -260,6 +264,95 @@ variable "sql_databases" {
   }
   ```
   DESCRIPTION
+
+  validation {
+    condition = length(
+      [
+        for db_key, db_params in var.sql_databases : db_params.name
+        ]) == length(distinct(
+        [
+          for db_key, db_params in var.sql_databases : db_params.name
+      ])
+    )
+    error_message = "The 'name' in the sql database value must be unique."
+  }
+
+  validation {
+    condition = alltrue(
+      [
+        for db_key, db_params in var.sql_databases :
+        length(
+          [
+            for container_key, container_params in db_params.containers : container_params.name
+          ]
+          ) == length(distinct(
+            [
+              for container_key, container_params in db_params.containers : container_params.name
+            ]
+        ))
+    ])
+    error_message = "The 'name' in the sql container value must be unique withing a sql database."
+  }
+
+  validation {
+    condition = alltrue(flatten(
+      [
+        for db_key, db_params in var.sql_databases :
+        [
+          for container_key, container_params in db_params.containers :
+          length(
+            [
+              for function_key, function_params in container_params.functions : function_params.name
+            ]
+            ) == length(distinct(
+              [
+                for function_key, function_params in container_params.functions : function_params.name
+              ]
+          ))
+        ]
+    ]))
+    error_message = "The 'name' in the sql function value must be unique within a container."
+  }
+
+  validation {
+    condition = alltrue(flatten(
+      [
+        for db_key, db_params in var.sql_databases :
+        [
+          for container_key, container_params in db_params.containers :
+          length(
+            [
+              for trigger_key, trigger_params in container_params.triggers : trigger_params.name
+            ]
+            ) == length(distinct(
+              [
+                for trigger_key, trigger_params in container_params.triggers : trigger_params.name
+              ]
+          ))
+        ]
+    ]))
+    error_message = "The 'name' in the sql triggers value must be unique within a container."
+  }
+
+  validation {
+    condition = alltrue(flatten(
+      [
+        for db_key, db_params in var.sql_databases :
+        [
+          for container_key, container_params in db_params.containers :
+          length(
+            [
+              for stored_key, stored_params in container_params.stored_procedures : stored_params.name
+            ]
+            ) == length(distinct(
+              [
+                for stored_key, stored_params in container_params.stored_procedures : stored_params.name
+              ]
+          ))
+        ]
+    ]))
+    error_message = "The 'name' in the sql stored procedure value must be unique within a container."
+  }
 
   validation {
     condition = alltrue(

@@ -1,12 +1,11 @@
 resource "azurerm_cosmosdb_sql_database" "this" {
-  for_each = local.normalized_sql_databases
+  for_each = var.sql_databases
 
-  name = each.key
+  name       = each.value.name
+  throughput = each.value.throughput
 
   account_name        = azurerm_cosmosdb_account.this.name
   resource_group_name = azurerm_cosmosdb_account.this.resource_group_name
-
-  throughput = each.value.throughput
 
   dynamic "autoscale_settings" {
     for_each = try(each.value.autoscale_settings.max_throughput, null) != null ? [1] : []

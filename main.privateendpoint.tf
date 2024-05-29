@@ -2,7 +2,7 @@
 resource "azurerm_private_endpoint" "this_managed_dns_zone_groups" {
   for_each = var.private_endpoints_manage_dns_zone_group ? var.private_endpoints : {}
 
-  name = coalesce(each.value.name, "pep-${each.key}")
+  name = coalesce(each.value.name, "pep-${var.name}")
 
   subnet_id                     = each.value.subnet_resource_id
   custom_network_interface_name = each.value.network_interface_name
@@ -43,7 +43,7 @@ resource "azurerm_private_endpoint" "this_managed_dns_zone_groups" {
 resource "azurerm_private_endpoint" "this_unmanaged_dns_zone_groups" {
   for_each = var.private_endpoints_manage_dns_zone_group == false ? var.private_endpoints : {}
 
-  name = coalesce(each.value.name, "pep-${each.key}")
+  name = coalesce(each.value.name, "pep-${var.name}")
 
   subnet_id                     = each.value.subnet_resource_id
   custom_network_interface_name = each.value.network_interface_name

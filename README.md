@@ -20,10 +20,10 @@ This Terraform module is designed to create Azure Cosmos DB accounts, its relate
 ## Limitations
 
 * The module does not support auto rotation of Customer Managed keys (CosmosDB doesn't support it yet)
-* The module does not support yet Gremlin API
-* The module does not support yet MongoDB API
-* The module does not support yet Table API
-* The module does not support yet Cassandra
+* The module does not support the Gremlin API yet
+* The module does not support the MongoDB API yet
+* The module does not support the Table API yet
+* The module does not support the Cassandra API yet
 
 ## Examples
 * [Use only defaults values](examples/default/main.tf)
@@ -721,7 +721,7 @@ Default: `{}`
 
 Description:   Defaults to `{}`. Manages SQL Databases within a Cosmos DB Account.
 
-  - `name`       - (Optional) - Defaults to map key if not specified. Specifies the name of the Cosmos DB SQL Container. Changing this forces a new resource to be created.
+  - `name`       - (Required) - Specifies the name of the Cosmos DB SQL Container. Changing this forces a new resource to be created.
   - `throughput` - (Optional) - Defaults to `null`. The throughput of SQL database (RU/s). Must be set in increments of `100`. The minimum value is `400`. This must be set upon database creation otherwise it cannot be updated without a manual terraform destroy-apply.
 
   - `autoscale_settings` - (Optional) - Defaults to `null`. This must be set upon database creation otherwise it cannot be updated without a manual terraform destroy-apply.
@@ -729,7 +729,7 @@ Description:   Defaults to `{}`. Manages SQL Databases within a Cosmos DB Accoun
 
   - `containers` - (Optional) - Defaults to `{}`. Manages SQL Containers within a Cosmos DB Account.
     - `partition_key_path`     - (Required) - Define a partition key. Changing this forces a new resource to be created.
-    - `name`                   - (Optional) - Defaults to map key if not specified. Specifies the name of the Cosmos DB SQL Container. Changing this forces a new resource to be created.
+    - `name`                   - (Required) - Specifies the name of the Cosmos DB SQL Container. Changing this forces a new resource to be created.
     - `throughput`             - (Optional) - Defaults to `null`. The throughput of SQL container (RU/s). Must be set in increments of `100`. The minimum value is `400`. This must be set upon container creation otherwise it cannot be updated without a manual terraform destroy-apply.
     - `default_ttl`            - (Optional) - Defaults to `null`. The default time to live of SQL container. If missing, items are not expired automatically. If present and the value is set to `-1`, it is equal to infinity, and items don't expire by default. If present and the value is set to some number n - items will expire n seconds after their last modified time.
     - `analytical_storage_ttl` - (Optional) - Defaults to `null`. The default time to live of Analytical Storage for this SQL container. If present and the value is set to `-1`, it is equal to infinity, and items don't expire by default. If present and the value is set to some number n - items will expire n seconds after their last modified time.
@@ -742,17 +742,17 @@ Description:   Defaults to `{}`. Manages SQL Databases within a Cosmos DB Accoun
 
     - `functions` - (Optional) - Defaults to `{}`. Manages SQL User Defined Functions.
       - `body` - (Required) - Body of the User Defined Function.
-      - `name` - (Optional) - Defaults to map key if not specified. The name which should be used for this SQL User Defined Function. Changing this forces a new SQL User Defined Function to be created.
+      - `name` - (Required) - The name which should be used for this SQL User Defined Function. Changing this forces a new SQL User Defined Function to be created.
 
     - `stored_procedures` - (Optional) - Defaults to `{}`. Manages SQL Stored Procedures within a Cosmos DB Account SQL Database.
       - `body` - (Required) - The body of the stored procedure.
-      - `name` - (Optional) - Defaults to map key if not specified. Specifies the name of the Cosmos DB SQL Stored Procedure. Changing this forces a new resource to be created.
+      - `name` - (Required) - Specifies the name of the Cosmos DB SQL Stored Procedure. Changing this forces a new resource to be created.
 
     - `triggers` - (Optional) -  Defaults to `{}`. Manages SQL Triggers.
       - `body`      - (Required) - Body of the Trigger.
       - `type`      - (Required) - Type of the Trigger. Possible values are `Pre` and `Post`.
       - `operation` - (Required) - The operation the trigger is associated with. Possible values are `All`, `Create`, `Update`, `Delete` and `Replace`.
-      - `name`      - (Optional) - Defaults to map key if not specified. The name which should be used for this SQL Trigger. Changing this forces a new SQL Trigger to be created.
+      - `name`      - (Required) - The name which should be used for this SQL Trigger. Changing this forces a new SQL Trigger to be created.
 
     - `conflict_resolution_policy` - (Optional) - Defaults to `null`. The conflict resolution policy of the container. Changing this forces a new resource to be created.
       - `mode`                          - (Required) - Indicates the conflict resolution mode. Possible values include: `LastWriterWins` and `Custom`.
@@ -810,18 +810,21 @@ Description:   Defaults to `{}`. Manages SQL Databases within a Cosmos DB Accoun
 
           functions = {
             function1 = {
+              name = "functionName"
               body = "function function1() { }"
             }
           }
 
           stored_procedures = {
             stored1 = {
+              name = "storedName"
               body = "function stored1() { }"
             }
           }
 
           triggers = {
             trigger1 = {
+              name      = "triggerName"
               body      = "function trigger1() { }"
               type      = "Pre"
               operation = "All"
@@ -875,7 +878,8 @@ Type:
 
 ```hcl
 map(object({
-    name       = optional(string, null)
+    name = string
+
     throughput = optional(number, null)
 
     autoscale_settings = optional(object({
@@ -884,8 +888,8 @@ map(object({
 
     containers = optional(map(object({
       partition_key_path = string
+      name               = string
 
-      name                   = optional(string, null)
       throughput             = optional(number, null)
       default_ttl            = optional(number, null)
       analytical_storage_ttl = optional(number, null)
@@ -900,19 +904,19 @@ map(object({
 
       functions = optional(map(object({
         body = string
-        name = optional(string)
+        name = string
       })), {})
 
       stored_procedures = optional(map(object({
         body = string
-        name = optional(string)
+        name = string
       })), {})
 
       triggers = optional(map(object({
         body      = string
         type      = string
         operation = string
-        name      = optional(string)
+        name      = string
       })), {})
 
       conflict_resolution_policy = optional(object({
@@ -1024,6 +1028,10 @@ Default: `[]`
 
 The following outputs are exported:
 
+### <a name="output_name"></a> [name](#output\_name)
+
+Description: The name of the cosmos db account created.
+
 ### <a name="output_resource"></a> [resource](#output\_resource)
 
 Description: The cosmos db account created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_account#attributes-reference
@@ -1031,6 +1039,10 @@ Description: The cosmos db account created. More info: https://registry.terrafor
 ### <a name="output_resource_diagnostic_settings"></a> [resource\_diagnostic\_settings](#output\_resource\_diagnostic\_settings)
 
 Description: The diagnostic settings created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting#attributes-reference
+
+### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
+
+Description: The resource ID of the cosmos db account created.
 
 ### <a name="output_resource_locks"></a> [resource\_locks](#output\_resource\_locks)
 
