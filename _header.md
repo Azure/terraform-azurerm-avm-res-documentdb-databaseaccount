@@ -1,19 +1,36 @@
-# terraform-azurerm-avm-template
+# Terraform Azure Cosmos DB Module
 
-This is a template repo for Terraform Azure Verified Modules.
+This Terraform module is designed to create Azure Cosmos DB accounts, its related resources and APIs.
 
-Things to do:
+> [!WARNING]
+> Major version Zero (0.y.z) is for initial development. Anything MAY change at any time. A module SHOULD NOT be considered stable till at least it is major version one (1.0.0) or greater. Changes will always be via new versions being published and no changes will be made to existing published versions. For more details please go to <https://semver.org/>
 
-1. Set up a GitHub repo environment called `test`.
-1. Configure environment protection rule to ensure that approval is required before deploying to this environment.
-1. Create a user-assigned managed identity in your test subscription.
-1. Create a role assignment for the managed identity on your test subscription, use the minimum required role.
-1. Configure federated identity credentials on the user assigned managed identity. Use the GitHub environment.
-1. Search and update TODOs within the code and remove the TODO comments once complete.
+## Features
 
-> [!IMPORTANT]
-> As the overall AVM framework is not GA (generally available) yet - the CI framework and test automation is not fully functional and implemented across all supported languages yet - breaking changes are expected, and additional customer feedback is yet to be gathered and incorporated. Hence, modules **MUST NOT** be published at version `1.0.0` or higher at this time.
-> 
-> All module **MUST** be published as a pre-release version (e.g., `0.1.0`, `0.1.1`, `0.2.0`, etc.) until the AVM framework becomes GA.
-> 
-> However, it is important to note that this **DOES NOT** mean that the modules cannot be consumed and utilized. They **CAN** be leveraged in all types of environments (dev, test, prod etc.). Consumers can treat them just like any other IaC module and raise issues or feature requests against them as they learn from the usage of the module. Consumers should also read the release notes for each version, if considering updating to a more recent version of a module to see if there are any considerations or breaking changes etc.
+* Creation of accounts with NoSQL API with its databases and containers.
+* EntraID authentication instead of access keys
+* Support for customer-managed keys.
+* Enable private endpoint, providing secure access over a private network.
+* Enable diagnostic settings.
+* Creation of role assignments
+* Enable locks
+* Enable managed identities both system and user assigned ones.
+
+## Limitations
+
+* The module does not support auto rotation of Customer Managed keys (CosmosDB doesn't support it yet)
+* The module does not support the Gremlin API yet
+* The module does not support the MongoDB API yet
+* The module does not support the Table API yet
+* The module does not support the Cassandra API yet
+
+## Examples
+* [Use only defaults values](examples/default/main.tf)
+* [Specifying all possible parameters at account level](examples/max-account/main.tf)
+* [Creation of sql api](examples/sql/main.tf)
+* [Creation of a serverless account](examples/serverless/main.tf)
+* [Customer managed key pinning to a specific key version](examples/cmk-pin-key-version/main.tf)
+* [Enable managed identities](examples/managed-identities/main.tf)
+* [Enable private endpoints with auto management of dns records](examples/private-endpoints-managed-dns-records/main.tf)
+* [Enable private endpoints with auto management of dns records](examples/private-endpoints-unmanaged-dns-records/main.tf)
+* [Restrict public network access with access control list and service endpoints](examples/public-restricted-access/main.tf)

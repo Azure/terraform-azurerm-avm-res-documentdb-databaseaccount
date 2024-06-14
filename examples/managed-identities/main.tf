@@ -23,7 +23,7 @@ provider "azurerm" {
 }
 
 locals {
-  prefix = "default"
+  prefix = "mi"
 }
 
 module "regions" {
@@ -48,10 +48,22 @@ resource "azurerm_resource_group" "example" {
   location = "northeurope"
 }
 
+resource "azurerm_user_assigned_identity" "example" {
+  name = "example-${local.prefix}"
+
+  resource_group_name = azurerm_resource_group.example.name
+  location            = azurerm_resource_group.example.location
+}
+
 module "cosmos" {
   source = "../../"
 
   resource_group_name = azurerm_resource_group.example.name
   location            = azurerm_resource_group.example.location
   name                = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
+
+  managed_identities = {
+    system_assigned            = true
+    user_assigned_resource_ids = [azurerm_user_assigned_identity.example.id]
+  }
 }
