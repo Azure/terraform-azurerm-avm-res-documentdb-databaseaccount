@@ -50,15 +50,14 @@ module "naming" {
 }
 
 resource "azurerm_resource_group" "example" {
-  name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
   location = "northeurope"
+  name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
 }
 
 resource "azurerm_user_assigned_identity" "example" {
-  name = "example-${local.prefix}"
-
-  resource_group_name = azurerm_resource_group.example.name
   location            = azurerm_resource_group.example.location
+  name                = "example-${local.prefix}"
+  resource_group_name = azurerm_resource_group.example.name
 }
 
 module "cosmos" {
