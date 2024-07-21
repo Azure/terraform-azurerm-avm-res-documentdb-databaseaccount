@@ -11,8 +11,6 @@ permissions:
   contents: read
   id-token: write
 
-concurrency: e2e-tests
-
 jobs:
   getexamples:
     if: github.event.repository.name != 'terraform-azurerm-avm-template'
@@ -20,7 +18,7 @@ jobs:
     outputs:
       examples: ${{ steps.getexamples.outputs.examples }}
     steps:
-      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 #v4.1.2
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 #v4.1.7
       - name: get examples
         id: getexamples
         uses: Azure/terraform-azurerm-avm-template/.github/actions/e2e-getexamples@main
@@ -40,13 +38,13 @@ jobs:
         example: ${{ fromJson(needs.getexamples.outputs.examples) }}
       fail-fast: false
     steps:
-      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 #v4.1.2
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 #v4.1.7
 
       - name: Test example
         shell: bash
         run: |
           set -e
-            MAX_RETRIES=10
+           MAX_RETRIES=10
           RETRY_COUNT=0
           until [ $RETRY_COUNT -ge $MAX_RETRIES ]
           do
