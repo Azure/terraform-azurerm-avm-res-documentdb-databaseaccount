@@ -57,56 +57,50 @@ module "naming" {
 }
 
 resource "azurerm_resource_group" "example" {
-  name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
   location = "northeurope"
+  name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
 }
 
 resource "azurerm_user_assigned_identity" "example" {
-  name = "example-${local.prefix}"
-
-  resource_group_name = azurerm_resource_group.example.name
   location            = azurerm_resource_group.example.location
+  name                = "example-${local.prefix}"
+  resource_group_name = azurerm_resource_group.example.name
 }
 
 resource "azurerm_key_vault" "example" {
-  name = "${module.naming.key_vault.name_unique}${local.prefix}"
-
-  soft_delete_retention_days = 7
+  location                   = azurerm_resource_group.example.location
+  name                       = "${module.naming.key_vault.name_unique}${local.prefix}"
+  resource_group_name        = azurerm_resource_group.example.name
+  sku_name                   = "standard"
+  tenant_id                  = data.azurerm_client_config.current.tenant_id
   enable_rbac_authorization  = true
   purge_protection_enabled   = true
-  sku_name                   = "standard"
-  resource_group_name        = azurerm_resource_group.example.name
-  location                   = azurerm_resource_group.example.location
-  tenant_id                  = data.azurerm_client_config.current.tenant_id
+  soft_delete_retention_days = 7
 }
 
 resource "azurerm_key_vault_key" "example" {
-  name = "customermanagedkey"
-
-  key_size     = 4096
-  key_type     = "RSA"
-  key_vault_id = azurerm_key_vault.example.id
-
   key_opts = [
     "wrapKey",
     "unwrapKey"
   ]
+  key_type     = "RSA"
+  key_vault_id = azurerm_key_vault.example.id
+  name         = "customermanagedkey"
+  key_size     = 4096
 
   depends_on = [time_sleep.wait_for_rbac_before_key_operations]
 }
 
 resource "azurerm_role_assignment" "crypto_officer" {
+  principal_id         = data.azurerm_client_config.current.object_id
+  scope                = azurerm_key_vault.example.id
   role_definition_name = "Key Vault Crypto Officer"
-
-  scope        = azurerm_key_vault.example.id
-  principal_id = data.azurerm_client_config.current.object_id
 }
 
 resource "azurerm_role_assignment" "crypto_service_encryption_user" {
+  principal_id         = azurerm_user_assigned_identity.example.principal_id
+  scope                = azurerm_key_vault.example.id
   role_definition_name = "Key Vault Crypto Service Encryption User"
-
-  scope        = azurerm_key_vault.example.id
-  principal_id = azurerm_user_assigned_identity.example.principal_id
 }
 
 resource "time_sleep" "wait_for_rbac_before_key_operations" {
@@ -151,16 +145,6 @@ The following requirements are needed by this module:
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.6)
 
 - <a name="requirement_time"></a> [time](#requirement\_time) (~> 0.11)
-
-## Providers
-
-The following providers are used by this module:
-
-- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 3.71)
-
-- <a name="provider_random"></a> [random](#provider\_random) (~> 3.6)
-
-- <a name="provider_time"></a> [time](#provider\_time) (~> 0.11)
 
 ## Resources
 

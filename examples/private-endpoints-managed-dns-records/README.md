@@ -52,22 +52,20 @@ module "naming" {
 }
 
 resource "azurerm_resource_group" "example" {
-  name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
   location = "northeurope"
+  name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
 }
 
 resource "azurerm_virtual_network" "example" {
-  name = "${module.naming.virtual_network.name_unique}-${local.prefix}"
-
   address_space       = ["10.0.0.0/16"]
-  resource_group_name = azurerm_resource_group.example.name
   location            = azurerm_resource_group.example.location
+  name                = "${module.naming.virtual_network.name_unique}-${local.prefix}"
+  resource_group_name = azurerm_resource_group.example.name
 }
 
 resource "azurerm_subnet" "example" {
-  name = module.naming.subnet.name_unique
-
   address_prefixes     = ["10.0.0.0/24"]
+  name                 = module.naming.subnet.name_unique
   resource_group_name  = azurerm_resource_group.example.name
   virtual_network_name = azurerm_virtual_network.example.name
 }
@@ -78,18 +76,16 @@ resource "azurerm_private_dns_zone" "example" {
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "private_links" {
-  name = "vnet-link"
-
+  name                  = "vnet-link"
+  private_dns_zone_name = azurerm_private_dns_zone.example.name
   resource_group_name   = azurerm_resource_group.example.name
   virtual_network_id    = azurerm_virtual_network.example.id
-  private_dns_zone_name = azurerm_private_dns_zone.example.name
 }
 
 resource "azurerm_application_security_group" "example" {
-  name = "tf-appsecuritygroup-${local.prefix}"
-
-  resource_group_name = azurerm_resource_group.example.name
   location            = azurerm_resource_group.example.location
+  name                = "tf-appsecuritygroup-${local.prefix}"
+  resource_group_name = azurerm_resource_group.example.name
 }
 
 module "cosmos" {
@@ -160,14 +156,6 @@ The following requirements are needed by this module:
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.71)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.6)
-
-## Providers
-
-The following providers are used by this module:
-
-- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 3.71)
-
-- <a name="provider_random"></a> [random](#provider\_random) (~> 3.6)
 
 ## Resources
 
