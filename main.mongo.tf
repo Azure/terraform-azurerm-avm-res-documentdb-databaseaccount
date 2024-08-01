@@ -33,7 +33,6 @@ resource "azurerm_cosmosdb_mongo_collection" "this" {
       max_throughput = each.value.collection_params.autoscale_settings.max_throughput
     }
   }
-  
   dynamic "index" {
     for_each = each.value.collection_params.index != null ? [each.value.collection_params.index] : []
 

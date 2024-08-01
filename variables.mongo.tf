@@ -1,3 +1,14 @@
+variable "mongo_server_version" {
+  type        = string
+  description = "The Server Version of a MongoDB account. Defaults to `3.6` Possible values are `4.2`, `4.0`, `3.6`, and `3.2`"
+  default     = "3.6"
+
+  validation {
+    condition     = can(index(["4.2", "4.0", "3.6", "3.2"], var.mongo_server_version))
+    error_message = "The 'mongo_server_version' variable must be '4.2', '4.0', '3.6', or '3.2'."
+  }
+}
+
 variable "mongo_databases" {
   type = map(object({
     name = string

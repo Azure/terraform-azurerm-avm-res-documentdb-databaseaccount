@@ -637,6 +637,14 @@ map(object({
 
 Default: `{}`
 
+### <a name="input_mongo_server_version"></a> [mongo\_server\_version](#input\_mongo\_server\_version)
+
+Description: The Server Version of a MongoDB account. Defaults to `3.6` Possible values are `4.2`, `4.0`, `3.6`, and `3.2`
+
+Type: `string`
+
+Default: `"3.6"`
+
 ### <a name="input_multiple_write_locations_enabled"></a> [multiple\_write\_locations\_enabled](#input\_multiple\_write\_locations\_enabled)
 
 Description: Defaults to `false`. Ignored when `backup.type` is `Continuous`. Enable multi-region writes for this Cosmos DB account.

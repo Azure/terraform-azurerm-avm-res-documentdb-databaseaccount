@@ -14,6 +14,7 @@ resource "azurerm_cosmosdb_account" "this" {
   kind                                  = length(var.mongo_databases) > 0 ? "MongoDB" : "GlobalDocumentDB"
   local_authentication_disabled         = var.local_authentication_disabled
   minimal_tls_version                   = var.minimal_tls_version
+  mongo_server_version                  = length(var.mongo_databases) > 0 ? var.mongo_server_version : null
   multiple_write_locations_enabled      = var.backup.type == local.periodic_backup_policy ? var.multiple_write_locations_enabled : false
   network_acl_bypass_for_azure_services = var.network_acl_bypass_for_azure_services
   network_acl_bypass_ids                = var.network_acl_bypass_ids
