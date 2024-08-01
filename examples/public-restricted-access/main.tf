@@ -44,25 +44,23 @@ module "naming" {
 }
 
 resource "azurerm_resource_group" "example" {
-  name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
   location = "northeurope"
+  name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
 }
 
 resource "azurerm_virtual_network" "example" {
-  name = "${module.naming.virtual_network.name_unique}-${local.prefix}"
-
   address_space       = ["10.0.0.0/16"]
-  resource_group_name = azurerm_resource_group.example.name
   location            = azurerm_resource_group.example.location
+  name                = "${module.naming.virtual_network.name_unique}-${local.prefix}"
+  resource_group_name = azurerm_resource_group.example.name
 }
 
 resource "azurerm_subnet" "example" {
-  name = module.naming.subnet.name_unique
-
   address_prefixes     = ["10.0.0.0/24"]
-  service_endpoints    = ["Microsoft.AzureCosmosDB"]
+  name                 = module.naming.subnet.name_unique
   resource_group_name  = azurerm_resource_group.example.name
   virtual_network_name = azurerm_virtual_network.example.name
+  service_endpoints    = ["Microsoft.AzureCosmosDB"]
 }
 
 module "cosmos" {
