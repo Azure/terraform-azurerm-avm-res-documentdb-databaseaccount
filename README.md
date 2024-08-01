@@ -64,6 +64,8 @@ The following providers are used by this module:
 The following resources are used by this module:
 
 - [azurerm_cosmosdb_account.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_account) (resource)
+- [azurerm_cosmosdb_mongo_collection.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_mongo_collection) (resource)
+- [azurerm_cosmosdb_mongo_database.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_mongo_database) (resource)
 - [azurerm_cosmosdb_sql_container.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_container) (resource)
 - [azurerm_cosmosdb_sql_database.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_database) (resource)
 - [azurerm_cosmosdb_sql_dedicated_gateway.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_dedicated_gateway) (resource)
@@ -554,6 +556,86 @@ Description: Defaults to `Tls12`. Specifies the minimal TLS version for the Cosm
 Type: `string`
 
 Default: `"Tls12"`
+
+### <a name="input_mongo_databases"></a> [mongo\_databases](#input\_mongo\_databases)
+
+Description:   Defaults to `{}`. Manages SQL Databases within a Cosmos DB Account.
+
+  - `name`       - (Required) - Specifies the name of the Cosmos DB Mongo Database. Changing this forces a new resource to be created.
+  - `throughput` - (Optional) - Defaults to `null`. The throughput of the MongoDB database (RU/s). Must be set in increments of `100`. The minimum value is `400`. This must be set upon database creation otherwise it cannot be updated without a manual terraform destroy-apply.
+
+  - `autoscale_settings` - (Optional) - Defaults to `null`. This must be set upon database creation otherwise it cannot be updated without a manual terraform destroy-apply.
+    - `max_throughput` - (Required) - The maximum throughput of the SQL database (RU/s). Must be between `1,000` and `1,000,000`. Must be set in increments of `1,000`. Conflicts with `throughput`.
+
+  - `collections` - (Optional) - Defaults to `{}`. Manages a Mongo Collection within a Cosmos DB Account.
+    - `name`      - (Required) Specifies the name of the Cosmos DB Mongo Collection. Changing this forces a new resource to be created.
+
+    - `throughput`             - (Optional) - Defaults to `null`. The throughput of the MongoDB collection (RU/s). Must be set in increments of 100. The minimum value is 400. This must be set upon database creation otherwise it cannot be updated without a manual terraform destroy-apply.
+    - `default_ttl_seconds`    - (Optional) - Defaults to `null`. The default Time To Live in seconds. If the value is -1, items are not automatically expired.
+    - `shard_key             ` - (Optional) - Defaults to `null`. The name of the key to partition on for sharding. There must not be any other unique index keys. Changing this forces a new resource to be created.
+
+    - `autoscale_settings` - (Optional) - Defaults to `null`. This must be set upon database creation otherwise it cannot be updated without a manual terraform destroy-apply.
+      - `max_throughput`   - (Required) - The maximum throughput of the MongoDB collection (RU/s). Must be between 1,000 and 1,000,000. Must be set in increments of 1,000. Conflicts with throughput.
+
+    - `Index` - (Optional) - Defaults to `null`. Improve the efficiency of MongoDB database operations.
+      - `keys`    - (Required) Specifies the list of user settable keys for each Cosmos DB Mongo Collection.
+      - `unique`  - (Optional) Defaults to `false`. Is the index unique or not?
+
+  Example inputs:
+  ```hcl
+      database_collection = {
+      name       = "database_mongoDb_collections"
+      throughput = 400
+
+      collections = {
+        "collection" = {
+          name                = "MongoDBcollection"
+          default_ttl_seconds = "3600"
+          shard_key           = "_id"
+          throughput          = 400
+
+          index = {
+            keys   = ["_id"]
+            unique = true
+          }
+        }
+      }
+    }
+```
+
+Type:
+
+```hcl
+map(object({
+    name = string
+
+    throughput = optional(number, null)
+
+    autoscale_settings = optional(object({
+      max_throughput = number
+    }), null)
+
+    collections = optional(map(object({
+      name = string
+
+      default_ttl_seconds = optional(string, null)
+      shard_key           = optional(string, null)
+      throughput          = optional(number, null)
+
+      autoscale_settings = optional(object({
+        max_throughput = number
+      }), null)
+
+      index = optional(object({
+        keys   = list(string)
+        unique = optional(bool, false)
+      }), null)
+
+    })), {})
+  }))
+```
+
+Default: `{}`
 
 ### <a name="input_multiple_write_locations_enabled"></a> [multiple\_write\_locations\_enabled](#input\_multiple\_write\_locations\_enabled)
 

@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
-# Max example
+# Mongo API example
 
-This example deploys the module with all configurations at the account level which havent been already covered in other examples.
+This example shows the different possible configuration of the Mongo API.
 
 ```hcl
 terraform {
@@ -28,10 +28,8 @@ provider "azurerm" {
   }
 }
 
-data "azurerm_client_config" "current" {}
-
 locals {
-  prefix = "max"
+  prefix = "mongo"
 }
 
 module "regions" {
@@ -59,72 +57,81 @@ resource "azurerm_resource_group" "example" {
 module "cosmos" {
   source = "../../"
 
-  resource_group_name                = azurerm_resource_group.example.name
-  location                           = azurerm_resource_group.example.location
-  name                               = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
-  public_network_access_enabled      = true
-  enable_telemetry                   = true
-  access_key_metadata_writes_enabled = true
-  analytical_storage_enabled         = true
-  automatic_failover_enabled         = true
-  local_authentication_disabled      = true
-  partition_merge_enabled            = false
-  multiple_write_locations_enabled   = true
+  resource_group_name        = azurerm_resource_group.example.name
+  location                   = azurerm_resource_group.example.location
+  name                       = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
+  analytical_storage_enabled = true
 
-  cors_rule = {
-    max_age_in_seconds = 3600
-    allowed_origins    = ["*"]
-    exposed_headers    = ["*"]
-    allowed_headers    = ["Authorization"]
-    allowed_methods    = ["GET", "POST", "PUT"]
-  }
-
-  capacity = {
-    total_throughput_limit = 10000
-  }
-
-  analytical_storage_config = {
-    schema_type = "WellDefined"
-  }
-
-  consistency_policy = {
-    consistency_level = "Session"
-  }
-
-  backup = {
-    retention_in_hours  = 8
-    interval_in_minutes = 1440
-    storage_redundancy  = "Geo"
-    type                = "Periodic"
-  }
-
-  geo_locations = [
-    {
-      failover_priority = 0
-      zone_redundant    = true
-      location          = azurerm_resource_group.example.location
+  mongo_databases = {
+    empty_database = {
+      name       = "empty_database"
+      throughput = 400
     }
-  ]
 
-  tags = {
-    environment = "testing"
-    department  = "engineering"
-  }
+    database_autoscale_througput = {
+      name = "database_autoscale_througput"
 
-  role_assignments = {
-    key = {
-      skip_service_principal_aad_check = false
-      role_definition_id_or_name       = "Contributor"
-      description                      = "This is a test role assignment"
-      principal_id                     = data.azurerm_client_config.current.object_id
+      autoscale_settings = {
+        max_throughput = 4000
+      }
     }
-  }
 
-  lock = {
-    kind = "CanNotDelete"
-    name = "Testing name CanNotDelete"
+    database_collection = {
+      name       = "database_mongoDb_collections"
+      throughput = 400
+
+      collections = {
+        "collection" = {
+          name                = "MongoDBcollection"
+          default_ttl_seconds = "3600"
+          shard_key           = "_id"
+          throughput          = 400
+
+          index = {
+            keys   = ["_id"]
+            unique = true
+          }
+        }
+
+        "collection_autoscale" = {
+          name = "collection_autoscale_settings"
+
+          default_ttl_seconds = "3600"
+          shard_key           = "uniqueKey"
+
+          autoscale_settings = {
+            max_throughput = 4000
+          }
+
+          index = {
+            keys   = ["_id"]
+            unique = false
+          }
+        }
+      }
+    }
+
+    database_collections_index_keys_unique_false = {
+      name       = "database_collections_index_keys_unique_false"
+      throughput = 400
+
+      collections = {
+        "collection" = {
+          name                = "collections_index_keys_unique_false"
+          default_ttl_seconds = "3600"
+          shard_key           = "uniqueKey"
+          throughput          = 400
+
+          index = {
+            keys   = ["_id"]
+            unique = false
+          }
+        }
+      }
+    }
   }
 }
+
 ```
 
 <!-- markdownlint-disable MD033 -->
@@ -152,7 +159,6 @@ The following resources are used by this module:
 
 - [azurerm_resource_group.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
-- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs

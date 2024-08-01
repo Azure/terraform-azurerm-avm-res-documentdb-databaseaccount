@@ -50,8 +50,8 @@ module "naming" {
 }
 
 resource "azurerm_resource_group" "example" {
-  name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
   location = "northeurope"
+  name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
 }
 
 module "cosmos" {
