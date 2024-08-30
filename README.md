@@ -1120,17 +1120,33 @@ Default: `[]`
 
 The following outputs are exported:
 
+### <a name="output_cosmosdb_keys"></a> [cosmosdb\_keys](#output\_cosmosdb\_keys)
+
+Description: The keys for the CosmosDB Account.
+
+### <a name="output_cosmosdb_mongodb_connection_strings"></a> [cosmosdb\_mongodb\_connection\_strings](#output\_cosmosdb\_mongodb\_connection\_strings)
+
+Description: The MongoDB connection strings for the CosmosDB Account.
+
+### <a name="output_cosmosdb_sql_connection_strings"></a> [cosmosdb\_sql\_connection\_strings](#output\_cosmosdb\_sql\_connection\_strings)
+
+Description: The SQL connection strings for the CosmosDB Account.
+
+### <a name="output_mongo_collections"></a> [mongo\_collections](#output\_mongo\_collections)
+
+Description: A map of the MongoDB collections created, with the collection name as the key and the collection ID as the value.
+
+### <a name="output_mongo_databases"></a> [mongo\_databases](#output\_mongo\_databases)
+
+Description: A map of the MongoDB databases created, with the database name as the key and the database ID as the value.
+
 ### <a name="output_name"></a> [name](#output\_name)
 
 Description: The name of the cosmos db account created.
 
-### <a name="output_resource"></a> [resource](#output\_resource)
-
-Description: The cosmos db account created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_account#attributes-reference
-
 ### <a name="output_resource_diagnostic_settings"></a> [resource\_diagnostic\_settings](#output\_resource\_diagnostic\_settings)
 
-Description: The diagnostic settings created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting#attributes-reference
+Description: A map of the diagnostic settings created, with the diagnostic setting name as the key and the diagnostic setting ID as the value.
 
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
@@ -1138,43 +1154,43 @@ Description: The resource ID of the cosmos db account created.
 
 ### <a name="output_resource_locks"></a> [resource\_locks](#output\_resource\_locks)
 
-Description: The management locks created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock#attributes-reference
+Description: A map of the management locks created, with the lock name as the key and the lock ID as the value.
 
 ### <a name="output_resource_private_endpoints"></a> [resource\_private\_endpoints](#output\_resource\_private\_endpoints)
 
-Description: A map of the private endpoints created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint#attributes-reference
+Description: A map of the management locks created, with the lock name as the key and the lock ID as the value.
 
 ### <a name="output_resource_private_endpoints_application_security_group_association"></a> [resource\_private\_endpoints\_application\_security\_group\_association](#output\_resource\_private\_endpoints\_application\_security\_group\_association)
 
-Description: The private endpoint application security group associations created
+Description: The IDs of the private endpoint application security group associations created.
 
 ### <a name="output_resource_role_assignments"></a> [resource\_role\_assignments](#output\_resource\_role\_assignments)
 
-Description: The role assignments created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment#attributes-reference
+Description: A map of the role assignments created, with the assignment key as the map key and the assignment value as the map value.
 
 ### <a name="output_sql_containers"></a> [sql\_containers](#output\_sql\_containers)
 
-Description: The value of the sql containers created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_container#attributes-reference
+Description: A map of the SQL containers created, with the container name as the key and the container ID as the value.
 
 ### <a name="output_sql_databases"></a> [sql\_databases](#output\_sql\_databases)
 
-Description: The value of the sql databases created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_database#attributes-reference
+Description: A map of the SQL databases created, with the database name as the key and the database ID as the value.
 
 ### <a name="output_sql_dedicated_gateway"></a> [sql\_dedicated\_gateway](#output\_sql\_dedicated\_gateway)
 
-Description: The value of the sql dedicated gateway created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_dedicated_gateway#attributes-reference
+Description: The IDs of the SQL dedicated gateways created.
 
 ### <a name="output_sql_functions"></a> [sql\_functions](#output\_sql\_functions)
 
-Description: The value of the sql functions created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_function#attributes-reference
+Description: A map of the SQL functions created, with the function name as the key and the function ID as the value.
 
 ### <a name="output_sql_stored_procedures"></a> [sql\_stored\_procedures](#output\_sql\_stored\_procedures)
 
-Description: The value of the sql stored procedures created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_stored_procedure#attributes-reference
+Description: A map of the SQL stored procedures created, with the stored procedure name as the key and the stored procedure ID as the value.
 
 ### <a name="output_sql_triggers"></a> [sql\_triggers](#output\_sql\_triggers)
 
-Description: The value of the sql triggers created. More info: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_trigger#attributes-reference
+Description: A map of the SQL triggers created, with the trigger name as the key and the trigger ID as the value.
 
 ## Modules
 
