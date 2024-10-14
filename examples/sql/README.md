@@ -298,6 +298,10 @@ module "cosmos" {
     }
   }
 }
+
+output "name" {
+  value = module.cosmos.sql_databases
+}
 ```
 
 <!-- markdownlint-disable MD033 -->
@@ -337,7 +341,11 @@ No optional inputs.
 
 ## Outputs
 
-No outputs.
+The following outputs are exported:
+
+### <a name="output_name"></a> [name](#output\_name)
+
+Description: n/a
 
 ## Modules
 

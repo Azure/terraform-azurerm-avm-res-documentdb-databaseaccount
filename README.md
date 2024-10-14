@@ -1132,13 +1132,9 @@ Description: The MongoDB connection strings for the CosmosDB Account.
 
 Description: The SQL connection strings for the CosmosDB Account.
 
-### <a name="output_mongo_collections"></a> [mongo\_collections](#output\_mongo\_collections)
-
-Description: A map of the MongoDB collections created, with the collection name as the key and the collection ID as the value.
-
 ### <a name="output_mongo_databases"></a> [mongo\_databases](#output\_mongo\_databases)
 
-Description: A map of the MongoDB databases created, with the database name as the key and the database ID as the value.
+Description: A map of the MongoDB databases created, with the database name as the key and the database id and collections as the value.
 
 ### <a name="output_name"></a> [name](#output\_name)
 
@@ -1168,29 +1164,13 @@ Description: The IDs of the private endpoint application security group associat
 
 Description: A map of the role assignments created, with the assignment key as the map key and the assignment value as the map value.
 
-### <a name="output_sql_containers"></a> [sql\_containers](#output\_sql\_containers)
-
-Description: A map of the SQL containers created, with the container name as the key and the container ID as the value.
-
 ### <a name="output_sql_databases"></a> [sql\_databases](#output\_sql\_databases)
 
-Description: A map of the SQL databases created, with the database name as the key and the database ID as the value.
+Description: A map of the SQL databases created, with the database name as the key and the database ID, containers, functions, stored\_procedures and triggers as the value.
 
 ### <a name="output_sql_dedicated_gateway"></a> [sql\_dedicated\_gateway](#output\_sql\_dedicated\_gateway)
 
 Description: The IDs of the SQL dedicated gateways created.
-
-### <a name="output_sql_functions"></a> [sql\_functions](#output\_sql\_functions)
-
-Description: A map of the SQL functions created, with the function name as the key and the function ID as the value.
-
-### <a name="output_sql_stored_procedures"></a> [sql\_stored\_procedures](#output\_sql\_stored\_procedures)
-
-Description: A map of the SQL stored procedures created, with the stored procedure name as the key and the stored procedure ID as the value.
-
-### <a name="output_sql_triggers"></a> [sql\_triggers](#output\_sql\_triggers)
-
-Description: A map of the SQL triggers created, with the trigger name as the key and the trigger ID as the value.
 
 ## Modules
 
