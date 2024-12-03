@@ -49,7 +49,7 @@ module "naming" {
 }
 
 resource "azurerm_resource_group" "example" {
-  location = "spaincentral"
+  location = "northeurope"
   name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
 }
 
@@ -69,10 +69,10 @@ module "cosmos" {
     }
   ]
 
-  # sql_dedicated_gateway = { # Dificult to find a region where this is available
-  #   instance_count = 1
-  #   instance_size  = "Cosmos.D4s"
-  # }
+  sql_dedicated_gateway = {
+    instance_count = 1
+    instance_size  = "Cosmos.D4s"
+  }
 
   sql_databases = {
     empty_database = {
