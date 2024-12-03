@@ -2,11 +2,11 @@ variable "minimal_tls_version" {
   type        = string
   nullable    = false
   default     = "Tls12"
-  description = "Defaults to `Tls12`. Specifies the minimal TLS version for the CosmosDB account. Possible values are: `Tls`, `Tls11`, and `Tls12`"
+  description = "Defaults to `Tls12`. Specifies the minimal TLS version for the CosmosDB account. Possible values are: `Tls12`"
 
   validation {
-    condition     = var.minimal_tls_version == null || can(index(["Tls", "Tls11", "Tls12"], var.minimal_tls_version))
-    error_message = "The minimal_tls_version variable must be 'Tls', 'Tls1' or 'Tls12'."
+    condition     = var.minimal_tls_version == null || can(index(["Tls12"], var.minimal_tls_version))
+    error_message = "The minimal_tls_version variable must be 'Tls12'."
   }
 }
 

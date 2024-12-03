@@ -67,7 +67,7 @@ variable "free_tier_enabled" {
 variable "multiple_write_locations_enabled" {
   type        = bool
   nullable    = false
-  default     = false
+  default     = true
   description = "Defaults to `false`. Ignored when `backup.type` is `Continuous`. Enable multi-region writes for this Cosmos DB account."
 }
 
