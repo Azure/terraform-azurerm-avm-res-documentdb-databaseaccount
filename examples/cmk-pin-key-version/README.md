@@ -12,12 +12,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 3.71"
     }
-
     random = {
       source  = "hashicorp/random"
       version = "~> 3.6"
     }
-
     time = {
       source  = "hashicorp/time"
       version = "~> 0.11"
@@ -145,16 +143,6 @@ The following requirements are needed by this module:
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.6)
 
 - <a name="requirement_time"></a> [time](#requirement\_time) (~> 0.11)
-
-## Providers
-
-The following providers are used by this module:
-
-- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 3.71)
-
-- <a name="provider_random"></a> [random](#provider\_random) (~> 3.6)
-
-- <a name="provider_time"></a> [time](#provider\_time) (~> 0.11)
 
 ## Resources
 
