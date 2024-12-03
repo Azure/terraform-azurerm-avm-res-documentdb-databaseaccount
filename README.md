@@ -645,7 +645,7 @@ Description: Defaults to `false`. Ignored when `backup.type` is `Continuous`. En
 
 Type: `bool`
 
-Default: `true`
+Default: `false`
 
 ### <a name="input_network_acl_bypass_for_azure_services"></a> [network\_acl\_bypass\_for\_azure\_services](#input\_network\_acl\_bypass\_for\_azure\_services)
 
