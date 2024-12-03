@@ -31,14 +31,19 @@ output "cosmosdb_sql_connection_strings" {
   }
 }
 
-output "mongo_collections" {
-  description = "A map of the MongoDB collections created, with the collection name as the key and the collection ID as the value."
-  value       = { for collection in azurerm_cosmosdb_mongo_collection.this : collection.name => collection.id }
-}
-
 output "mongo_databases" {
-  description = "A map of the MongoDB databases created, with the database name as the key and the database ID as the value."
-  value       = { for db in azurerm_cosmosdb_mongo_database.this : db.name => db.id }
+  description = "A map of the MongoDB databases created, with the database name as the key and the database id and collections as the value."
+  value = { for db in azurerm_cosmosdb_mongo_database.this : db.name =>
+    {
+      id = db.id
+
+      collections = {
+        for collection in azurerm_cosmosdb_mongo_collection.this :
+        collection.name => collection.id
+        if collection.database_name == db.name
+      }
+    }
+  }
 }
 
 output "name" {
@@ -76,32 +81,43 @@ output "resource_role_assignments" {
   value       = { for role in azurerm_role_assignment.this : role.name => role.id }
 }
 
-output "sql_containers" {
-  description = "A map of the SQL containers created, with the container name as the key and the container ID as the value."
-  value       = { for container in azurerm_cosmosdb_sql_container.this : container.name => container.id }
-}
-
 output "sql_databases" {
-  description = "A map of the SQL databases created, with the database name as the key and the database ID as the value."
-  value       = { for db in azurerm_cosmosdb_sql_database.this : db.name => db.id }
+  description = "A map of the SQL databases created, with the database name as the key and the database ID, containers, functions, stored_procedures and triggers as the value."
+  value = { for db in azurerm_cosmosdb_sql_database.this : db.name =>
+    {
+      id = db.id
+
+      containers = {
+        for container in azurerm_cosmosdb_sql_container.this :
+        container.name =>
+        {
+          id = container.id
+
+          functions = {
+            for func in azurerm_cosmosdb_sql_function.this :
+            func.name => func.id
+            if func.container_id == db.id
+          }
+
+          stored_procedures = {
+            for stored in azurerm_cosmosdb_sql_stored_procedure.this :
+            stored.name => stored.id
+            if stored.database_name == db.name && stored.container_name == container.name
+          }
+
+          triggers = {
+            for trigger in azurerm_cosmosdb_sql_trigger.this :
+            trigger.name => trigger.id
+            if trigger.container_id == container.id
+          }
+        }
+        if container.database_name == db.name
+      }
+    }
+  }
 }
 
 output "sql_dedicated_gateway" {
   description = "The IDs of the SQL dedicated gateways created."
   value       = [for gateway in azurerm_cosmosdb_sql_dedicated_gateway.this : gateway.id]
-}
-
-output "sql_functions" {
-  description = "A map of the SQL functions created, with the function name as the key and the function ID as the value."
-  value       = { for func in azurerm_cosmosdb_sql_function.this : func.name => func.id }
-}
-
-output "sql_stored_procedures" {
-  description = "A map of the SQL stored procedures created, with the stored procedure name as the key and the stored procedure ID as the value."
-  value       = { for stored in azurerm_cosmosdb_sql_stored_procedure.this : stored.name => stored.id }
-}
-
-output "sql_triggers" {
-  description = "A map of the SQL triggers created, with the trigger name as the key and the trigger ID as the value."
-  value       = { for trigger in azurerm_cosmosdb_sql_trigger.this : trigger.name => trigger.id }
 }

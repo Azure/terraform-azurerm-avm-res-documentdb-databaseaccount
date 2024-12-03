@@ -6,7 +6,6 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 3.71"
     }
-
     random = {
       source  = "hashicorp/random"
       version = "~> 3.6"
@@ -291,4 +290,8 @@ module "cosmos" {
       }
     }
   }
+}
+
+output "name" {
+  value = module.cosmos.sql_databases
 }

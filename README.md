@@ -49,16 +49,6 @@ The following requirements are needed by this module:
 
 - <a name="requirement_time"></a> [time](#requirement\_time) (~> 0.11)
 
-## Providers
-
-The following providers are used by this module:
-
-- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 3.71)
-
-- <a name="provider_random"></a> [random](#provider\_random) (~> 3.6)
-
-- <a name="provider_time"></a> [time](#provider\_time) (~> 0.11)
-
 ## Resources
 
 The following resources are used by this module:
@@ -77,10 +67,12 @@ The following resources are used by this module:
 - [azurerm_private_endpoint.this_managed_dns_zone_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
 - [azurerm_private_endpoint.this_unmanaged_dns_zone_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
 - [azurerm_private_endpoint_application_security_group_association.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint_application_security_group_association) (resource)
-- [azurerm_resource_group_template_deployment.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group_template_deployment) (resource)
 - [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
-- [random_id.telem](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) (resource)
+- [modtm_telemetry.telemetry](https://registry.terraform.io/providers/hashicorp/modtm/latest/docs/resources/telemetry) (resource)
+- [random_uuid.telemetry](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) (resource)
 - [time_sleep.wait_180_seconds_for_destroy](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
+- [azurerm_client_config.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
+- [modtm_module_source.telemetry](https://registry.terraform.io/providers/hashicorp/modtm/latest/docs/data-sources/module_source) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -1132,13 +1124,9 @@ Description: The MongoDB connection strings for the CosmosDB Account.
 
 Description: The SQL connection strings for the CosmosDB Account.
 
-### <a name="output_mongo_collections"></a> [mongo\_collections](#output\_mongo\_collections)
-
-Description: A map of the MongoDB collections created, with the collection name as the key and the collection ID as the value.
-
 ### <a name="output_mongo_databases"></a> [mongo\_databases](#output\_mongo\_databases)
 
-Description: A map of the MongoDB databases created, with the database name as the key and the database ID as the value.
+Description: A map of the MongoDB databases created, with the database name as the key and the database id and collections as the value.
 
 ### <a name="output_name"></a> [name](#output\_name)
 
@@ -1168,29 +1156,13 @@ Description: The IDs of the private endpoint application security group associat
 
 Description: A map of the role assignments created, with the assignment key as the map key and the assignment value as the map value.
 
-### <a name="output_sql_containers"></a> [sql\_containers](#output\_sql\_containers)
-
-Description: A map of the SQL containers created, with the container name as the key and the container ID as the value.
-
 ### <a name="output_sql_databases"></a> [sql\_databases](#output\_sql\_databases)
 
-Description: A map of the SQL databases created, with the database name as the key and the database ID as the value.
+Description: A map of the SQL databases created, with the database name as the key and the database ID, containers, functions, stored\_procedures and triggers as the value.
 
 ### <a name="output_sql_dedicated_gateway"></a> [sql\_dedicated\_gateway](#output\_sql\_dedicated\_gateway)
 
 Description: The IDs of the SQL dedicated gateways created.
-
-### <a name="output_sql_functions"></a> [sql\_functions](#output\_sql\_functions)
-
-Description: A map of the SQL functions created, with the function name as the key and the function ID as the value.
-
-### <a name="output_sql_stored_procedures"></a> [sql\_stored\_procedures](#output\_sql\_stored\_procedures)
-
-Description: A map of the SQL stored procedures created, with the stored procedure name as the key and the stored procedure ID as the value.
-
-### <a name="output_sql_triggers"></a> [sql\_triggers](#output\_sql\_triggers)
-
-Description: A map of the SQL triggers created, with the trigger name as the key and the trigger ID as the value.
 
 ## Modules
 
