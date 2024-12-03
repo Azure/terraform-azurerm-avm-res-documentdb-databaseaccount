@@ -543,7 +543,7 @@ Default: `{}`
 
 ### <a name="input_minimal_tls_version"></a> [minimal\_tls\_version](#input\_minimal\_tls\_version)
 
-Description: Defaults to `Tls12`. Specifies the minimal TLS version for the CosmosDB account. Possible values are: `Tls`, `Tls11`, and `Tls12`
+Description: Defaults to `Tls12`. Specifies the minimal TLS version for the CosmosDB account. Possible values are: `Tls12`
 
 Type: `string`
 
@@ -643,7 +643,7 @@ Description: Defaults to `false`. Ignored when `backup.type` is `Continuous`. En
 
 Type: `bool`
 
-Default: `false`
+Default: `true`
 
 ### <a name="input_network_acl_bypass_for_azure_services"></a> [network\_acl\_bypass\_for\_azure\_services](#input\_network\_acl\_bypass\_for\_azure\_services)
 
