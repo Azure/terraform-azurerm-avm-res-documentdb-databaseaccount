@@ -18,7 +18,7 @@ terraform {
     }
     time = {
       source  = "hashicorp/time"
-      version = "~> 0.11"
+      version = "~> 0.12"
     }
   }
 }
@@ -55,7 +55,7 @@ module "naming" {
 }
 
 resource "azurerm_resource_group" "example" {
-  location = "northeurope"
+  location = "spaincentral"
   name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
 }
 
@@ -142,7 +142,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.6)
 
-- <a name="requirement_time"></a> [time](#requirement\_time) (~> 0.11)
+- <a name="requirement_time"></a> [time](#requirement\_time) (~> 0.12)
 
 ## Resources
 

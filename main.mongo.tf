@@ -41,5 +41,10 @@ resource "azurerm_cosmosdb_mongo_collection" "this" {
       unique = index.value.unique
     }
   }
+  index {
+    # We need to create a default unique one for the _id field
+    keys   = ["_id"]
+    unique = true
+  }
 }
 

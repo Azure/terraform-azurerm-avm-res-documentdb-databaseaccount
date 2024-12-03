@@ -12,7 +12,7 @@ terraform {
     }
     time = {
       source  = "hashicorp/time"
-      version = "~> 0.11"
+      version = "~> 0.12"
     }
   }
 }
@@ -49,7 +49,7 @@ module "naming" {
 }
 
 resource "azurerm_resource_group" "example" {
-  location = "northeurope"
+  location = "spaincentral"
   name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
 }
 

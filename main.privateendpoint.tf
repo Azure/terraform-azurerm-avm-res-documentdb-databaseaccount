@@ -7,7 +7,7 @@ resource "azurerm_private_endpoint" "this_managed_dns_zone_groups" {
   resource_group_name           = coalesce(each.value.resource_group_name, var.resource_group_name)
   subnet_id                     = each.value.subnet_resource_id
   custom_network_interface_name = each.value.network_interface_name
-  tags                          = each.value.tags == null ? var.tags : each.value.tags
+  tags                          = coalesce(each.value.tags, var.tags, {})
 
   private_service_connection {
     is_manual_connection           = false
@@ -44,7 +44,7 @@ resource "azurerm_private_endpoint" "this_unmanaged_dns_zone_groups" {
   resource_group_name           = coalesce(each.value.resource_group_name, var.resource_group_name)
   subnet_id                     = each.value.subnet_resource_id
   custom_network_interface_name = each.value.network_interface_name
-  tags                          = each.value.tags == null ? var.tags : each.value.tags == {} ? {} : each.value.tags
+  tags                          = coalesce(each.value.tags, var.tags, {})
 
   private_service_connection {
     is_manual_connection           = false

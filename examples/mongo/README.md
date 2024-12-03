@@ -49,7 +49,7 @@ module "naming" {
 }
 
 resource "azurerm_resource_group" "example" {
-  location = "northeurope"
+  location = "spaincentral"
   name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
 }
 
@@ -76,62 +76,60 @@ module "cosmos" {
       }
     }
 
-    database_collection = {
-      name       = "database_mongoDb_collections"
+    database_with_fixed_throughput = {
+      name       = "database_with_fixed_throughput"
+      throughput = 400
+    }
+
+    database_with_collections = {
+      name       = "database_with_collections"
       throughput = 400
 
       collections = {
-        "collection" = {
-          name                = "MongoDBcollection"
-          default_ttl_seconds = "3600"
-          shard_key           = "_id"
-          throughput          = 400
-
-          index = {
-            keys   = ["_id"]
-            unique = true
-          }
+        "collection_fixed_throughput" = {
+          name       = "collection_fixed_throughput"
+          throughput = 400
         }
 
         "collection_autoscale" = {
-          name = "collection_autoscale_settings"
-
-          default_ttl_seconds = "3600"
-          shard_key           = "uniqueKey"
+          name = "collection_autoscale"
 
           autoscale_settings = {
             max_throughput = 4000
           }
+        }
+
+        "collections_with_ttl" = {
+          name                = "collections_with_ttl"
+          default_ttl_seconds = 3600
+        }
+
+        "collections_custom_shard_key" = {
+          name      = "collections_custom_shard_key"
+          shard_key = "_id"
+        }
+
+        "collections_index_keys_unique_false" = {
+          name = "collections_index_keys_unique_false"
 
           index = {
-            keys   = ["_id"]
+            keys   = ["testproperty"]
             unique = false
           }
         }
-      }
-    }
 
-    database_collections_index_keys_unique_false = {
-      name       = "database_collections_index_keys_unique_false"
-      throughput = 400
-
-      collections = {
-        "collection" = {
-          name                = "collections_index_keys_unique_false"
-          default_ttl_seconds = "3600"
-          shard_key           = "uniqueKey"
-          throughput          = 400
+        "collections_index_keys_unique_true" = {
+          name = "collections_index_keys_unique_true"
 
           index = {
-            keys   = ["_id"]
-            unique = false
+            keys   = ["testproperty"]
+            unique = true
           }
         }
       }
     }
   }
 }
-
 ```
 
 <!-- markdownlint-disable MD033 -->
