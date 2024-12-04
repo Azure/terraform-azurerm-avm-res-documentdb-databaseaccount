@@ -479,11 +479,11 @@ Default: `[]`
 
 ### <a name="input_local_authentication_disabled"></a> [local\_authentication\_disabled](#input\_local\_authentication\_disabled)
 
-Description: Defaults to `false`. Ignored for non SQL APIs accounts. Disable local authentication and ensure only MSI and AAD can be used exclusively for authentication. Can be set only when using the SQL API.
+Description: Defaults to `true`. Ignored for non SQL APIs accounts. Disable local authentication and ensure only MSI and AAD can be used exclusively for authentication. Can be set only when using the SQL API.
 
 Type: `bool`
 
-Default: `false`
+Default: `true`
 
 ### <a name="input_lock"></a> [lock](#input\_lock)
 
@@ -655,7 +655,7 @@ Type: `bool`
 
 Default: `false`
 
-### <a name="input_network_acl_bypass_ids"></a> [network\_acl\_bypass\_ids](#input\_network\_acl\_bypass\_ids)
+### <a name="input_network_acl_bypass_resource_ids"></a> [network\_acl\_bypass\_resource\_ids](#input\_network\_acl\_bypass\_resource\_ids)
 
 Description: Defaults to `[]`. The list of resource Ids for Network Acl Bypass for this Cosmos DB account.
 
@@ -751,11 +751,11 @@ Default: `true`
 
 ### <a name="input_public_network_access_enabled"></a> [public\_network\_access\_enabled](#input\_public\_network\_access\_enabled)
 
-Description: Defaults to `true`. Whether or not public network access is allowed for this CosmosDB account.
+Description: Defaults to `false`. Whether or not public network access is allowed for this CosmosDB account.
 
 Type: `bool`
 
-Default: `true`
+Default: `false`
 
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 

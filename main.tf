@@ -12,12 +12,12 @@ resource "azurerm_cosmosdb_account" "this" {
   is_virtual_network_filter_enabled     = length(var.virtual_network_rules) > 0 ? true : false
   key_vault_key_id                      = local.normalized_cmk_key_url
   kind                                  = length(var.mongo_databases) > 0 ? "MongoDB" : "GlobalDocumentDB"
-  local_authentication_disabled         = var.local_authentication_disabled
+  local_authentication_disabled         = length(var.sql_databases) > 0 ? var.local_authentication_disabled : false
   minimal_tls_version                   = var.minimal_tls_version
   mongo_server_version                  = length(var.mongo_databases) > 0 ? var.mongo_server_version : null
   multiple_write_locations_enabled      = var.backup.type == local.periodic_backup_policy ? var.multiple_write_locations_enabled : false
   network_acl_bypass_for_azure_services = var.network_acl_bypass_for_azure_services
-  network_acl_bypass_ids                = var.network_acl_bypass_ids
+  network_acl_bypass_ids                = var.network_acl_bypass_resource_ids
   partition_merge_enabled               = var.partition_merge_enabled
   public_network_access_enabled         = var.public_network_access_enabled
   tags                                  = var.tags
