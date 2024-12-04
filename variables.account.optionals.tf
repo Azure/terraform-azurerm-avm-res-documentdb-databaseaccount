@@ -33,8 +33,8 @@ variable "geo_locations" {
 variable "local_authentication_disabled" {
   type        = bool
   nullable    = false
-  default     = false
-  description = "Defaults to `false`. Ignored for non SQL APIs accounts. Disable local authentication and ensure only MSI and AAD can be used exclusively for authentication. Can be set only when using the SQL API."
+  default     = true
+  description = "Defaults to `true`. Ignored for non SQL APIs accounts. Disable local authentication and ensure only MSI and AAD can be used exclusively for authentication. Can be set only when using the SQL API."
 }
 
 variable "analytical_storage_enabled" {

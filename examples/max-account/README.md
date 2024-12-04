@@ -62,11 +62,11 @@ module "cosmos" {
   location                           = azurerm_resource_group.example.location
   name                               = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
   public_network_access_enabled      = true
-  enable_telemetry                   = true
+  enable_telemetry                   = false
   access_key_metadata_writes_enabled = true
   analytical_storage_enabled         = true
-  automatic_failover_enabled         = true
-  local_authentication_disabled      = true
+  automatic_failover_enabled         = false
+  local_authentication_disabled      = false
   partition_merge_enabled            = false
   multiple_write_locations_enabled   = true
 

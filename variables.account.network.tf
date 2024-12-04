@@ -13,8 +13,8 @@ variable "minimal_tls_version" {
 variable "public_network_access_enabled" {
   type        = bool
   nullable    = false
-  default     = true
-  description = "Defaults to `true`. Whether or not public network access is allowed for this CosmosDB account."
+  default     = false
+  description = "Defaults to `false`. Whether or not public network access is allowed for this CosmosDB account."
 }
 
 variable "network_acl_bypass_for_azure_services" {
@@ -24,7 +24,7 @@ variable "network_acl_bypass_for_azure_services" {
   description = "Defaults to `false`. If Azure services can bypass ACLs."
 }
 
-variable "network_acl_bypass_ids" {
+variable "network_acl_bypass_resource_ids" {
   type        = set(string)
   nullable    = false
   default     = []
