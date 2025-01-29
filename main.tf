@@ -8,7 +8,7 @@ resource "azurerm_cosmosdb_account" "this" {
   automatic_failover_enabled            = var.automatic_failover_enabled
   default_identity_type                 = local.normalized_cmk_default_identity_type
   free_tier_enabled                     = var.free_tier_enabled
-  ip_range_filter                       = local.normalized_ip_range_filter
+  ip_range_filter                       = local.trimmed_ip_range_filter
   is_virtual_network_filter_enabled     = length(var.virtual_network_rules) > 0 ? true : false
   key_vault_key_id                      = local.normalized_cmk_key_url
   kind                                  = length(var.mongo_databases) > 0 ? "MongoDB" : "GlobalDocumentDB"
