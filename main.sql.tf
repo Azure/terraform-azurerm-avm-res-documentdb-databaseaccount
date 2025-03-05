@@ -28,10 +28,10 @@ resource "azurerm_cosmosdb_sql_container" "this" {
   account_name           = azurerm_cosmosdb_account.this.name
   database_name          = azurerm_cosmosdb_sql_database.this[each.value.db_name].name
   name                   = each.value.container_name
+  partition_key_paths    = each.value.container_params.partition_key_paths
   resource_group_name    = azurerm_cosmosdb_account.this.resource_group_name
   analytical_storage_ttl = each.value.container_params.analytical_storage_ttl
   default_ttl            = each.value.container_params.default_ttl
-  partition_key_paths    = each.value.container_params.partition_key_paths
   partition_key_version  = 2
   throughput             = each.value.container_params.throughput
 
