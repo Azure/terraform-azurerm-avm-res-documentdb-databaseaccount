@@ -30,7 +30,6 @@ locals {
   normalized_cmk_default_identity_type = var.customer_managed_key != null ? "UserAssignedIdentity=${var.customer_managed_key.user_assigned_identity.resource_id}" : null
   normalized_cmk_key_url               = var.customer_managed_key != null ? "https://${local.cmk_keyvault_name}.vault.azure.net/keys/${var.customer_managed_key.key_name}" : null
   normalized_geo_locations             = coalesce(var.geo_locations, local.default_geo_location)
-  normalized_ip_range_filter           = length(local.trimmed_ip_range_filter) > 0 ? join(",", local.trimmed_ip_range_filter) : null
   periodic_backup_policy               = "Periodic"
   private_endpoint_scope_type          = "PrivateEndpoint"
   serverless_capability                = "EnableServerless"

@@ -4,7 +4,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.71"
+      version = "~> 4.0"
     }
     random = {
       source  = "hashicorp/random"
@@ -48,8 +48,7 @@ resource "azurerm_resource_group" "example" {
 }
 
 module "cosmos" {
-  source = "../../"
-
+  source              = "../../"
   resource_group_name = azurerm_resource_group.example.name
   location            = azurerm_resource_group.example.location
   name                = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
