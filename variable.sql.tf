@@ -43,8 +43,9 @@ variable "sql_databases" {
     }), null)
 
     containers = optional(map(object({
-      partition_key_paths = list(string)
-      name                = string
+      partition_key_paths   = list(string)
+      partition_key_version = optional(number, 2)
+      name                  = string
 
       throughput             = optional(number, null)
       default_ttl            = optional(number, null)
@@ -118,7 +119,8 @@ variable "sql_databases" {
     - `max_throughput` - (Required) - The maximum throughput of the SQL database (RU/s). Must be between `1,000` and `1,000,000`. Must be set in increments of `1,000`. Conflicts with `throughput`.
 
   - `containers` - (Optional) - Defaults to `{}`. Manages SQL Containers within a Cosmos DB Account.
-    - `partition_key_paths`     - (Required) - Defines the partition key for the container. Changing this forces a new resource to be created.
+    - `partition_key_paths`    - (Required) - Defines the partition key for the container. Changing this forces a new resource to be created.
+    - `partition_key_version`  - (Optional) - Defines the partition key version for the container. Changing this forces a new resource to be created.
     - `name`                   - (Required) - Specifies the name of the Cosmos DB SQL Container. Changing this forces a new resource to be created.
     - `throughput`             - (Optional) - Defaults to `null`. The throughput of SQL container (RU/s). Must be set in increments of `100`. The minimum value is `400`. This must be set upon container creation otherwise it cannot be updated without a manual terraform destroy-apply.
     - `default_ttl`            - (Optional) - Defaults to `null`. The default time to live of SQL container. If missing, items are not expired automatically. If present and the value is set to `-1`, it is equal to infinity, and items don't expire by default. If present and the value is set to some number n - items will expire n seconds after their last modified time.
@@ -183,6 +185,7 @@ variable "sql_databases" {
       containers = {
         container1 = {
           partition_key_paths = ["/id"]
+          partition_key_version = 2
           name               = "container1"
           throughput         = 400
           default_ttl        = 1000
