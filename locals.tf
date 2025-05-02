@@ -1,7 +1,7 @@
 locals {
   account_scope_type            = "Account"
+  bounded_staleness_consistency = "BoundedStaleness"
   cmk_keyvault_name             = var.customer_managed_key != null ? element(split("/", var.customer_managed_key.key_vault_resource_id), 8) : null
-  consistent_prefix_consistency = "ConsistentPrefix"
   continuous_backup_policy      = "Continuous"
   default_geo_location = toset([{
     failover_priority = 0

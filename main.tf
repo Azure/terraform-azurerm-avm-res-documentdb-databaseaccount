@@ -24,8 +24,8 @@ resource "azurerm_cosmosdb_account" "this" {
 
   consistency_policy {
     consistency_level       = var.consistency_policy.consistency_level
-    max_interval_in_seconds = var.consistency_policy.consistency_level == local.consistent_prefix_consistency ? var.consistency_policy.max_interval_in_seconds : null
-    max_staleness_prefix    = var.consistency_policy.consistency_level == local.consistent_prefix_consistency ? var.consistency_policy.max_staleness_prefix : null
+    max_interval_in_seconds = var.consistency_policy.consistency_level == local.bounded_staleness_consistency ? var.consistency_policy.max_interval_in_seconds : null
+    max_staleness_prefix    = var.consistency_policy.consistency_level == local.bounded_staleness_consistency ? var.consistency_policy.max_staleness_prefix : null
   }
   dynamic "geo_location" {
     for_each = local.normalized_geo_locations
