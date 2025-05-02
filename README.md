@@ -255,14 +255,14 @@ Default: `{}`
 
 Description:   Defaults to `{}`. Used to define the consistency policy for this CosmosDB account
 
-  - `consistency_level`       - (Optional) - Defaults to `ConsistentPrefix`. The Consistency Level to use for this CosmosDB Account - can be either `BoundedStaleness`, `Eventual`, `Session`, `Strong` or `ConsistentPrefix`.
+  - `consistency_level`       - (Optional) - Defaults to `BoundedStaleness`. The Consistency Level to use for this CosmosDB Account - can be either `BoundedStaleness`, `Eventual`, `Session`, `Strong` or `ConsistentPrefix`.
   - `max_interval_in_seconds` - (Optional) - Defaults to `5`. Used when `consistency_level` is set to `BoundedStaleness`. When used with the Bounded Staleness consistency level, this value represents the time amount of staleness (in seconds) tolerated. The accepted range for this value is `5` - `86400` (1 day).
   - `max_staleness_prefix`    - (Optional) - Defaults to `100`. Used when `consistency_level` is set to `BoundedStaleness`. When used with the Bounded Staleness consistency level, this value represents the number of stale requests tolerated. The accepted range for this value is `10` – `2147483647`
 
   Example inputs:
   ```hcl
   consistency_policy = {
-    consistency_level       = "ConsistentPrefix"
+    consistency_level       = "BoundedStaleness"
     max_interval_in_seconds = 10
     max_interval_in_seconds = 100
   }
@@ -274,7 +274,7 @@ Type:
 object({
     max_interval_in_seconds = optional(number, 5)
     max_staleness_prefix    = optional(number, 100)
-    consistency_level       = optional(string, "ConsistentPrefix")
+    consistency_level       = optional(string, "BoundedStaleness")
   })
 ```
 
