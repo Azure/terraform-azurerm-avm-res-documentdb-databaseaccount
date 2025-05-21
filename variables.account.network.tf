@@ -1,39 +1,5 @@
-variable "minimal_tls_version" {
-  type        = string
-  nullable    = false
-  default     = "Tls12"
-  description = "Defaults to `Tls12`. Specifies the minimal TLS version for the CosmosDB account. Possible values are: `Tls12`"
-
-  validation {
-    condition     = var.minimal_tls_version == null || can(index(["Tls12"], var.minimal_tls_version))
-    error_message = "The minimal_tls_version variable must be 'Tls12'."
-  }
-}
-
-variable "public_network_access_enabled" {
-  type        = bool
-  nullable    = false
-  default     = false
-  description = "Defaults to `false`. Whether or not public network access is allowed for this CosmosDB account."
-}
-
-variable "network_acl_bypass_for_azure_services" {
-  type        = bool
-  nullable    = false
-  default     = false
-  description = "Defaults to `false`. If Azure services can bypass ACLs."
-}
-
-variable "network_acl_bypass_resource_ids" {
-  type        = set(string)
-  nullable    = false
-  default     = []
-  description = "Defaults to `[]`. The list of resource Ids for Network Acl Bypass for this Cosmos DB account."
-}
-
 variable "ip_range_filter" {
   type        = set(string)
-  nullable    = false
   default     = []
   description = <<DESCRIPTION
   Defaults to `[]`. CosmosDB Firewall Support: This value specifies the set of IP addresses or IP address ranges in CIDR form to be included as the allowed list of client IPs for a given database account.
@@ -42,6 +8,7 @@ variable "ip_range_filter" {
   > Note: To enable the "Accept connections from within public Azure datacenters" behavior, you should add 0.0.0.0 to the list, see the documentation for more details. https://learn.microsoft.com/en-us/azure/cosmos-db/how-to-configure-firewall#allow-requests-from-global-azure-datacenters-or-other-sources-within-azure
 
   DESCRIPTION
+  nullable    = false
 
   validation {
     condition = alltrue([
@@ -50,7 +17,6 @@ variable "ip_range_filter" {
     ])
     error_message = "Allowed Ips must be valid IPv4 CIDR."
   }
-
   validation {
     condition = alltrue([
       for value in var.ip_range_filter :
@@ -60,11 +26,43 @@ variable "ip_range_filter" {
   }
 }
 
+variable "minimal_tls_version" {
+  type        = string
+  default     = "Tls12"
+  description = "Defaults to `Tls12`. Specifies the minimal TLS version for the CosmosDB account. Possible values are: `Tls12`"
+  nullable    = false
+
+  validation {
+    condition     = var.minimal_tls_version == null || can(index(["Tls12"], var.minimal_tls_version))
+    error_message = "The minimal_tls_version variable must be 'Tls12'."
+  }
+}
+
+variable "network_acl_bypass_for_azure_services" {
+  type        = bool
+  default     = false
+  description = "Defaults to `false`. If Azure services can bypass ACLs."
+  nullable    = false
+}
+
+variable "network_acl_bypass_resource_ids" {
+  type        = set(string)
+  default     = []
+  description = "Defaults to `[]`. The list of resource Ids for Network Acl Bypass for this Cosmos DB account."
+  nullable    = false
+}
+
+variable "public_network_access_enabled" {
+  type        = bool
+  default     = false
+  description = "Defaults to `false`. Whether or not public network access is allowed for this CosmosDB account."
+  nullable    = false
+}
+
 variable "virtual_network_rules" {
   type = set(object({
     subnet_id = string
   }))
-  nullable    = false
   default     = []
   description = <<DESCRIPTION
   Defaults to `[]`. Used to define which subnets are allowed to access this CosmosDB account.
@@ -82,6 +80,7 @@ variable "virtual_network_rules" {
   ]
   ```
   DESCRIPTION
+  nullable    = false
 
   validation {
     condition = alltrue([

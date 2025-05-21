@@ -65,18 +65,17 @@ resource "azurerm_subnet" "example" {
 module "cosmos" {
   source = "../../"
 
-  resource_group_name           = azurerm_resource_group.example.name
-  location                      = azurerm_resource_group.example.location
-  name                          = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
-  public_network_access_enabled = true
-
-  network_acl_bypass_for_azure_services = true
+  location            = azurerm_resource_group.example.location
+  name                = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
+  resource_group_name = azurerm_resource_group.example.name
   ip_range_filter = [
     "168.125.123.255",
     "170.0.0.0/24",
     "0.0.0.0",                                                                      #Accept connections from within public Azure datacenters. https://learn.microsoft.com/en-us/azure/cosmos-db/how-to-configure-firewall#allow-requests-from-the-azure-portal
     "104.42.195.92", "40.76.54.131", "52.176.6.30", "52.169.50.45", "52.187.184.26" #Allow access from the Azure portal. https://learn.microsoft.com/en-us/azure/cosmos-db/how-to-configure-firewall#allow-requests-from-global-azure-datacenters-or-other-sources-within-azure
   ]
+  network_acl_bypass_for_azure_services = true
+  public_network_access_enabled         = true
   virtual_network_rules = [
     {
       subnet_id = azurerm_subnet.example.id

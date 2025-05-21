@@ -12,7 +12,6 @@ variable "diagnostic_settings" {
     marketplace_partner_resource_id          = optional(string, null)
   }))
   default     = {}
-  nullable    = false
   description = <<DESCRIPTION
   Defaults to `{}`. A map of diagnostic settings to create. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
@@ -48,6 +47,7 @@ variable "diagnostic_settings" {
   }
   ```  
   DESCRIPTION
+  nullable    = false
 
   validation {
     condition = alltrue([
@@ -59,7 +59,6 @@ variable "diagnostic_settings" {
     ])
     error_message = "The metric_categories parameter if specified can only be 'AllMetrics'."
   }
-
   validation {
     condition = alltrue([
       for _, v in var.diagnostic_settings :
@@ -70,7 +69,6 @@ variable "diagnostic_settings" {
     ])
     error_message = "The 'log_groups' parameter if specified can only be 'allLogs' and 'audit'."
   }
-
   validation {
     condition = alltrue([
       for _, v in var.diagnostic_settings :
@@ -81,7 +79,6 @@ variable "diagnostic_settings" {
     ])
     error_message = "The 'log_categories' parameter if specified can only be 'DataPlaneRequests', 'MongoRequests', 'CassandraRequests',  'GremlinRequests', 'QueryRuntimeStatistics', 'PartitionKeyStatistics', 'PartitionKeyRUConsumption', 'ControlPlaneRequests',  'TableApiRequests'."
   }
-
   validation {
     condition = alltrue([
       for _, v in var.diagnostic_settings :
@@ -89,7 +86,6 @@ variable "diagnostic_settings" {
     ])
     error_message = "'log_analytics_destination_type' must be one of: 'Dedicated', 'AzureDiagnostics'."
   }
-
   validation {
     condition = alltrue(
       [
@@ -99,7 +95,6 @@ variable "diagnostic_settings" {
     )
     error_message = "At least one of 'workspace_resource_id', 'storage_account_resource_id', 'marketplace_partner_resource_id', or 'event_hub_authorization_rule_resource_id' and 'event_hub_name' together, must be set."
   }
-
   validation {
     condition = alltrue([
       for _, v in var.diagnostic_settings :
@@ -107,7 +102,6 @@ variable "diagnostic_settings" {
     ])
     error_message = "At least one of 'log_categories', 'log_groups', or 'metric_categories' must be set."
   }
-
   validation {
     condition = alltrue([
       for _, v in var.diagnostic_settings :
@@ -115,7 +109,6 @@ variable "diagnostic_settings" {
     ])
     error_message = "The 'storage_account_resource_id' if specified must have the format '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Storage/storageAccounts/{storageAccountName}'"
   }
-
   validation {
     condition = alltrue([
       for _, v in var.diagnostic_settings :
@@ -123,7 +116,6 @@ variable "diagnostic_settings" {
     ])
     error_message = "The 'workspace_resource_id' if specified must have the format '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.OperationalInsights/workspaces/{workspaceName}'"
   }
-
   validation {
     condition = alltrue([
       for _, v in var.diagnostic_settings :

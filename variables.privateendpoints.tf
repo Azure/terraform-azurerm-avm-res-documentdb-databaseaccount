@@ -1,10 +1,3 @@
-variable "private_endpoints_manage_dns_zone_group" {
-  type        = bool
-  default     = true
-  nullable    = false
-  description = "Default to true. Whether to manage private DNS zone groups with this module. If set to false, you must manage private DNS zone groups externally, e.g. using Azure Policy."
-}
-
 variable "private_endpoints" {
   type = map(object({
     subnet_resource_id = string
@@ -45,7 +38,6 @@ variable "private_endpoints" {
     })), {})
   }))
   default     = {}
-  nullable    = false
   description = <<DESCRIPTION
   Default to `{}`. A map of private endpoints to create. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
@@ -70,4 +62,12 @@ variable "private_endpoints" {
 
   > Note: See more related to subresource_name in: https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-overview#private-link-resource
   DESCRIPTION
+  nullable    = false
+}
+
+variable "private_endpoints_manage_dns_zone_group" {
+  type        = bool
+  default     = true
+  description = "Default to true. Whether to manage private DNS zone groups with this module. If set to false, you must manage private DNS zone groups externally, e.g. using Azure Policy."
+  nullable    = false
 }
