@@ -105,8 +105,7 @@ variable "capabilities" {
   description = <<DESCRIPTION
   Defaults to `[]`. The capabilities which should be enabled for this Cosmos DB account.
 
-
-  - `name` - (Required) - The capability to enable - Possible values are `AllowSelfServeUpgradeToMongo36`, `DisableRateLimitingResponses`, `EnableAggregationPipeline`, `EnableCassandra`, `EnableGremlin`, `EnableMongo`, `EnableMongo16MBDocumentSupport`, `EnableMongoRetryableWrites`, `EnableMongoRoleBasedAccessControl`, `EnablePartialUniqueIndex`, `EnableServerless`, `EnableTable`, `EnableTtlOnCustomPath`, `EnableUniqueCompoundNestedDocs`, `MongoDBv3.4`, `EnableNoSQLVectorSearch` and `mongoEnableDocLevelTTL`.
+  - `name - (Required) - The capability to enable - Possible values are `AllowSelfServeUpgradeToMongo36`, `DeleteAllItemsByPartitionKey`, `DisableRateLimitingResponses`, `EnableAggregationPipeline`, `EnableCassandra`, `EnableGremlin`, `EnableMongo`, `EnableMongo16MBDocumentSupport`, `EnableMongoRetryableWrites`, `EnableMongoRoleBasedAccessControl`, `EnableNoSQLVectorSearch`, `EnableNoSQLFullTextSearch`, `EnablePartialUniqueIndex`, `EnableServerless`, `EnableTable`, `EnableTtlOnCustomPath`, `EnableUniqueCompoundNestedDocs`, `MongoDBv3.4`, `mongoEnableDocLevelTTL`.
 
   Example inputs:
   ```hcl
@@ -122,9 +121,9 @@ variable "capabilities" {
   validation {
     condition = alltrue([
       for capability in var.capabilities :
-      contains(["AllowSelfServeUpgradeToMongo36", "DisableRateLimitingResponses", "EnableAggregationPipeline", "EnableCassandra", "EnableGremlin", "EnableMongo", "EnableMongo16MBDocumentSupport", "EnableMongoRetryableWrites", "EnableMongoRoleBasedAccessControl", "EnablePartialUniqueIndex", "EnableServerless", "EnableTable", "EnableTtlOnCustomPath", "EnableUniqueCompoundNestedDocs", "MongoDBv3.4", "EnableNoSQLVectorSearch", "mongoEnableDocLevelTTL"], capability.name)
+      contains(["AllowSelfServeUpgradeToMongo36", "DeleteAllItemsByPartitionKey", "DisableRateLimitingResponses", "EnableAggregationPipeline", "EnableCassandra", "EnableGremlin", "EnableMongo", "EnableMongo16MBDocumentSupport", "EnableMongoRetryableWrites", "EnableMongoRoleBasedAccessControl", "EnableNoSQLVectorSearch", "EnableNoSQLFullTextSearch", "EnablePartialUniqueIndex", "EnableServerless", "EnableTable", "EnableTtlOnCustomPath", "EnableUniqueCompoundNestedDocs", "MongoDBv3.4", "mongoEnableDocLevelTTL"], capability.name)
     ])
-    error_message = "The 'name' value must be one of 'AllowSelfServeUpgradeToMongo36', 'DisableRateLimitingResponses', 'EnableAggregationPipeline', 'EnableCassandra', 'EnableGremlin', 'EnableMongo', 'EnableMongo16MBDocumentSupport', 'EnableMongoRetryableWrites', 'EnableMongoRoleBasedAccessControl', 'EnablePartialUniqueIndex', 'EnableServerless', 'EnableTable', 'EnableTtlOnCustomPath', 'EnableUniqueCompoundNestedDocs', 'MongoDBv3.4', 'EnableNoSQLVectorSearch' or 'mongoEnableDocLevelTTL'."
+    error_message = "The 'name' value must be any of 'AllowSelfServeUpgradeToMongo36', 'DeleteAllItemsByPartitionKey', 'DisableRateLimitingResponses', 'EnableAggregationPipeline', 'EnableCassandra', 'EnableGremlin', 'EnableMongo', 'EnableMongo16MBDocumentSupport', 'EnableMongoRetryableWrites', 'EnableMongoRoleBasedAccessControl', 'EnableNoSQLVectorSearch', 'EnableNoSQLFullTextSearch', 'EnablePartialUniqueIndex', 'EnableServerless', 'EnableTable', 'EnableTtlOnCustomPath', 'EnableUniqueCompoundNestedDocs', 'MongoDBv3.4', or 'mongoEnableDocLevelTTL'."
   }
 }
 
@@ -255,7 +254,7 @@ variable "geo_locations" {
   - `location`          - (Required) - The name of the Azure location where the CosmosDB Account is being created.
   - `failover_priority` - (Required) - The failover priority of the region. A failover priority of 0 indicates a write region.
   - `zone_redundant`    - (Optional) - Defaults to `true`. Whether or not the region is zone redundant.
-  
+
   Example inputs:
   ```hcl
   geo_locations = [

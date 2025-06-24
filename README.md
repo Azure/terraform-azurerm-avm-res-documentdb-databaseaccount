@@ -207,10 +207,10 @@ Default: `{}`
 
 Description:   Defaults to `[]`. The capabilities which should be enabled for this Cosmos DB account.
 
-  - `name` - (Required) - The capability to enable - Possible values are `AllowSelfServeUpgradeToMongo36`, `DisableRateLimitingResponses`, `EnableAggregationPipeline`, `EnableCassandra`, `EnableGremlin`, `EnableMongo`, `EnableMongo16MBDocumentSupport`, `EnableMongoRetryableWrites`, `EnableMongoRoleBasedAccessControl`, `EnablePartialUniqueIndex`, `EnableServerless`, `EnableTable`, `EnableTtlOnCustomPath`, `EnableUniqueCompoundNestedDocs`, `MongoDBv3.4`, `EnableNoSQLVectorSearch` and `mongoEnableDocLevelTTL`.
+  - `name - (Required) - The capability to enable - Possible values are `AllowSelfServeUpgradeToMongo36`, `DeleteAllItemsByPartitionKey`, `DisableRateLimitingResponses`, `EnableAggregationPipeline`, `EnableCassandra`, `EnableGremlin`, `EnableMongo`, `EnableMongo16MBDocumentSupport`, `EnableMongoRetryableWrites`, `EnableMongoRoleBasedAccessControl`, `EnableNoSQLVectorSearch`, `EnableNoSQLFullTextSearch`, `EnablePartialUniqueIndex`, `EnableServerless`, `EnableTable`, `EnableTtlOnCustomPath`, `EnableUniqueCompoundNestedDocs`, `MongoDBv3.4`, `mongoEnableDocLevelTTL`.
 
   Example inputs:
-  ```hcl
+  ````hcl
   capabilities = [
     {
       name = "DisableRateLimitingResponses"
@@ -436,7 +436,7 @@ Description:   Default to the region where the account was deployed with zone re
 
   - `location`          - (Required) - The name of the Azure location where the CosmosDB Account is being created.
   - `failover_priority` - (Required) - The failover priority of the region. A failover priority of 0 indicates a write region.
-  - `zone_redundant`    - (Optional) - Defaults to `true`. Whether or not the region is zone redundant.  
+  - `zone_redundant`    - (Optional) - Defaults to `true`. Whether or not the region is zone redundant.
 
   Example inputs:
   ```hcl
