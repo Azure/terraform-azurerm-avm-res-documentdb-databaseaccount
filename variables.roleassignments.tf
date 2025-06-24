@@ -10,9 +10,7 @@ variable "role_assignments" {
     condition         = optional(string, null) # forced to be here by lint, not supported
     condition_version = optional(string, null) # forced to be here by lint, not supported
   }))
-  default  = {}
-  nullable = false
-
+  default     = {}
   description = <<DESCRIPTION
   Defaults to `{}`. A map of role assignments to create. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
@@ -40,6 +38,7 @@ variable "role_assignments" {
   }
   ```
   DESCRIPTION
+  nullable    = false
 
   validation {
     condition = alltrue([
@@ -48,7 +47,6 @@ variable "role_assignments" {
     ])
     error_message = "'role_definition_id_or_name' must be set and not empty value"
   }
-
   validation {
     condition = alltrue([
       for k, v in var.role_assignments :

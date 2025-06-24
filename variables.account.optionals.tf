@@ -1,122 +1,45 @@
-variable "geo_locations" {
-  type = set(object({
-    location          = string
-    failover_priority = number
-    zone_redundant    = optional(bool, true)
-  }))
-  default     = null
-  description = <<DESCRIPTION
-  Default to the region where the account was deployed with zone redundant enabled. Specifies a geo_location resource, used to define where data should be replicated with the failover_priority 0 specifying the primary location.
-
-  - `location`          - (Required) - The name of the Azure location where the CosmosDB Account is being created.
-  - `failover_priority` - (Required) - The failover priority of the region. A failover priority of 0 indicates a write region.
-  - `zone_redundant`    - (Optional) - Defaults to `true`. Whether or not the region is zone redundant.
-  
-  Example inputs:
-  ```hcl
-  geo_locations = [
-    {
-      location          = "eastus"
-      failover_priority = 0
-      zone_redundant    = true
-    },
-    {
-      location          = "westus"
-      failover_priority = 1
-      zone_redundant    = true
-    }
-  ]
-  ```
-  DESCRIPTION
-}
-
-variable "local_authentication_disabled" {
-  type        = bool
-  nullable    = false
-  default     = true
-  description = "Defaults to `true`. Ignored for non SQL APIs accounts. Disable local authentication and ensure only MSI and AAD can be used exclusively for authentication. Can be set only when using the SQL API."
-}
-
-variable "analytical_storage_enabled" {
-  type        = bool
-  nullable    = false
-  default     = false
-  description = "Defaults to `false`. Enable Analytical Storage option for this Cosmos DB account. Enabling and then disabling analytical storage forces a new resource to be created."
-}
-
 variable "access_key_metadata_writes_enabled" {
   type        = bool
   default     = false
   description = "Defaults to `false`. Is write operations on metadata resources (databases, containers, throughput) via account keys enabled?"
 }
 
-variable "automatic_failover_enabled" {
-  type        = bool
-  nullable    = false
-  default     = true
-  description = "Defaults to `true`. Enable automatic failover for this Cosmos DB account."
-}
-
-variable "free_tier_enabled" {
-  type        = bool
-  nullable    = false
-  default     = false
-  description = "Defaults to `false`. Enable the Free Tier pricing option for this Cosmos DB account. Defaults to false. Changing this forces a new resource to be created."
-}
-
-variable "multiple_write_locations_enabled" {
-  type        = bool
-  nullable    = false
-  default     = false
-  description = "Defaults to `false`. Ignored when `backup.type` is `Continuous`. Enable multi-region writes for this Cosmos DB account."
-}
-
-variable "partition_merge_enabled" {
-  type        = bool
-  nullable    = false
-  default     = false
-  description = "Defaults to `false`. Is partition merge on the Cosmos DB account enabled?"
-}
-
-variable "consistency_policy" {
+variable "analytical_storage_config" {
   type = object({
-    max_interval_in_seconds = optional(number, 5)
-    max_staleness_prefix    = optional(number, 100)
-    consistency_level       = optional(string, "BoundedStaleness")
+    schema_type = string
   })
-  nullable    = false
-  default     = {}
+  default     = null
   description = <<DESCRIPTION
-  Defaults to `{}`. Used to define the consistency policy for this CosmosDB account
+  Defaults to `null`. Configuration related to the analytical storage of this account
 
-  - `consistency_level`       - (Optional) - Defaults to `BoundedStaleness`. The Consistency Level to use for this CosmosDB Account - can be either `BoundedStaleness`, `Eventual`, `Session`, `Strong` or `ConsistentPrefix`.
-  - `max_interval_in_seconds` - (Optional) - Defaults to `5`. Used when `consistency_level` is set to `BoundedStaleness`. When used with the Bounded Staleness consistency level, this value represents the time amount of staleness (in seconds) tolerated. The accepted range for this value is `5` - `86400` (1 day).
-  - `max_staleness_prefix`    - (Optional) - Defaults to `100`. Used when `consistency_level` is set to `BoundedStaleness`. When used with the Bounded Staleness consistency level, this value represents the number of stale requests tolerated. The accepted range for this value is `10` – `2147483647`
+  - `schema_type` - (Required) - The schema type of the Analytical Storage for this Cosmos DB account. Possible values are FullFidelity and WellDefined.
 
   Example inputs:
   ```hcl
-  consistency_policy = {
-    consistency_level       = "BoundedStaleness"
-    max_interval_in_seconds = 10
-    max_interval_in_seconds = 100
+  analytical_storage_config = {
+    schema_type = "WellDefined"
   }
   ```
   DESCRIPTION
 
   validation {
-    condition     = var.consistency_policy.consistency_level == "BoundedStaleness" ? var.consistency_policy.max_interval_in_seconds >= 5 && var.consistency_policy.max_interval_in_seconds <= 86400 : true
-    error_message = "The 'max_interval_in_seconds' value must be between 5 and 86400 when 'BoundedStaleness' consistency level is set."
+    condition     = var.analytical_storage_config != null ? contains(["WellDefined", "FullFidelity"], var.analytical_storage_config.schema_type) : true
+    error_message = "The 'schema_type' value must be 'WellDefined' or 'FullFidelity'."
   }
+}
 
-  validation {
-    condition     = var.consistency_policy.consistency_level == "BoundedStaleness" ? var.consistency_policy.max_staleness_prefix >= 10 && var.consistency_policy.max_staleness_prefix <= 2147483647 : true
-    error_message = "The 'max_staleness_prefix' value must be between 10 and 2147483647 when 'BoundedStaleness' consistency level is set."
-  }
+variable "analytical_storage_enabled" {
+  type        = bool
+  default     = false
+  description = "Defaults to `false`. Enable Analytical Storage option for this Cosmos DB account. Enabling and then disabling analytical storage forces a new resource to be created."
+  nullable    = false
+}
 
-  validation {
-    condition     = contains(["BoundedStaleness", "Eventual", "Session", "Strong", "ConsistentPrefix"], var.consistency_policy.consistency_level)
-    error_message = "The 'consistency_level' value must be one of 'BoundedStaleness', 'Eventual', 'Session', 'Strong' or 'ConsistentPrefix'."
-  }
+variable "automatic_failover_enabled" {
+  type        = bool
+  default     = true
+  description = "Defaults to `true`. Enable automatic failover for this Cosmos DB account."
+  nullable    = false
 }
 
 variable "backup" {
@@ -127,7 +50,6 @@ variable "backup" {
     type                = optional(string, "Continuous")
     tier                = optional(string, "Continuous30Days")
   })
-  nullable    = false
   default     = {}
   description = <<DESCRIPTION
   Defaults to `{}`. Configures the backup policy for this Cosmos DB account.
@@ -155,25 +77,53 @@ variable "backup" {
   }
   ```
   DESCRIPTION
+  nullable    = false
 
   validation {
     condition     = var.backup.type == "Continuous" ? contains(["Continuous7Days", "Continuous30Days"], var.backup.tier) : true
     error_message = "The 'tier' value must be 'Continuous7Days' or 'Continuous30Days' when type is 'Continuous'."
   }
-
   validation {
     condition     = var.backup.type == "Periodic" ? contains(["Geo", "Zone", "Local"], var.backup.storage_redundancy) : true
     error_message = "The 'storage_redundancy' value must be 'Geo', 'Zone' or 'Local' when type is 'Periodic'."
   }
-
   validation {
     condition     = var.backup.type == "Periodic" ? var.backup.interval_in_minutes >= 60 && var.backup.interval_in_minutes <= 1440 : true
     error_message = "The 'interval_in_minutes' value must be between 60 and 1440 when type is 'Periodic'."
   }
-
   validation {
     condition     = var.backup.type == "Periodic" ? var.backup.retention_in_hours >= 8 && var.backup.retention_in_hours <= 720 : true
     error_message = "The 'retention_in_hours' value must be between 8 and 720 when type is 'Periodic'."
+  }
+}
+
+variable "capabilities" {
+  type = set(object({
+    name = string
+  }))
+  default     = []
+  description = <<DESCRIPTION
+  Defaults to `[]`. The capabilities which should be enabled for this Cosmos DB account.
+
+  - `name` - (Required) - The capability to enable - Possible values are `AllowSelfServeUpgradeToMongo36`, `DisableRateLimitingResponses`, `EnableAggregationPipeline`, `EnableCassandra`, `EnableGremlin`, `EnableMongo`, `EnableMongo16MBDocumentSupport`, `EnableMongoRetryableWrites`, `EnableMongoRoleBasedAccessControl`, `EnablePartialUniqueIndex`, `EnableServerless`, `EnableTable`, `EnableTtlOnCustomPath`, `EnableUniqueCompoundNestedDocs`, `MongoDBv3.4` and `mongoEnableDocLevelTTL`.
+
+  Example inputs:
+  ```hcl
+  capabilities = [
+    {
+      name = "DisableRateLimitingResponses"
+    }
+  ]
+  ```
+  DESCRIPTION
+  nullable    = false
+
+  validation {
+    condition = alltrue([
+      for capability in var.capabilities :
+      contains(["AllowSelfServeUpgradeToMongo36", "DisableRateLimitingResponses", "EnableAggregationPipeline", "EnableCassandra", "EnableGremlin", "EnableMongo", "EnableMongo16MBDocumentSupport", "EnableMongoRetryableWrites", "EnableMongoRoleBasedAccessControl", "EnablePartialUniqueIndex", "EnableServerless", "EnableTable", "EnableTtlOnCustomPath", "EnableUniqueCompoundNestedDocs", "MongoDBv3.4", "mongoEnableDocLevelTTL"], capability.name)
+    ])
+    error_message = "The 'name' value must be one of 'AllowSelfServeUpgradeToMongo36', 'DisableRateLimitingResponses', 'EnableAggregationPipeline', 'EnableCassandra', 'EnableGremlin', 'EnableMongo', 'EnableMongo16MBDocumentSupport', 'EnableMongoRetryableWrites', 'EnableMongoRoleBasedAccessControl', 'EnablePartialUniqueIndex', 'EnableServerless', 'EnableTable', 'EnableTtlOnCustomPath', 'EnableUniqueCompoundNestedDocs', 'MongoDBv3.4' or 'mongoEnableDocLevelTTL'."
   }
 }
 
@@ -181,7 +131,6 @@ variable "capacity" {
   type = object({
     total_throughput_limit = optional(number, -1)
   })
-  nullable    = false
   default     = {}
   description = <<DESCRIPTION
   Defaults to `{}`. Configures the throughput limit for this Cosmos DB account.
@@ -195,6 +144,7 @@ variable "capacity" {
   }
   ```
   DESCRIPTION
+  nullable    = false
 
   validation {
     condition     = var.capacity.total_throughput_limit >= -1
@@ -202,27 +152,42 @@ variable "capacity" {
   }
 }
 
-variable "analytical_storage_config" {
+variable "consistency_policy" {
   type = object({
-    schema_type = string
+    max_interval_in_seconds = optional(number, 5)
+    max_staleness_prefix    = optional(number, 100)
+    consistency_level       = optional(string, "BoundedStaleness")
   })
-  default     = null
+  default     = {}
   description = <<DESCRIPTION
-  Defaults to `null`. Configuration related to the analytical storage of this account
+  Defaults to `{}`. Used to define the consistency policy for this CosmosDB account
 
-  - `schema_type` - (Required) - The schema type of the Analytical Storage for this Cosmos DB account. Possible values are FullFidelity and WellDefined.
+  - `consistency_level`       - (Optional) - Defaults to `BoundedStaleness`. The Consistency Level to use for this CosmosDB Account - can be either `BoundedStaleness`, `Eventual`, `Session`, `Strong` or `ConsistentPrefix`.
+  - `max_interval_in_seconds` - (Optional) - Defaults to `5`. Used when `consistency_level` is set to `BoundedStaleness`. When used with the Bounded Staleness consistency level, this value represents the time amount of staleness (in seconds) tolerated. The accepted range for this value is `5` - `86400` (1 day).
+  - `max_staleness_prefix`    - (Optional) - Defaults to `100`. Used when `consistency_level` is set to `BoundedStaleness`. When used with the Bounded Staleness consistency level, this value represents the number of stale requests tolerated. The accepted range for this value is `10` – `2147483647`
 
   Example inputs:
   ```hcl
-  analytical_storage_config = {
-    schema_type = "WellDefined"
+  consistency_policy = {
+    consistency_level       = "BoundedStaleness"
+    max_interval_in_seconds = 10
+    max_interval_in_seconds = 100
   }
   ```
   DESCRIPTION
+  nullable    = false
 
   validation {
-    condition     = var.analytical_storage_config != null ? contains(["WellDefined", "FullFidelity"], var.analytical_storage_config.schema_type) : true
-    error_message = "The 'schema_type' value must be 'WellDefined' or 'FullFidelity'."
+    condition     = var.consistency_policy.consistency_level == "BoundedStaleness" ? var.consistency_policy.max_interval_in_seconds >= 5 && var.consistency_policy.max_interval_in_seconds <= 86400 : true
+    error_message = "The 'max_interval_in_seconds' value must be between 5 and 86400 when 'BoundedStaleness' consistency level is set."
+  }
+  validation {
+    condition     = var.consistency_policy.consistency_level == "BoundedStaleness" ? var.consistency_policy.max_staleness_prefix >= 10 && var.consistency_policy.max_staleness_prefix <= 2147483647 : true
+    error_message = "The 'max_staleness_prefix' value must be between 10 and 2147483647 when 'BoundedStaleness' consistency level is set."
+  }
+  validation {
+    condition     = contains(["BoundedStaleness", "Eventual", "Session", "Strong", "ConsistentPrefix"], var.consistency_policy.consistency_level)
+    error_message = "The 'consistency_level' value must be one of 'BoundedStaleness', 'Eventual', 'Session', 'Strong' or 'ConsistentPrefix'."
   }
 }
 
@@ -263,39 +228,68 @@ variable "cors_rule" {
     ]) : true
     error_message = "The 'allowed_methods' value must be 'DELETE', 'GET', 'HEAD', 'MERGE', 'POST', 'OPTIONS', 'PUT' or 'PATCH'."
   }
-
   validation {
     condition     = var.cors_rule != null ? var.cors_rule.max_age_in_seconds == null || var.cors_rule.max_age_in_seconds >= 1 && var.cors_rule.max_age_in_seconds <= 2147483647 : true
     error_message = "The 'max_age_in_seconds' value if set must be between 1 and 2147483647."
   }
 }
 
-variable "capabilities" {
-  type = set(object({
-    name = string
-  }))
+variable "free_tier_enabled" {
+  type        = bool
+  default     = false
+  description = "Defaults to `false`. Enable the Free Tier pricing option for this Cosmos DB account. Defaults to false. Changing this forces a new resource to be created."
   nullable    = false
-  default     = []
+}
+
+variable "geo_locations" {
+  type = set(object({
+    location          = string
+    failover_priority = number
+    zone_redundant    = optional(bool, true)
+  }))
+  default     = null
   description = <<DESCRIPTION
-  Defaults to `[]`. The capabilities which should be enabled for this Cosmos DB account.
+  Default to the region where the account was deployed with zone redundant enabled. Specifies a geo_location resource, used to define where data should be replicated with the failover_priority 0 specifying the primary location.
 
-  - `name` - (Required) - The capability to enable - Possible values are `AllowSelfServeUpgradeToMongo36`, `DisableRateLimitingResponses`, `EnableAggregationPipeline`, `EnableCassandra`, `EnableGremlin`, `EnableMongo`, `EnableMongo16MBDocumentSupport`, `EnableMongoRetryableWrites`, `EnableMongoRoleBasedAccessControl`, `EnablePartialUniqueIndex`, `EnableServerless`, `EnableTable`, `EnableTtlOnCustomPath`, `EnableUniqueCompoundNestedDocs`, `MongoDBv3.4` and `mongoEnableDocLevelTTL`.
-
+  - `location`          - (Required) - The name of the Azure location where the CosmosDB Account is being created.
+  - `failover_priority` - (Required) - The failover priority of the region. A failover priority of 0 indicates a write region.
+  - `zone_redundant`    - (Optional) - Defaults to `true`. Whether or not the region is zone redundant.
+  
   Example inputs:
   ```hcl
-  capabilities = [
+  geo_locations = [
     {
-      name = "DisableRateLimitingResponses"
+      location          = "eastus"
+      failover_priority = 0
+      zone_redundant    = true
+    },
+    {
+      location          = "westus"
+      failover_priority = 1
+      zone_redundant    = true
     }
   ]
   ```
   DESCRIPTION
+}
 
-  validation {
-    condition = alltrue([
-      for capability in var.capabilities :
-      contains(["AllowSelfServeUpgradeToMongo36", "DisableRateLimitingResponses", "EnableAggregationPipeline", "EnableCassandra", "EnableGremlin", "EnableMongo", "EnableMongo16MBDocumentSupport", "EnableMongoRetryableWrites", "EnableMongoRoleBasedAccessControl", "EnablePartialUniqueIndex", "EnableServerless", "EnableTable", "EnableTtlOnCustomPath", "EnableUniqueCompoundNestedDocs", "MongoDBv3.4", "mongoEnableDocLevelTTL"], capability.name)
-    ])
-    error_message = "The 'name' value must be one of 'AllowSelfServeUpgradeToMongo36', 'DisableRateLimitingResponses', 'EnableAggregationPipeline', 'EnableCassandra', 'EnableGremlin', 'EnableMongo', 'EnableMongo16MBDocumentSupport', 'EnableMongoRetryableWrites', 'EnableMongoRoleBasedAccessControl', 'EnablePartialUniqueIndex', 'EnableServerless', 'EnableTable', 'EnableTtlOnCustomPath', 'EnableUniqueCompoundNestedDocs', 'MongoDBv3.4' or 'mongoEnableDocLevelTTL'."
-  }
+variable "local_authentication_disabled" {
+  type        = bool
+  default     = true
+  description = "Defaults to `true`. Ignored for non SQL APIs accounts. Disable local authentication and ensure only MSI and AAD can be used exclusively for authentication. Can be set only when using the SQL API."
+  nullable    = false
+}
+
+variable "multiple_write_locations_enabled" {
+  type        = bool
+  default     = false
+  description = "Defaults to `false`. Ignored when `backup.type` is `Continuous`. Enable multi-region writes for this Cosmos DB account."
+  nullable    = false
+}
+
+variable "partition_merge_enabled" {
+  type        = bool
+  default     = false
+  description = "Defaults to `false`. Is partition merge on the Cosmos DB account enabled?"
+  nullable    = false
 }
