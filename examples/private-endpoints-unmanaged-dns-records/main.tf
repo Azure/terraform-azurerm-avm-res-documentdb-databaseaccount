@@ -50,10 +50,10 @@ resource "azurerm_resource_group" "example" {
 }
 
 resource "azurerm_virtual_network" "example" {
-  address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.example.location
   name                = "${module.naming.virtual_network.name_unique}-${local.prefix}"
   resource_group_name = azurerm_resource_group.example.name
+  address_space       = ["10.0.0.0/16"]
 }
 
 resource "azurerm_subnet" "example" {
