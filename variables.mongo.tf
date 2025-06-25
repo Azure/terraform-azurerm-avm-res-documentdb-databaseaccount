@@ -198,11 +198,11 @@ variable "mongo_databases" {
 variable "mongo_server_version" {
   type        = string
   default     = "3.6"
-  description = "The Server Version of a MongoDB account. Defaults to `3.6` Possible values are `4.2`, `4.0`, `3.6`, and `3.2`"
+  description = "The Server Version of a MongoDB account. Defaults to `3.6` Possible values are `7.0`, `6.0`, `5.0`, `4.2`, `4.0`, `3.6`, and `3.2`"
   nullable    = false
 
   validation {
-    condition     = can(index(["4.2", "4.0", "3.6", "3.2"], var.mongo_server_version))
-    error_message = "The 'mongo_server_version' variable must be '4.2', '4.0', '3.6', or '3.2'."
+    condition     = can(index(["7.0", "6.0", "5.0", "4.2", "4.0", "3.6", "3.2"], var.mongo_server_version))
+    error_message = "The 'mongo_server_version' variable must be `7.0`, `6.0`, `5.0`, '4.2', '4.0', '3.6', or '3.2'."
   }
 }

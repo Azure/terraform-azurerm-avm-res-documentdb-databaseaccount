@@ -633,7 +633,7 @@ Default: `{}`
 
 ### <a name="input_mongo_server_version"></a> [mongo\_server\_version](#input\_mongo\_server\_version)
 
-Description: The Server Version of a MongoDB account. Defaults to `3.6` Possible values are `4.2`, `4.0`, `3.6`, and `3.2`
+Description: The Server Version of a MongoDB account. Defaults to `3.6` Possible values are `7.0`, `6.0`, `5.0`, `4.2`, `4.0`, `3.6`, and `3.2`
 
 Type: `string`
 
