@@ -52,7 +52,7 @@ variable "backup" {
   })
   default     = {}
   description = <<DESCRIPTION
-  Defaults to `{}`. Configures the backup policy for this Cosmos DB account. 
+  Defaults to `{}`. Configures the backup policy for this Cosmos DB account.
 
   - `type`                - (Optional) - Defaults to `Continuous`. The type of the backup. Possible values are `Continuous` and `Periodic`
   - `tier`                - (Optional) - Defaults to `Continuous30Days`. Used when `type` is set to `Continuous`. The continuous backup tier. Possible values are `Continuous7Days` and `Continuous30Days`.
@@ -77,7 +77,6 @@ variable "backup" {
   }
   ```
   DESCRIPTION
-  nullable    = false
 
   validation {
     condition     = var.backup.type == "Continuous" ? contains(["Continuous7Days", "Continuous30Days"], var.backup.tier) : true
