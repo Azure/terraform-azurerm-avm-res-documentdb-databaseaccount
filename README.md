@@ -83,7 +83,7 @@ The following input variables are required:
 
 ### <a name="input_location"></a> [location](#input\_location)
 
-Description:   Specifies the supported Azure location where the resource exists. Changing this forces a new resource to be created.  
+Description:   Specifies the supported Azure location where the resource exists. Changing this forces a new resource to be created.
 
   Example Inputs: eastus  
   See more in CLI: az account list-locations -o table --query "[].name"
@@ -102,7 +102,7 @@ Type: `string`
 
 ### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
 
-Description:   The name of the resource group in which to create this resource.   
+Description:   The name of the resource group in which to create this resource.  
   Changing this forces a new resource to be created.  
   Name must be less than 90 characters long and must only contain underscores, hyphens, periods, parentheses, letters, or digits.
 
@@ -813,8 +813,8 @@ Description:   Defaults to `{}`. Manages SQL Databases within a Cosmos DB Accoun
   - `autoscale_settings` - (Optional) - Defaults to `null`. This must be set upon database creation otherwise it cannot be updated without a manual terraform destroy-apply.
     - `max_throughput` - (Required) - The maximum throughput of the SQL database (RU/s). Must be between `1,000` and `1,000,000`. Must be set in increments of `1,000`. Conflicts with `throughput`.
 
-  - `containers` - (Optional) - Defaults to `{}`. Manages SQL Containers within a Cosmos DB Account.
-    - `partition_key_paths`     - (Required) - Defines the partition key for the container. Changing this forces a new resource to be created.
+  - `containers` - (Optional)  - Defaults to `{}`. Manages SQL Containers within a Cosmos DB Account.
+    - `partition_key_paths`    - (Required) - Defines the partition key for the container. Changing this forces a new resource to be created.
     - `name`                   - (Required) - Specifies the name of the Cosmos DB SQL Container. Changing this forces a new resource to be created.
     - `partition_key_version`  - (Optional) - Defines the partition key version for the container. Changing this forces a new resource to be created.
     - `throughput`             - (Optional) - Defaults to `null`. The throughput of SQL container (RU/s). Must be set in increments of `100`. The minimum value is `400`. This must be set upon container creation otherwise it cannot be updated without a manual terraform destroy-apply.
@@ -880,7 +880,6 @@ Description:   Defaults to `{}`. Manages SQL Databases within a Cosmos DB Accoun
       containers = {
         container1 = {
           partition_key_paths = ["/id"]
-          partition_key_version = 2
           name               = "container1"
           throughput         = 400
           default_ttl        = 1000
