@@ -1,37 +1,3 @@
-variable "sql_dedicated_gateway" {
-  type = object({
-    instance_size  = string
-    instance_count = optional(number, 1)
-  })
-  default     = null
-  description = <<DESCRIPTION
-  Defaults to `null`. Manages a SQL Dedicated Gateway within a Cosmos DB Account.
-
-  - `instance_size`  - (Optional) - The instance size for the CosmosDB SQL Dedicated Gateway. Changing this forces a new resource to be created. Possible values are `Cosmos.D4s`, `Cosmos.D8s` and `Cosmos.D16s`
-  - `instance_count` - (Optional) - The instance count for the CosmosDB SQL Dedicated Gateway. Possible value is between `1` and `5`.
-
-  > Note: To create a dedicated gateway in a zone redundant region you must request Azure to enable it into your account. See more in: https://learn.microsoft.com/en-us/azure/cosmos-db/dedicated-gateway#provisioning-the-dedicated-gateway
-
-  Example inputs: 
-  ```hcl
-  sql_dedicated_gateway = {
-    instance_count = 1
-    instance_size  = "Cosmos.D4s"
-  }
-  ```
-  DESCRIPTION
-
-  validation {
-    condition     = try(var.sql_dedicated_gateway.instance_count, null) != null ? var.sql_dedicated_gateway.instance_count >= 1 && var.sql_dedicated_gateway.instance_count <= 5 : true
-    error_message = "The 'instance_count' in the sql_dedicated_gateway value must be between 1 and 5 if specified."
-  }
-
-  validation {
-    condition     = try(var.sql_dedicated_gateway.instance_size, null) != null ? can(index(["Cosmos.D4s", "Cosmos.D8s", "Cosmos.D16s"], var.sql_dedicated_gateway.instance_size)) : true
-    error_message = "The 'instance_size' in the sql_dedicated_gateway value must be 'Cosmos.D4s', 'Cosmos.D8s' or 'Cosmos.D16s' if specified."
-  }
-}
-
 variable "sql_databases" {
   type = map(object({
     name = string
@@ -43,9 +9,9 @@ variable "sql_databases" {
     }), null)
 
     containers = optional(map(object({
-      partition_key_paths = list(string)
-      name                = string
-
+      partition_key_paths    = list(string)
+      name                   = string
+      partition_key_version  = optional(number, 2)
       throughput             = optional(number, null)
       default_ttl            = optional(number, null)
       analytical_storage_ttl = optional(number, null)
@@ -106,7 +72,6 @@ variable "sql_databases" {
 
     })), {})
   }))
-  nullable    = false
   default     = {}
   description = <<DESCRIPTION
   Defaults to `{}`. Manages SQL Databases within a Cosmos DB Account.
@@ -117,9 +82,10 @@ variable "sql_databases" {
   - `autoscale_settings` - (Optional) - Defaults to `null`. This must be set upon database creation otherwise it cannot be updated without a manual terraform destroy-apply.
     - `max_throughput` - (Required) - The maximum throughput of the SQL database (RU/s). Must be between `1,000` and `1,000,000`. Must be set in increments of `1,000`. Conflicts with `throughput`.
 
-  - `containers` - (Optional) - Defaults to `{}`. Manages SQL Containers within a Cosmos DB Account.
-    - `partition_key_paths`     - (Required) - Defines the partition key for the container. Changing this forces a new resource to be created.
+  - `containers` - (Optional)  - Defaults to `{}`. Manages SQL Containers within a Cosmos DB Account.
+    - `partition_key_paths`    - (Required) - Defines the partition key for the container. Changing this forces a new resource to be created.
     - `name`                   - (Required) - Specifies the name of the Cosmos DB SQL Container. Changing this forces a new resource to be created.
+    - `partition_key_version`  - (Optional) - Defines the partition key version for the container. Changing this forces a new resource to be created.
     - `throughput`             - (Optional) - Defaults to `null`. The throughput of SQL container (RU/s). Must be set in increments of `100`. The minimum value is `400`. This must be set upon container creation otherwise it cannot be updated without a manual terraform destroy-apply.
     - `default_ttl`            - (Optional) - Defaults to `null`. The default time to live of SQL container. If missing, items are not expired automatically. If present and the value is set to `-1`, it is equal to infinity, and items don't expire by default. If present and the value is set to some number n - items will expire n seconds after their last modified time.
     - `analytical_storage_ttl` - (Optional) - Defaults to `null`. The default time to live of Analytical Storage for this SQL container. If present and the value is set to `-1`, it is equal to infinity, and items don't expire by default. If present and the value is set to some number n - items will expire n seconds after their last modified time.
@@ -129,7 +95,7 @@ variable "sql_databases" {
 
     - `autoscale_settings` - (Optional) - Defaults to `null`. This must be set upon database creation otherwise it cannot be updated without a manual terraform destroy-apply.
       - `max_throughput` - (Required) - The maximum throughput of the SQL container (RU/s). Must be between `1,000` and `1,000,000`. Must be set in increments of `1,000`. Conflicts with `throughput`.
-    
+
     - `functions` - (Optional) - Defaults to `{}`. Manages SQL User Defined Functions.
       - `body` - (Required) - Body of the User Defined Function.
       - `name` - (Required) - The name which should be used for this SQL User Defined Function. Changing this forces a new SQL User Defined Function to be created.
@@ -168,7 +134,7 @@ variable "sql_databases" {
 
   > Note: Switching between autoscale and manual throughput is not supported via Terraform and must be completed via the Azure Portal and refreshed.
   > Note: For indexing policy See more in: https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/how-to-manage-indexing-policy?tabs=dotnetv3%2Cpythonv3
-  
+
   Example inputs:
   ```hcl
   sql_databases = {
@@ -264,6 +230,7 @@ variable "sql_databases" {
   }
   ```
   DESCRIPTION
+  nullable    = false
 
   validation {
     condition = length(
@@ -276,7 +243,6 @@ variable "sql_databases" {
     )
     error_message = "The 'name' in the sql database value must be unique."
   }
-
   validation {
     condition = alltrue(
       [
@@ -293,7 +259,6 @@ variable "sql_databases" {
     ])
     error_message = "The 'name' in the sql container value must be unique withing a sql database."
   }
-
   validation {
     condition = alltrue(flatten(
       [
@@ -313,7 +278,6 @@ variable "sql_databases" {
     ]))
     error_message = "The 'name' in the sql function value must be unique within a container."
   }
-
   validation {
     condition = alltrue(flatten(
       [
@@ -333,7 +297,6 @@ variable "sql_databases" {
     ]))
     error_message = "The 'name' in the sql triggers value must be unique within a container."
   }
-
   validation {
     condition = alltrue(flatten(
       [
@@ -353,7 +316,6 @@ variable "sql_databases" {
     ]))
     error_message = "The 'name' in the sql stored procedure value must be unique within a container."
   }
-
   validation {
     condition = alltrue(
       flatten([
@@ -366,7 +328,6 @@ variable "sql_databases" {
     )
     error_message = "The 'partition_key_paths' in the containers value must not be empty."
   }
-
   validation {
     condition = alltrue(
       [
@@ -376,7 +337,6 @@ variable "sql_databases" {
     )
     error_message = "The 'default_ttl' in the database value must be between -1 and 2147483647 if specified."
   }
-
   validation {
     condition = alltrue(
       [
@@ -386,14 +346,12 @@ variable "sql_databases" {
     )
     error_message = "The 'analytical_storage_ttl' in the database value must be between -1 and 2147483647 if specified."
   }
-
   validation {
     condition = alltrue(
       [for key, value in var.sql_databases : value.throughput != null ? value.throughput >= 400 : true]
     )
     error_message = "The 'throughput' in the database value must be greater than or equal to 400 if specified."
   }
-
   validation {
     condition = alltrue(
       [
@@ -403,7 +361,6 @@ variable "sql_databases" {
     )
     error_message = "The 'throughput' value in the 'autoscale_settings' at the database level must be a multiple of 100 if specified."
   }
-
   validation {
     condition = alltrue(
       [
@@ -413,7 +370,6 @@ variable "sql_databases" {
     )
     error_message = "The 'max_throughput' in the autoscale_settings value must be between 1000 and 1000000 if specified."
   }
-
   validation {
     condition = alltrue(
       [
@@ -423,7 +379,6 @@ variable "sql_databases" {
     )
     error_message = "The 'max_throughput' in the autoscale_settings value must be a multiple of 1000 if specified."
   }
-
   validation {
     condition = alltrue(
       [
@@ -433,7 +388,6 @@ variable "sql_databases" {
     )
     error_message = "The 'throughput' and 'autoscale_settings.max_throughput' cannot be specified at the same time at database level."
   }
-
   validation {
     condition = alltrue(
       flatten([
@@ -446,7 +400,6 @@ variable "sql_databases" {
     )
     error_message = "The 'throughput' value at the container level must be greater than or equal to 400 if specified."
   }
-
   validation {
     condition = alltrue(
       flatten([
@@ -459,7 +412,6 @@ variable "sql_databases" {
     )
     error_message = "The 'throughput' value in the 'autoscale_settings' at the container level must be a multiple of 100 if specified."
   }
-
   validation {
     condition = alltrue(
       flatten([
@@ -472,7 +424,6 @@ variable "sql_databases" {
     )
     error_message = "The 'max_throughput'value in the 'autoscale_settings' at the container level must be between 1000 and 1000000 if specified."
   }
-
   validation {
     condition = alltrue(
       flatten([
@@ -485,7 +436,6 @@ variable "sql_databases" {
     )
     error_message = "The 'max_throughput' value in the 'autoscale_settings' at the container level must be a multiple of 1000 if specified."
   }
-
   validation {
     condition = alltrue(
       flatten([
@@ -498,7 +448,6 @@ variable "sql_databases" {
     )
     error_message = "The 'throughput' and 'autoscale_settings.max_throughput' cannot be specified at the same time at container level."
   }
-
   validation {
     condition = alltrue(
       flatten([
@@ -511,7 +460,6 @@ variable "sql_databases" {
     )
     error_message = "The 'conflict_resolution_policy.mode' must be either 'Custom' or 'LastWriterWins' if specified."
   }
-
   validation {
     condition = alltrue(
       flatten([
@@ -524,7 +472,6 @@ variable "sql_databases" {
     )
     error_message = "The 'conflict_resolution_path' must be specified when the conflict resolution mode is 'LastWriterWins'."
   }
-
   validation {
     condition = alltrue(
       flatten([
@@ -537,7 +484,6 @@ variable "sql_databases" {
     )
     error_message = "The 'conflict_resolution_procedure' must be specified when the conflict resolution mode is 'Custom'."
   }
-
   validation {
     condition = alltrue(
       flatten([
@@ -553,7 +499,6 @@ variable "sql_databases" {
     )
     error_message = "The 'type' in the trigger value must be either 'Pre' or 'Post'."
   }
-
   validation {
     condition = alltrue(
       flatten([
@@ -569,7 +514,6 @@ variable "sql_databases" {
     )
     error_message = "The 'operation' in the trigger value must be either 'All', 'Create', 'Delete', 'Replace', or 'Update'."
   }
-
   validation {
     condition = alltrue(
       flatten([
@@ -585,7 +529,6 @@ variable "sql_databases" {
     )
     error_message = "The 'body' in the trigger value must not be empty."
   }
-
   validation {
     condition = alltrue(
       flatten([
@@ -601,7 +544,6 @@ variable "sql_databases" {
     )
     error_message = "The 'body' in the function value must not be empty."
   }
-
   validation {
     condition = alltrue(
       flatten([
@@ -617,7 +559,6 @@ variable "sql_databases" {
     )
     error_message = "The 'body' in the stored procedures value must not be empty."
   }
-
   validation {
     condition = alltrue(
       flatten([
@@ -630,7 +571,6 @@ variable "sql_databases" {
     )
     error_message = "The 'indexing_mode' in the indexing_policy value must be either 'consistent' or 'none'."
   }
-
   validation {
     condition = alltrue(
       flatten([
@@ -649,7 +589,6 @@ variable "sql_databases" {
     )
     error_message = "The 'order' in the composite index value must be either 'Ascending' or 'Descending'."
   }
-
   validation {
     condition = alltrue(
       flatten([
@@ -661,5 +600,38 @@ variable "sql_databases" {
       ])
     )
     error_message = "Either 'included_paths' or 'excluded_paths' must contain the path '/*' if they are specified"
+  }
+}
+
+variable "sql_dedicated_gateway" {
+  type = object({
+    instance_size  = string
+    instance_count = optional(number, 1)
+  })
+  default     = null
+  description = <<DESCRIPTION
+  Defaults to `null`. Manages a SQL Dedicated Gateway within a Cosmos DB Account.
+
+  - `instance_size`  - (Optional) - The instance size for the CosmosDB SQL Dedicated Gateway. Changing this forces a new resource to be created. Possible values are `Cosmos.D4s`, `Cosmos.D8s` and `Cosmos.D16s`
+  - `instance_count` - (Optional) - The instance count for the CosmosDB SQL Dedicated Gateway. Possible value is between `1` and `5`.
+
+  > Note: To create a dedicated gateway in a zone redundant region you must request Azure to enable it into your account. See more in: https://learn.microsoft.com/en-us/azure/cosmos-db/dedicated-gateway#provisioning-the-dedicated-gateway
+
+  Example inputs:
+  ```hcl
+  sql_dedicated_gateway = {
+    instance_count = 1
+    instance_size  = "Cosmos.D4s"
+  }
+  ```
+  DESCRIPTION
+
+  validation {
+    condition     = try(var.sql_dedicated_gateway.instance_count, null) != null ? var.sql_dedicated_gateway.instance_count >= 1 && var.sql_dedicated_gateway.instance_count <= 5 : true
+    error_message = "The 'instance_count' in the sql_dedicated_gateway value must be between 1 and 5 if specified."
+  }
+  validation {
+    condition     = try(var.sql_dedicated_gateway.instance_size, null) != null ? can(index(["Cosmos.D4s", "Cosmos.D8s", "Cosmos.D16s"], var.sql_dedicated_gateway.instance_size)) : true
+    error_message = "The 'instance_size' in the sql_dedicated_gateway value must be 'Cosmos.D4s', 'Cosmos.D8s' or 'Cosmos.D16s' if specified."
   }
 }

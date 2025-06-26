@@ -50,10 +50,10 @@ resource "azurerm_resource_group" "example" {
 }
 
 resource "azurerm_virtual_network" "example" {
-  address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.example.location
   name                = "${module.naming.virtual_network.name_unique}-${local.prefix}"
   resource_group_name = azurerm_resource_group.example.name
+  address_space       = ["10.0.0.0/16"]
 }
 
 resource "azurerm_subnet" "example" {
@@ -84,12 +84,9 @@ resource "azurerm_application_security_group" "example" {
 module "cosmos" {
   source = "../../"
 
-  resource_group_name                     = azurerm_resource_group.example.name
-  location                                = azurerm_resource_group.example.location
-  name                                    = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
-  public_network_access_enabled           = false
-  private_endpoints_manage_dns_zone_group = true
-
+  location            = azurerm_resource_group.example.location
+  name                = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
+  resource_group_name = azurerm_resource_group.example.name
   private_endpoints = {
     max = {
       name                            = "max"
@@ -136,4 +133,6 @@ module "cosmos" {
       private_dns_zone_resource_ids = [azurerm_private_dns_zone.example.id]
     }
   }
+  private_endpoints_manage_dns_zone_group = true
+  public_network_access_enabled           = false
 }

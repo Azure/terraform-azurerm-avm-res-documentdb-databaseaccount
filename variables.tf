@@ -2,7 +2,7 @@ variable "location" {
   type        = string
   description = <<DESCRIPTION
   Specifies the supported Azure location where the resource exists. Changing this forces a new resource to be created.
-  
+
   Example Inputs: eastus
   See more in CLI: az account list-locations -o table --query "[].name"
   DESCRIPTION
@@ -37,7 +37,7 @@ variable "name" {
 variable "resource_group_name" {
   type        = string
   description = <<DESCRIPTION
-  The name of the resource group in which to create this resource. 
+  The name of the resource group in which to create this resource.
   Changing this forces a new resource to be created.
   Name must be less than 90 characters long and must only contain underscores, hyphens, periods, parentheses, letters, or digits.
 

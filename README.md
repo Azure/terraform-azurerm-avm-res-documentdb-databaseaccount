@@ -83,7 +83,7 @@ The following input variables are required:
 
 ### <a name="input_location"></a> [location](#input\_location)
 
-Description:   Specifies the supported Azure location where the resource exists. Changing this forces a new resource to be created.  
+Description:   Specifies the supported Azure location where the resource exists. Changing this forces a new resource to be created.
 
   Example Inputs: eastus  
   See more in CLI: az account list-locations -o table --query "[].name"
@@ -102,7 +102,7 @@ Type: `string`
 
 ### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
 
-Description:   The name of the resource group in which to create this resource.   
+Description:   The name of the resource group in which to create this resource.  
   Changing this forces a new resource to be created.  
   Name must be less than 90 characters long and must only contain underscores, hyphens, periods, parentheses, letters, or digits.
 
@@ -207,10 +207,10 @@ Default: `{}`
 
 Description:   Defaults to `[]`. The capabilities which should be enabled for this Cosmos DB account.
 
-  - `name` - (Required) - The capability to enable - Possible values are `AllowSelfServeUpgradeToMongo36`, `DisableRateLimitingResponses`, `EnableAggregationPipeline`, `EnableCassandra`, `EnableGremlin`, `EnableMongo`, `EnableMongo16MBDocumentSupport`, `EnableMongoRetryableWrites`, `EnableMongoRoleBasedAccessControl`, `EnablePartialUniqueIndex`, `EnableServerless`, `EnableTable`, `EnableTtlOnCustomPath`, `EnableUniqueCompoundNestedDocs`, `MongoDBv3.4` and `mongoEnableDocLevelTTL`.
+  - `name - (Required) - The capability to enable - Possible values are `AllowSelfServeUpgradeToMongo36`, `DeleteAllItemsByPartitionKey`, `DisableRateLimitingResponses`, `EnableAggregationPipeline`, `EnableCassandra`, `EnableGremlin`, `EnableMongo`, `EnableMongo16MBDocumentSupport`, `EnableMongoRetryableWrites`, `EnableMongoRoleBasedAccessControl`, `EnableNoSQLVectorSearch`, `EnableNoSQLFullTextSearch`, `EnablePartialUniqueIndex`, `EnableServerless`, `EnableTable`, `EnableTtlOnCustomPath`, `EnableUniqueCompoundNestedDocs`, `MongoDBv3.4`, `mongoEnableDocLevelTTL`.
 
   Example inputs:
-  ```hcl
+  ````hcl
   capabilities = [
     {
       name = "DisableRateLimitingResponses"
@@ -436,7 +436,7 @@ Description:   Default to the region where the account was deployed with zone re
 
   - `location`          - (Required) - The name of the Azure location where the CosmosDB Account is being created.
   - `failover_priority` - (Required) - The failover priority of the region. A failover priority of 0 indicates a write region.
-  - `zone_redundant`    - (Optional) - Defaults to `true`. Whether or not the region is zone redundant.  
+  - `zone_redundant`    - (Optional) - Defaults to `true`. Whether or not the region is zone redundant.
 
   Example inputs:
   ```hcl
@@ -633,7 +633,7 @@ Default: `{}`
 
 ### <a name="input_mongo_server_version"></a> [mongo\_server\_version](#input\_mongo\_server\_version)
 
-Description: The Server Version of a MongoDB account. Defaults to `3.6` Possible values are `4.2`, `4.0`, `3.6`, and `3.2`
+Description: The Server Version of a MongoDB account. Defaults to `3.6` Possible values are `7.0`, `6.0`, `5.0`, `4.2`, `4.0`, `3.6`, and `3.2`
 
 Type: `string`
 
@@ -813,9 +813,10 @@ Description:   Defaults to `{}`. Manages SQL Databases within a Cosmos DB Accoun
   - `autoscale_settings` - (Optional) - Defaults to `null`. This must be set upon database creation otherwise it cannot be updated without a manual terraform destroy-apply.
     - `max_throughput` - (Required) - The maximum throughput of the SQL database (RU/s). Must be between `1,000` and `1,000,000`. Must be set in increments of `1,000`. Conflicts with `throughput`.
 
-  - `containers` - (Optional) - Defaults to `{}`. Manages SQL Containers within a Cosmos DB Account.
-    - `partition_key_paths`     - (Required) - Defines the partition key for the container. Changing this forces a new resource to be created.
+  - `containers` - (Optional)  - Defaults to `{}`. Manages SQL Containers within a Cosmos DB Account.
+    - `partition_key_paths`    - (Required) - Defines the partition key for the container. Changing this forces a new resource to be created.
     - `name`                   - (Required) - Specifies the name of the Cosmos DB SQL Container. Changing this forces a new resource to be created.
+    - `partition_key_version`  - (Optional) - Defines the partition key version for the container. Changing this forces a new resource to be created.
     - `throughput`             - (Optional) - Defaults to `null`. The throughput of SQL container (RU/s). Must be set in increments of `100`. The minimum value is `400`. This must be set upon container creation otherwise it cannot be updated without a manual terraform destroy-apply.
     - `default_ttl`            - (Optional) - Defaults to `null`. The default time to live of SQL container. If missing, items are not expired automatically. If present and the value is set to `-1`, it is equal to infinity, and items don't expire by default. If present and the value is set to some number n - items will expire n seconds after their last modified time.
     - `analytical_storage_ttl` - (Optional) - Defaults to `null`. The default time to live of Analytical Storage for this SQL container. If present and the value is set to `-1`, it is equal to infinity, and items don't expire by default. If present and the value is set to some number n - items will expire n seconds after their last modified time.
@@ -863,7 +864,7 @@ Description:   Defaults to `{}`. Manages SQL Databases within a Cosmos DB Accoun
         - `path` - (Required) -  Path for which the indexing behaviour applies to. According to the service design, all spatial types including LineString, MultiPolygon, Point, and Polygon will be applied to the path.
 
   > Note: Switching between autoscale and manual throughput is not supported via Terraform and must be completed via the Azure Portal and refreshed.
-  > Note: For indexing policy See more in: https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/how-to-manage-indexing-policy?tabs=dotnetv3%2Cpythonv3  
+  > Note: For indexing policy See more in: https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/how-to-manage-indexing-policy?tabs=dotnetv3%2Cpythonv3
 
   Example inputs:
   ```hcl
@@ -973,9 +974,9 @@ map(object({
     }), null)
 
     containers = optional(map(object({
-      partition_key_paths = list(string)
-      name                = string
-
+      partition_key_paths    = list(string)
+      name                   = string
+      partition_key_version  = optional(number, 2)
       throughput             = optional(number, null)
       default_ttl            = optional(number, null)
       analytical_storage_ttl = optional(number, null)

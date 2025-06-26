@@ -110,14 +110,9 @@ resource "time_sleep" "wait_for_rbac_before_key_operations" {
 module "cosmos" {
   source = "../../"
 
-  resource_group_name = azurerm_resource_group.example.name
   location            = azurerm_resource_group.example.location
   name                = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
-
-  managed_identities = {
-    user_assigned_resource_ids = [azurerm_user_assigned_identity.example.id]
-  }
-
+  resource_group_name = azurerm_resource_group.example.name
   customer_managed_key = {
     key_vault_resource_id = azurerm_key_vault.example.id
     key_name              = azurerm_key_vault_key.example.name
@@ -125,6 +120,9 @@ module "cosmos" {
     user_assigned_identity = {
       resource_id = azurerm_user_assigned_identity.example.id
     }
+  }
+  managed_identities = {
+    user_assigned_resource_ids = [azurerm_user_assigned_identity.example.id]
   }
 
   depends_on = [time_sleep.wait_for_rbac_before_key_operations]

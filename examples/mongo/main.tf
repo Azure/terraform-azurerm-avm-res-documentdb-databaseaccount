@@ -50,12 +50,10 @@ resource "azurerm_resource_group" "example" {
 module "cosmos" {
   source = "../../"
 
-  resource_group_name        = azurerm_resource_group.example.name
   location                   = azurerm_resource_group.example.location
   name                       = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
-  mongo_server_version       = "3.6"
+  resource_group_name        = azurerm_resource_group.example.name
   analytical_storage_enabled = true
-
   mongo_databases = {
     empty_database = {
       name       = "empty_database"
@@ -123,4 +121,5 @@ module "cosmos" {
       }
     }
   }
+  mongo_server_version = "3.6"
 }

@@ -1,15 +1,3 @@
-variable "mongo_server_version" {
-  type        = string
-  description = "The Server Version of a MongoDB account. Defaults to `3.6` Possible values are `4.2`, `4.0`, `3.6`, and `3.2`"
-  default     = "3.6"
-  nullable    = false
-
-  validation {
-    condition     = can(index(["4.2", "4.0", "3.6", "3.2"], var.mongo_server_version))
-    error_message = "The 'mongo_server_version' variable must be '4.2', '4.0', '3.6', or '3.2'."
-  }
-}
-
 variable "mongo_databases" {
   type = map(object({
     name = string
@@ -38,7 +26,6 @@ variable "mongo_databases" {
 
     })), {})
   }))
-  nullable    = false
   default     = {}
   description = <<DESCRIPTION
   Defaults to `{}`. Manages SQL Databases within a Cosmos DB Account.
@@ -85,6 +72,7 @@ variable "mongo_databases" {
     }
   ```
   DESCRIPTION
+  nullable    = false
 
   validation {
     condition = alltrue(
@@ -93,7 +81,6 @@ variable "mongo_databases" {
     ])
     error_message = "The name field cannot contain the characters /\\.\"$*<>:|?"
   }
-
   validation {
     condition = alltrue(
       [
@@ -102,7 +89,6 @@ variable "mongo_databases" {
     )
     error_message = "The 'name' field must be 64 characters or less."
   }
-
   validation {
     condition = length(
       [
@@ -114,14 +100,12 @@ variable "mongo_databases" {
     )
     error_message = "The 'name' in the sql database value must be unique."
   }
-
   validation {
     condition = alltrue(
       [for key, value in var.mongo_databases : value.throughput != null ? value.throughput >= 400 : true]
     )
     error_message = "The 'throughput' in the database value must be greater than or equal to 400 if specified."
   }
-
   validation {
     condition = alltrue(
       [
@@ -131,7 +115,6 @@ variable "mongo_databases" {
     )
     error_message = "The 'max_throughput' in the autoscale_settings value must be between 1000 and 1000000 if specified."
   }
-
   validation {
     condition = alltrue(
       [
@@ -141,7 +124,6 @@ variable "mongo_databases" {
     )
     error_message = "The 'max_throughput' in the autoscale_settings value must be a multiple of 1000 if specified."
   }
-
   validation {
     condition = alltrue(
       [
@@ -151,7 +133,6 @@ variable "mongo_databases" {
     )
     error_message = "The 'throughput' and 'autoscale_settings.max_throughput' cannot be specified at the same time at database level."
   }
-
   validation {
     condition = alltrue(
       [
@@ -176,7 +157,6 @@ variable "mongo_databases" {
     )
     error_message = "The 'throughput' value at the collection level must be greater than or equal to 400 if specified."
   }
-
   validation {
     condition = alltrue(
       [
@@ -189,7 +169,6 @@ variable "mongo_databases" {
     )
     error_message = "The 'max_throughput' in the collection value must be between 1000 and 1000000 if specified."
   }
-
   validation {
     condition = alltrue(
       [
@@ -202,7 +181,6 @@ variable "mongo_databases" {
     )
     error_message = "The 'throughput' and 'autoscale_settings.max_throughput' cannot be specified at the same time at collection level."
   }
-
   validation {
     condition = alltrue(
       [
@@ -214,5 +192,17 @@ variable "mongo_databases" {
       ]
     )
     error_message = "The 'max_throughput' in the autoscale_settings value must be a multiple of 1000 if specified at collection level."
+  }
+}
+
+variable "mongo_server_version" {
+  type        = string
+  default     = "3.6"
+  description = "The Server Version of a MongoDB account. Defaults to `3.6` Possible values are `7.0`, `6.0`, `5.0`, `4.2`, `4.0`, `3.6`, and `3.2`"
+  nullable    = false
+
+  validation {
+    condition     = can(index(["7.0", "6.0", "5.0", "4.2", "4.0", "3.6", "3.2"], var.mongo_server_version))
+    error_message = "The 'mongo_server_version' variable must be `7.0`, `6.0`, `5.0`, '4.2', '4.0', '3.6', or '3.2'."
   }
 }

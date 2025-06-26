@@ -50,11 +50,10 @@ resource "azurerm_resource_group" "example" {
 module "cosmos" {
   source = "../../"
 
-  resource_group_name        = azurerm_resource_group.example.name
   location                   = azurerm_resource_group.example.location
   name                       = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
+  resource_group_name        = azurerm_resource_group.example.name
   analytical_storage_enabled = true
-
   geo_locations = [ #Sql Gateway in a region with zone redundant enabled require a support ticket to allow it
     {
       failover_priority = 0
@@ -62,12 +61,6 @@ module "cosmos" {
       location          = azurerm_resource_group.example.location
     }
   ]
-
-  sql_dedicated_gateway = {
-    instance_count = 1
-    instance_size  = "Cosmos.D4s"
-  }
-
   sql_databases = {
     empty_database = {
       name = "empty_database"
@@ -290,8 +283,9 @@ module "cosmos" {
       }
     }
   }
+  sql_dedicated_gateway = {
+    instance_count = 1
+    instance_size  = "Cosmos.D4s"
+  }
 }
 
-output "name" {
-  value = module.cosmos.sql_databases
-}
