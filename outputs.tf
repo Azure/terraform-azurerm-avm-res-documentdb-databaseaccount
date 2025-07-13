@@ -151,7 +151,7 @@ output "sql_dedicated_gateway" {
 # Additional comprehensive outputs for the CosmosDB account resource
 
 output "resource" {
-  description = "The complete azurerm_cosmosdb_account resource."
+  description = "This is the full output for the resource."
   value       = azurerm_cosmosdb_account.this
   sensitive   = true
 }
