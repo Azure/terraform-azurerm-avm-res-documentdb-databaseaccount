@@ -88,28 +88,28 @@ The following input variables are required:
 
 Description:   Specifies the supported Azure location where the resource exists. Changing this forces a new resource to be created.
 
-  Example Inputs: eastus  
+  Example Inputs: eastus
   See more in CLI: az account list-locations -o table --query "[].name"
 
 Type: `string`
 
 ### <a name="input_name"></a> [name](#input\_name)
 
-Description:   Specifies the name of the CosmosDB Account. Changing this forces a new resource to be created.  
+Description:   Specifies the name of the CosmosDB Account. Changing this forces a new resource to be created.
   The name can contain only lowercase letters, numbers and the '-' character, must be between 3 and 44 characters long, and must not start or end with the character '-'.
 
-  Example Inputs: cosmos-sharepoint-prod-westus-001  
+  Example Inputs: cosmos-sharepoint-prod-westus-001
   See more: https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules#microsoftdocumentdb
 
 Type: `string`
 
 ### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
 
-Description:   The name of the resource group in which to create this resource.  
-  Changing this forces a new resource to be created.  
+Description:   The name of the resource group in which to create this resource.
+  Changing this forces a new resource to be created.
   Name must be less than 90 characters long and must only contain underscores, hyphens, periods, parentheses, letters, or digits.
 
-  Example Inputs: rg-sharepoint-prod-westus-001  
+  Example Inputs: rg-sharepoint-prod-westus-001
   See more: https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules#microsoftresources
 
 Type: `string`
@@ -336,7 +336,7 @@ Description:   Defaults to `null`. Ignored for Basic and Standard. Defines a cus
   customer_managed_key = {
     key_name               = "sample-customer-key"
     key_vault_resource_id  = "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{keyVaultName}"
-    
+
     user_assigned_identity {
       resource_id = "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{managedIdentityName}"
     }
@@ -394,7 +394,7 @@ Description:   Defaults to `{}`. A map of diagnostic settings to create. The map
       storage_account_resource_id = "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Storage/storageAccounts/{storageAccountName}"
     }
   }
-```  
+```
 
 Type:
 
@@ -417,8 +417,8 @@ Default: `{}`
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
-Description:   Defaults to `true`. This variable controls whether or not telemetry is enabled for the module.  
-  For more information see https://aka.ms/avm/telemetryinfo.  
+Description:   Defaults to `true`. This variable controls whether or not telemetry is enabled for the module.
+  For more information see https://aka.ms/avm/telemetryinfo.
   If it is set to false, then no telemetry will be collected.
 
 Type: `bool`
@@ -607,8 +607,8 @@ Default: `true`
 
 ### <a name="input_lock"></a> [lock](#input\_lock)
 
-Description:   Defaults to `null`. Controls the Resource Lock configuration for this resource.   
-  If specified, it will be inherited by child resources unless overriden when creating those child resources.   
+Description:   Defaults to `null`. Controls the Resource Lock configuration for this resource.
+  If specified, it will be inherited by child resources unless overriden when creating those child resources.
   The following properties can be specified:
 
   - `kind` - (Required) - The type of lock. Possible values are `CanNotDelete` and `ReadOnly`.
@@ -1235,9 +1235,41 @@ Default: `[]`
 
 The following outputs are exported:
 
-### <a name="output_cosmosdb_gremlin_connection_strings"></a> [cosmosdb\_gremlin\_connection\_strings](#output\_cosmosdb\_gremlin\_connection\_strings)
+### <a name="output_access_key_metadata_writes_enabled"></a> [access\_key\_metadata\_writes\_enabled](#output\_access\_key\_metadata\_writes\_enabled)
 
-Description: The Gremlin connection strings for the CosmosDB Account.
+Description: Whether access key metadata writes are enabled for the CosmosDB Account.
+
+### <a name="output_analytical_storage"></a> [analytical\_storage](#output\_analytical\_storage)
+
+Description: The analytical storage configuration for the CosmosDB Account.
+
+### <a name="output_analytical_storage_enabled"></a> [analytical\_storage\_enabled](#output\_analytical\_storage\_enabled)
+
+Description: Whether analytical storage is enabled for the CosmosDB Account.
+
+### <a name="output_automatic_failover_enabled"></a> [automatic\_failover\_enabled](#output\_automatic\_failover\_enabled)
+
+Description: Whether automatic failover is enabled for the CosmosDB Account.
+
+### <a name="output_backup"></a> [backup](#output\_backup)
+
+Description: The backup configuration for the CosmosDB Account.
+
+### <a name="output_capabilities"></a> [capabilities](#output\_capabilities)
+
+Description: The capabilities enabled for the CosmosDB Account.
+
+### <a name="output_capacity"></a> [capacity](#output\_capacity)
+
+Description: The capacity configuration for the CosmosDB Account.
+
+### <a name="output_consistency_policy"></a> [consistency\_policy](#output\_consistency\_policy)
+
+Description: The consistency policy configuration for the CosmosDB Account.
+
+### <a name="output_cors_rule"></a> [cors\_rule](#output\_cors\_rule)
+
+Description: The CORS rule configuration for the CosmosDB Account.
 
 ### <a name="output_cosmosdb_keys"></a> [cosmosdb\_keys](#output\_cosmosdb\_keys)
 
@@ -1251,21 +1283,105 @@ Description: The MongoDB connection strings for the CosmosDB Account.
 
 Description: The SQL connection strings for the CosmosDB Account.
 
-### <a name="output_gremlin_databases"></a> [gremlin\_databases](#output\_gremlin\_databases)
+### <a name="output_default_identity_type"></a> [default\_identity\_type](#output\_default\_identity\_type)
 
-Description: A map of the Gremlin databases created, with the database name as the key and the database id and graphs as the value.
+Description: The default identity type for the CosmosDB Account.
+
+### <a name="output_endpoint"></a> [endpoint](#output\_endpoint)
+
+Description: The endpoint for the CosmosDB Account.
+
+### <a name="output_free_tier_enabled"></a> [free\_tier\_enabled](#output\_free\_tier\_enabled)
+
+Description: Whether the free tier is enabled for the CosmosDB Account.
+
+### <a name="output_geo_location"></a> [geo\_location](#output\_geo\_location)
+
+Description: The geo-location configuration for the CosmosDB Account.
+
+### <a name="output_identity"></a> [identity](#output\_identity)
+
+Description: The managed identity configuration for the CosmosDB Account.
+
+### <a name="output_ip_range_filter"></a> [ip\_range\_filter](#output\_ip\_range\_filter)
+
+Description: The IP range filter for the CosmosDB Account.
+
+### <a name="output_is_virtual_network_filter_enabled"></a> [is\_virtual\_network\_filter\_enabled](#output\_is\_virtual\_network\_filter\_enabled)
+
+Description: Whether virtual network filtering is enabled for the CosmosDB Account.
+
+### <a name="output_key_vault_key_id"></a> [key\_vault\_key\_id](#output\_key\_vault\_key\_id)
+
+Description: The Key Vault key ID used for encryption.
+
+### <a name="output_kind"></a> [kind](#output\_kind)
+
+Description: The kind of the CosmosDB Account (GlobalDocumentDB, MongoDB, Parse).
+
+### <a name="output_local_authentication_disabled"></a> [local\_authentication\_disabled](#output\_local\_authentication\_disabled)
+
+Description: Whether local authentication is disabled for the CosmosDB Account.
+
+### <a name="output_location"></a> [location](#output\_location)
+
+Description: The location/region where the CosmosDB Account is created.
+
+### <a name="output_minimal_tls_version"></a> [minimal\_tls\_version](#output\_minimal\_tls\_version)
+
+Description: The minimal TLS version for the CosmosDB Account.
 
 ### <a name="output_mongo_databases"></a> [mongo\_databases](#output\_mongo\_databases)
 
 Description: A map of the MongoDB databases created, with the database name as the key and the database id and collections as the value.
 
+### <a name="output_mongo_server_version"></a> [mongo\_server\_version](#output\_mongo\_server\_version)
+
+Description: The MongoDB server version for the CosmosDB Account.
+
+### <a name="output_multiple_write_locations_enabled"></a> [multiple\_write\_locations\_enabled](#output\_multiple\_write\_locations\_enabled)
+
+Description: Whether multiple write locations are enabled for the CosmosDB Account.
+
 ### <a name="output_name"></a> [name](#output\_name)
 
 Description: The name of the cosmos db account created.
 
+### <a name="output_network_acl_bypass_for_azure_services"></a> [network\_acl\_bypass\_for\_azure\_services](#output\_network\_acl\_bypass\_for\_azure\_services)
+
+Description: Whether network ACL bypass is enabled for Azure services.
+
+### <a name="output_network_acl_bypass_ids"></a> [network\_acl\_bypass\_ids](#output\_network\_acl\_bypass\_ids)
+
+Description: The list of resource IDs that are allowed to bypass network ACLs.
+
+### <a name="output_offer_type"></a> [offer\_type](#output\_offer\_type)
+
+Description: The offer type for the CosmosDB Account.
+
+### <a name="output_partition_merge_enabled"></a> [partition\_merge\_enabled](#output\_partition\_merge\_enabled)
+
+Description: Whether partition merge is enabled for the CosmosDB Account.
+
+### <a name="output_public_network_access_enabled"></a> [public\_network\_access\_enabled](#output\_public\_network\_access\_enabled)
+
+Description: Whether public network access is enabled for the CosmosDB Account.
+
+### <a name="output_read_endpoints"></a> [read\_endpoints](#output\_read\_endpoints)
+
+Description: A list of read endpoints available for this CosmosDB account.
+
+### <a name="output_resource"></a> [resource](#output\_resource)
+
+Description: The complete azurerm\_cosmosdb\_account resource.
+
 ### <a name="output_resource_diagnostic_settings"></a> [resource\_diagnostic\_settings](#output\_resource\_diagnostic\_settings)
 
 Description: A map of the diagnostic settings created, with the diagnostic setting name as the key and the diagnostic setting ID as the value.
+
+### <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name)
+
+Description: The name of the resource group in which the CosmosDB Account is created.
 
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
@@ -1294,6 +1410,18 @@ Description: A map of the SQL databases created, with the database name as the k
 ### <a name="output_sql_dedicated_gateway"></a> [sql\_dedicated\_gateway](#output\_sql\_dedicated\_gateway)
 
 Description: The IDs of the SQL dedicated gateways created.
+
+### <a name="output_tags"></a> [tags](#output\_tags)
+
+Description: The tags assigned to the CosmosDB Account.
+
+### <a name="output_virtual_network_rule"></a> [virtual\_network\_rule](#output\_virtual\_network\_rule)
+
+Description: The virtual network rules configured for the CosmosDB Account.
+
+### <a name="output_write_endpoints"></a> [write\_endpoints](#output\_write\_endpoints)
+
+Description: A list of write endpoints available for this CosmosDB account.
 
 ## Modules
 
