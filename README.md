@@ -1373,7 +1373,7 @@ Description: A list of read endpoints available for this CosmosDB account.
 
 ### <a name="output_resource"></a> [resource](#output\_resource)
 
-Description: The complete azurerm\_cosmosdb\_account resource.
+Description: This is the full output for the resource.
 
 ### <a name="output_resource_diagnostic_settings"></a> [resource\_diagnostic\_settings](#output\_resource\_diagnostic\_settings)
 

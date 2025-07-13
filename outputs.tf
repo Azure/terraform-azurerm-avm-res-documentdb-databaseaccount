@@ -1,12 +1,72 @@
-output "cosmosdb_gremlin_connection_strings" {
-  description = "The Gremlin connection strings for the CosmosDB Account."
-  sensitive   = true
+# Additional comprehensive outputs for the CosmosDB account resource
+
+output "access_key_metadata_writes_enabled" {
+  description = "Whether access key metadata writes are enabled for the CosmosDB Account."
+  value       = azurerm_cosmosdb_account.this.access_key_metadata_writes_enabled
+}
+
+output "analytical_storage" {
+  description = "The analytical storage configuration for the CosmosDB Account."
+  value = length(azurerm_cosmosdb_account.this.analytical_storage) > 0 ? {
+    schema_type = azurerm_cosmosdb_account.this.analytical_storage[0].schema_type
+  } : null
+}
+
+output "analytical_storage_enabled" {
+  description = "Whether analytical storage is enabled for the CosmosDB Account."
+  value       = azurerm_cosmosdb_account.this.analytical_storage_enabled
+}
+
+output "automatic_failover_enabled" {
+  description = "Whether automatic failover is enabled for the CosmosDB Account."
+  value       = azurerm_cosmosdb_account.this.automatic_failover_enabled
+}
+
+output "backup" {
+  description = "The backup configuration for the CosmosDB Account."
   value = {
-    primary_gremlin_connection_string            = "${azurerm_cosmosdb_account.this.primary_sql_connection_string}ApiKind=Gremlin;"
-    secondary_gremlin_connection_string          = "${azurerm_cosmosdb_account.this.secondary_sql_connection_string}ApiKind=Gremlin;"
-    primary_readonly_gremlin_connection_string   = "${azurerm_cosmosdb_account.this.primary_readonly_sql_connection_string}ApiKind=Gremlin;"
-    secondary_readonly_gremlin_connection_string = "${azurerm_cosmosdb_account.this.secondary_readonly_sql_connection_string}ApiKind=Gremlin;"
+    type                = azurerm_cosmosdb_account.this.backup[0].type
+    interval_in_minutes = azurerm_cosmosdb_account.this.backup[0].interval_in_minutes
+    retention_in_hours  = azurerm_cosmosdb_account.this.backup[0].retention_in_hours
+    storage_redundancy  = azurerm_cosmosdb_account.this.backup[0].storage_redundancy
+    tier                = azurerm_cosmosdb_account.this.backup[0].tier
   }
+}
+
+output "capabilities" {
+  description = "The capabilities enabled for the CosmosDB Account."
+  value = [
+    for capability in azurerm_cosmosdb_account.this.capabilities : {
+      name = capability.name
+    }
+  ]
+}
+
+output "capacity" {
+  description = "The capacity configuration for the CosmosDB Account."
+  value = {
+    total_throughput_limit = azurerm_cosmosdb_account.this.capacity[0].total_throughput_limit
+  }
+}
+
+output "consistency_policy" {
+  description = "The consistency policy configuration for the CosmosDB Account."
+  value = {
+    consistency_level       = azurerm_cosmosdb_account.this.consistency_policy[0].consistency_level
+    max_interval_in_seconds = azurerm_cosmosdb_account.this.consistency_policy[0].max_interval_in_seconds
+    max_staleness_prefix    = azurerm_cosmosdb_account.this.consistency_policy[0].max_staleness_prefix
+  }
+}
+
+output "cors_rule" {
+  description = "The CORS rule configuration for the CosmosDB Account."
+  value = length(azurerm_cosmosdb_account.this.cors_rule) > 0 ? {
+    allowed_headers    = azurerm_cosmosdb_account.this.cors_rule[0].allowed_headers
+    allowed_methods    = azurerm_cosmosdb_account.this.cors_rule[0].allowed_methods
+    allowed_origins    = azurerm_cosmosdb_account.this.cors_rule[0].allowed_origins
+    exposed_headers    = azurerm_cosmosdb_account.this.cors_rule[0].exposed_headers
+    max_age_in_seconds = azurerm_cosmosdb_account.this.cors_rule[0].max_age_in_seconds
+  } : null
 }
 
 output "cosmosdb_keys" {
@@ -42,19 +102,76 @@ output "cosmosdb_sql_connection_strings" {
   }
 }
 
-output "gremlin_databases" {
-  description = "A map of the Gremlin databases created, with the database name as the key and the database id and graphs as the value."
-  value = { for db in azurerm_cosmosdb_gremlin_database.this : db.name =>
-    {
-      id = db.id
+output "default_identity_type" {
+  description = "The default identity type for the CosmosDB Account."
+  value       = azurerm_cosmosdb_account.this.default_identity_type
+}
 
-      graphs = {
-        for graph in azurerm_cosmosdb_gremlin_graph.this :
-        graph.name => graph.id
-        if graph.database_name == db.name
-      }
+output "endpoint" {
+  description = "The endpoint for the CosmosDB Account."
+  value       = azurerm_cosmosdb_account.this.endpoint
+}
+
+output "free_tier_enabled" {
+  description = "Whether the free tier is enabled for the CosmosDB Account."
+  value       = azurerm_cosmosdb_account.this.free_tier_enabled
+}
+
+output "geo_location" {
+  description = "The geo-location configuration for the CosmosDB Account."
+  value = [
+    for location in azurerm_cosmosdb_account.this.geo_location : {
+      id                = location.id
+      location          = location.location
+      failover_priority = location.failover_priority
+      zone_redundant    = location.zone_redundant
     }
-  }
+  ]
+}
+
+output "identity" {
+  description = "The managed identity configuration for the CosmosDB Account."
+  value = length(azurerm_cosmosdb_account.this.identity) > 0 ? {
+    type         = azurerm_cosmosdb_account.this.identity[0].type
+    identity_ids = azurerm_cosmosdb_account.this.identity[0].identity_ids
+    principal_id = azurerm_cosmosdb_account.this.identity[0].principal_id
+    tenant_id    = azurerm_cosmosdb_account.this.identity[0].tenant_id
+  } : null
+}
+
+output "ip_range_filter" {
+  description = "The IP range filter for the CosmosDB Account."
+  value       = azurerm_cosmosdb_account.this.ip_range_filter
+}
+
+output "is_virtual_network_filter_enabled" {
+  description = "Whether virtual network filtering is enabled for the CosmosDB Account."
+  value       = azurerm_cosmosdb_account.this.is_virtual_network_filter_enabled
+}
+
+output "key_vault_key_id" {
+  description = "The Key Vault key ID used for encryption."
+  value       = azurerm_cosmosdb_account.this.key_vault_key_id
+}
+
+output "kind" {
+  description = "The kind of the CosmosDB Account (GlobalDocumentDB, MongoDB, Parse)."
+  value       = azurerm_cosmosdb_account.this.kind
+}
+
+output "local_authentication_disabled" {
+  description = "Whether local authentication is disabled for the CosmosDB Account."
+  value       = azurerm_cosmosdb_account.this.local_authentication_disabled
+}
+
+output "location" {
+  description = "The location/region where the CosmosDB Account is created."
+  value       = azurerm_cosmosdb_account.this.location
+}
+
+output "minimal_tls_version" {
+  description = "The minimal TLS version for the CosmosDB Account."
+  value       = azurerm_cosmosdb_account.this.minimal_tls_version
 }
 
 output "mongo_databases" {
@@ -72,14 +189,65 @@ output "mongo_databases" {
   }
 }
 
+output "mongo_server_version" {
+  description = "The MongoDB server version for the CosmosDB Account."
+  value       = azurerm_cosmosdb_account.this.mongo_server_version
+}
+
+output "multiple_write_locations_enabled" {
+  description = "Whether multiple write locations are enabled for the CosmosDB Account."
+  value       = azurerm_cosmosdb_account.this.multiple_write_locations_enabled
+}
+
 output "name" {
   description = "The name of the cosmos db account created."
   value       = azurerm_cosmosdb_account.this.name
 }
 
+output "network_acl_bypass_for_azure_services" {
+  description = "Whether network ACL bypass is enabled for Azure services."
+  value       = azurerm_cosmosdb_account.this.network_acl_bypass_for_azure_services
+}
+
+output "network_acl_bypass_ids" {
+  description = "The list of resource IDs that are allowed to bypass network ACLs."
+  value       = azurerm_cosmosdb_account.this.network_acl_bypass_ids
+}
+
+output "offer_type" {
+  description = "The offer type for the CosmosDB Account."
+  value       = azurerm_cosmosdb_account.this.offer_type
+}
+
+output "partition_merge_enabled" {
+  description = "Whether partition merge is enabled for the CosmosDB Account."
+  value       = azurerm_cosmosdb_account.this.partition_merge_enabled
+}
+
+output "public_network_access_enabled" {
+  description = "Whether public network access is enabled for the CosmosDB Account."
+  value       = azurerm_cosmosdb_account.this.public_network_access_enabled
+}
+
+output "read_endpoints" {
+  description = "A list of read endpoints available for this CosmosDB account."
+  value       = azurerm_cosmosdb_account.this.read_endpoints
+}
+
+output "resource" {
+  description = "This is the full output for the resource."
+  sensitive   = true
+  value       = azurerm_cosmosdb_account.this
+}
+
 output "resource_diagnostic_settings" {
   description = "A map of the diagnostic settings created, with the diagnostic setting name as the key and the diagnostic setting ID as the value."
   value       = { for diagnostic in azurerm_monitor_diagnostic_setting.this : diagnostic.name => diagnostic.id }
+}
+
+output "resource_group_name" {
+  description = "The name of the resource group in which the CosmosDB Account is created."
+  value       = azurerm_cosmosdb_account.this.resource_group_name
 }
 
 output "resource_id" {
@@ -148,82 +316,9 @@ output "sql_dedicated_gateway" {
   value       = [for gateway in azurerm_cosmosdb_sql_dedicated_gateway.this : gateway.id]
 }
 
-# Additional comprehensive outputs for the CosmosDB account resource
-
-output "resource" {
-  description = "This is the full output for the resource."
-  value       = azurerm_cosmosdb_account.this
-  sensitive   = true
-}
-
-output "endpoint" {
-  description = "The endpoint for the CosmosDB Account."
-  value       = azurerm_cosmosdb_account.this.endpoint
-}
-
-output "read_endpoints" {
-  description = "A list of read endpoints available for this CosmosDB account."
-  value       = azurerm_cosmosdb_account.this.read_endpoints
-}
-
-output "write_endpoints" {
-  description = "A list of write endpoints available for this CosmosDB account."
-  value       = azurerm_cosmosdb_account.this.write_endpoints
-}
-
-output "resource_group_name" {
-  description = "The name of the resource group in which the CosmosDB Account is created."
-  value       = azurerm_cosmosdb_account.this.resource_group_name
-}
-
-output "location" {
-  description = "The location/region where the CosmosDB Account is created."
-  value       = azurerm_cosmosdb_account.this.location
-}
-
 output "tags" {
   description = "The tags assigned to the CosmosDB Account."
   value       = azurerm_cosmosdb_account.this.tags
-}
-
-output "offer_type" {
-  description = "The offer type for the CosmosDB Account."
-  value       = azurerm_cosmosdb_account.this.offer_type
-}
-
-output "kind" {
-  description = "The kind of the CosmosDB Account (GlobalDocumentDB, MongoDB, Parse)."
-  value       = azurerm_cosmosdb_account.this.kind
-}
-
-output "consistency_policy" {
-  description = "The consistency policy configuration for the CosmosDB Account."
-  value = {
-    consistency_level       = azurerm_cosmosdb_account.this.consistency_policy[0].consistency_level
-    max_interval_in_seconds = azurerm_cosmosdb_account.this.consistency_policy[0].max_interval_in_seconds
-    max_staleness_prefix    = azurerm_cosmosdb_account.this.consistency_policy[0].max_staleness_prefix
-  }
-}
-
-output "geo_location" {
-  description = "The geo-location configuration for the CosmosDB Account."
-  value = [
-    for location in azurerm_cosmosdb_account.this.geo_location : {
-      id                = location.id
-      location          = location.location
-      failover_priority = location.failover_priority
-      zone_redundant    = location.zone_redundant
-    }
-  ]
-}
-
-output "capabilities" {
-  description = "The capabilities enabled for the CosmosDB Account."
-  value = [
-    for capability in azurerm_cosmosdb_account.this.capabilities : {
-      name = capability.name
-    }
-  ]
 }
 
 output "virtual_network_rule" {
@@ -236,128 +331,7 @@ output "virtual_network_rule" {
   ]
 }
 
-output "analytical_storage" {
-  description = "The analytical storage configuration for the CosmosDB Account."
-  value = length(azurerm_cosmosdb_account.this.analytical_storage) > 0 ? {
-    schema_type = azurerm_cosmosdb_account.this.analytical_storage[0].schema_type
-  } : null
-}
-
-output "backup" {
-  description = "The backup configuration for the CosmosDB Account."
-  value = {
-    type                = azurerm_cosmosdb_account.this.backup[0].type
-    interval_in_minutes = azurerm_cosmosdb_account.this.backup[0].interval_in_minutes
-    retention_in_hours  = azurerm_cosmosdb_account.this.backup[0].retention_in_hours
-    storage_redundancy  = azurerm_cosmosdb_account.this.backup[0].storage_redundancy
-    tier                = azurerm_cosmosdb_account.this.backup[0].tier
-  }
-}
-
-output "capacity" {
-  description = "The capacity configuration for the CosmosDB Account."
-  value = {
-    total_throughput_limit = azurerm_cosmosdb_account.this.capacity[0].total_throughput_limit
-  }
-}
-
-output "cors_rule" {
-  description = "The CORS rule configuration for the CosmosDB Account."
-  value = length(azurerm_cosmosdb_account.this.cors_rule) > 0 ? {
-    allowed_headers    = azurerm_cosmosdb_account.this.cors_rule[0].allowed_headers
-    allowed_methods    = azurerm_cosmosdb_account.this.cors_rule[0].allowed_methods
-    allowed_origins    = azurerm_cosmosdb_account.this.cors_rule[0].allowed_origins
-    exposed_headers    = azurerm_cosmosdb_account.this.cors_rule[0].exposed_headers
-    max_age_in_seconds = azurerm_cosmosdb_account.this.cors_rule[0].max_age_in_seconds
-  } : null
-}
-
-output "identity" {
-  description = "The managed identity configuration for the CosmosDB Account."
-  value = length(azurerm_cosmosdb_account.this.identity) > 0 ? {
-    type         = azurerm_cosmosdb_account.this.identity[0].type
-    identity_ids = azurerm_cosmosdb_account.this.identity[0].identity_ids
-    principal_id = azurerm_cosmosdb_account.this.identity[0].principal_id
-    tenant_id    = azurerm_cosmosdb_account.this.identity[0].tenant_id
-  } : null
-}
-
-output "access_key_metadata_writes_enabled" {
-  description = "Whether access key metadata writes are enabled for the CosmosDB Account."
-  value       = azurerm_cosmosdb_account.this.access_key_metadata_writes_enabled
-}
-
-output "analytical_storage_enabled" {
-  description = "Whether analytical storage is enabled for the CosmosDB Account."
-  value       = azurerm_cosmosdb_account.this.analytical_storage_enabled
-}
-
-output "automatic_failover_enabled" {
-  description = "Whether automatic failover is enabled for the CosmosDB Account."
-  value       = azurerm_cosmosdb_account.this.automatic_failover_enabled
-}
-
-output "free_tier_enabled" {
-  description = "Whether the free tier is enabled for the CosmosDB Account."
-  value       = azurerm_cosmosdb_account.this.free_tier_enabled
-}
-
-output "ip_range_filter" {
-  description = "The IP range filter for the CosmosDB Account."
-  value       = azurerm_cosmosdb_account.this.ip_range_filter
-}
-
-output "is_virtual_network_filter_enabled" {
-  description = "Whether virtual network filtering is enabled for the CosmosDB Account."
-  value       = azurerm_cosmosdb_account.this.is_virtual_network_filter_enabled
-}
-
-output "key_vault_key_id" {
-  description = "The Key Vault key ID used for encryption."
-  value       = azurerm_cosmosdb_account.this.key_vault_key_id
-}
-
-output "local_authentication_disabled" {
-  description = "Whether local authentication is disabled for the CosmosDB Account."
-  value       = azurerm_cosmosdb_account.this.local_authentication_disabled
-}
-
-output "minimal_tls_version" {
-  description = "The minimal TLS version for the CosmosDB Account."
-  value       = azurerm_cosmosdb_account.this.minimal_tls_version
-}
-
-output "mongo_server_version" {
-  description = "The MongoDB server version for the CosmosDB Account."
-  value       = azurerm_cosmosdb_account.this.mongo_server_version
-}
-
-output "multiple_write_locations_enabled" {
-  description = "Whether multiple write locations are enabled for the CosmosDB Account."
-  value       = azurerm_cosmosdb_account.this.multiple_write_locations_enabled
-}
-
-output "network_acl_bypass_for_azure_services" {
-  description = "Whether network ACL bypass is enabled for Azure services."
-  value       = azurerm_cosmosdb_account.this.network_acl_bypass_for_azure_services
-}
-
-output "network_acl_bypass_ids" {
-  description = "The list of resource IDs that are allowed to bypass network ACLs."
-  value       = azurerm_cosmosdb_account.this.network_acl_bypass_ids
-}
-
-output "partition_merge_enabled" {
-  description = "Whether partition merge is enabled for the CosmosDB Account."
-  value       = azurerm_cosmosdb_account.this.partition_merge_enabled
-}
-
-output "public_network_access_enabled" {
-  description = "Whether public network access is enabled for the CosmosDB Account."
-  value       = azurerm_cosmosdb_account.this.public_network_access_enabled
-}
-
-output "default_identity_type" {
-  description = "The default identity type for the CosmosDB Account."
-  value       = azurerm_cosmosdb_account.this.default_identity_type
+output "write_endpoints" {
+  description = "A list of write endpoints available for this CosmosDB account."
+  value       = azurerm_cosmosdb_account.this.write_endpoints
 }
