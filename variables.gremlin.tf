@@ -11,11 +11,11 @@ variable "gremlin_databases" {
     graphs = optional(map(object({
       name = string
 
-      partition_key_path = string
+      partition_key_path    = string
       partition_key_version = optional(string, null)
-      throughput          = optional(number, null)
+      throughput            = optional(number, null)
 
-      default_ttl = optional(number, null)
+      default_ttl            = optional(number, null)
       analytical_storage_ttl = optional(number, null)
 
       autoscale_settings = optional(object({
@@ -23,14 +23,14 @@ variable "gremlin_databases" {
       }), null)
 
       index_policy = optional(object({
-        automatic = optional(bool, true)
-        indexing_mode = string
+        automatic      = optional(bool, true)
+        indexing_mode  = string
         included_paths = list(string)
         excluded_paths = list(string)
 
         composite_index = optional(list(object({
           index = set(object({
-            path = string
+            path  = string
             order = string
           }))
         })), null)
@@ -41,8 +41,8 @@ variable "gremlin_databases" {
       }), null)
 
       conflict_resolution_policy = optional(object({
-        mode  = string
-        conflict_resolution_path = optional(string, null)
+        mode                          = string
+        conflict_resolution_path      = optional(string, null)
         conflict_resolution_procedure = optional(string, null)
       }), null)
 
@@ -209,8 +209,8 @@ variable "gremlin_databases" {
         for db_key, db_value in var.gremlin_databases :
         length([
           for graph_key, graph_params in db_value.graphs : graph_params.name
-        ]) == length(distinct([
-          for graph_key, graph_params in db_value.graphs : graph_params.name
+          ]) == length(distinct([
+            for graph_key, graph_params in db_value.graphs : graph_params.name
         ]))
       ]
     )
@@ -411,7 +411,7 @@ variable "gremlin_databases" {
         for db_key, db_params in var.gremlin_databases :
         flatten([
           for graph_key, graph_params in db_params.graphs :
-          try(graph_params.index_policy.composite_index, null) != null ? 
+          try(graph_params.index_policy.composite_index, null) != null ?
           flatten([
             for composite_idx in graph_params.index_policy.composite_index :
             [

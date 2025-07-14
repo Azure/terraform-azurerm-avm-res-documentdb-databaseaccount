@@ -121,8 +121,8 @@ module "cosmos" {
           partition_key_path = "/partitionKey"
 
           index_policy = {
-            automatic     = true
-            indexing_mode = "consistent"
+            automatic      = true
+            indexing_mode  = "consistent"
             included_paths = ["/", "/included/*"]
             excluded_paths = ["/excluded/*"]
 

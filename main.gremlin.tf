@@ -20,12 +20,12 @@ resource "azurerm_cosmosdb_gremlin_graph" "this" {
 
   name                   = each.value.graph_params.name
   resource_group_name    = azurerm_cosmosdb_account.this.resource_group_name
-  account_name          = azurerm_cosmosdb_account.this.name
-  database_name         = azurerm_cosmosdb_gremlin_database.this[each.value.db_name].name
-  partition_key_path    = each.value.graph_params.partition_key_path
-  partition_key_version = each.value.graph_params.partition_key_version
-  throughput            = each.value.graph_params.throughput
-  default_ttl           = each.value.graph_params.default_ttl
+  account_name           = azurerm_cosmosdb_account.this.name
+  database_name          = azurerm_cosmosdb_gremlin_database.this[each.value.db_name].name
+  partition_key_path     = each.value.graph_params.partition_key_path
+  partition_key_version  = each.value.graph_params.partition_key_version
+  throughput             = each.value.graph_params.throughput
+  default_ttl            = each.value.graph_params.default_ttl
   analytical_storage_ttl = each.value.graph_params.analytical_storage_ttl
 
   dynamic "autoscale_settings" {

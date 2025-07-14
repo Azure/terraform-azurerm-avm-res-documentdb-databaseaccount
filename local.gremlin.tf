@@ -1,7 +1,7 @@
 locals {
   flattened_gremlin_graphs = flatten(
     [
-      for db_name, db_params in var.gremlin_databases:
+      for db_name, db_params in var.gremlin_databases :
       [
         for graph_key, graph_params in db_params.graphs : {
           db_name      = db_name
