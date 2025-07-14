@@ -9,6 +9,17 @@ output "cosmosdb_keys" {
   }
 }
 
+output "cosmosdb_gremlin_connection_strings" {
+  description = "The Gremlin connection strings for the CosmosDB Account."
+  sensitive   = true
+  value = {
+    primary_gremlin_connection_string            = "${azurerm_cosmosdb_account.this.primary_sql_connection_string}ApiKind=Gremlin;"
+    secondary_gremlin_connection_string          = "${azurerm_cosmosdb_account.this.secondary_sql_connection_string}ApiKind=Gremlin;"
+    primary_readonly_gremlin_connection_string   = "${azurerm_cosmosdb_account.this.primary_readonly_sql_connection_string}ApiKind=Gremlin;"
+    secondary_readonly_gremlin_connection_string = "${azurerm_cosmosdb_account.this.secondary_readonly_sql_connection_string}ApiKind=Gremlin;"
+  }
+}
+
 output "cosmosdb_mongodb_connection_strings" {
   description = "The MongoDB connection strings for the CosmosDB Account."
   sensitive   = true
@@ -41,6 +52,21 @@ output "mongo_databases" {
         for collection in azurerm_cosmosdb_mongo_collection.this :
         collection.name => collection.id
         if collection.database_name == db.name
+      }
+    }
+  }
+}
+
+output "gremlin_databases" {
+  description = "A map of the Gremlin databases created, with the database name as the key and the database id and graphs as the value."
+  value = { for db in azurerm_cosmosdb_gremlin_database.this : db.name =>
+    {
+      id = db.id
+
+      graphs = {
+        for graph in azurerm_cosmosdb_gremlin_graph.this :
+        graph.name => graph.id
+        if graph.database_name == db.name
       }
     }
   }
