@@ -1,14 +1,3 @@
-output "cosmosdb_keys" {
-  description = "The keys for the CosmosDB Account."
-  sensitive   = true
-  value = {
-    primary_key            = azurerm_cosmosdb_account.this.primary_key
-    secondary_key          = azurerm_cosmosdb_account.this.secondary_key
-    primary_readonly_key   = azurerm_cosmosdb_account.this.primary_readonly_key
-    secondary_readonly_key = azurerm_cosmosdb_account.this.secondary_readonly_key
-  }
-}
-
 output "cosmosdb_gremlin_connection_strings" {
   description = "The Gremlin connection strings for the CosmosDB Account."
   sensitive   = true
@@ -17,6 +6,17 @@ output "cosmosdb_gremlin_connection_strings" {
     secondary_gremlin_connection_string          = "${azurerm_cosmosdb_account.this.secondary_sql_connection_string}ApiKind=Gremlin;"
     primary_readonly_gremlin_connection_string   = "${azurerm_cosmosdb_account.this.primary_readonly_sql_connection_string}ApiKind=Gremlin;"
     secondary_readonly_gremlin_connection_string = "${azurerm_cosmosdb_account.this.secondary_readonly_sql_connection_string}ApiKind=Gremlin;"
+  }
+}
+
+output "cosmosdb_keys" {
+  description = "The keys for the CosmosDB Account."
+  sensitive   = true
+  value = {
+    primary_key            = azurerm_cosmosdb_account.this.primary_key
+    secondary_key          = azurerm_cosmosdb_account.this.secondary_key
+    primary_readonly_key   = azurerm_cosmosdb_account.this.primary_readonly_key
+    secondary_readonly_key = azurerm_cosmosdb_account.this.secondary_readonly_key
   }
 }
 
@@ -42,21 +42,6 @@ output "cosmosdb_sql_connection_strings" {
   }
 }
 
-output "mongo_databases" {
-  description = "A map of the MongoDB databases created, with the database name as the key and the database id and collections as the value."
-  value = { for db in azurerm_cosmosdb_mongo_database.this : db.name =>
-    {
-      id = db.id
-
-      collections = {
-        for collection in azurerm_cosmosdb_mongo_collection.this :
-        collection.name => collection.id
-        if collection.database_name == db.name
-      }
-    }
-  }
-}
-
 output "gremlin_databases" {
   description = "A map of the Gremlin databases created, with the database name as the key and the database id and graphs as the value."
   value = { for db in azurerm_cosmosdb_gremlin_database.this : db.name =>
@@ -67,6 +52,21 @@ output "gremlin_databases" {
         for graph in azurerm_cosmosdb_gremlin_graph.this :
         graph.name => graph.id
         if graph.database_name == db.name
+      }
+    }
+  }
+}
+
+output "mongo_databases" {
+  description = "A map of the MongoDB databases created, with the database name as the key and the database id and collections as the value."
+  value = { for db in azurerm_cosmosdb_mongo_database.this : db.name =>
+    {
+      id = db.id
+
+      collections = {
+        for collection in azurerm_cosmosdb_mongo_collection.this :
+        collection.name => collection.id
+        if collection.database_name == db.name
       }
     }
   }

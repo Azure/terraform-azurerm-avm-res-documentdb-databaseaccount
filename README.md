@@ -56,6 +56,8 @@ The following requirements are needed by this module:
 The following resources are used by this module:
 
 - [azurerm_cosmosdb_account.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_account) (resource)
+- [azurerm_cosmosdb_gremlin_database.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_gremlin_database) (resource)
+- [azurerm_cosmosdb_gremlin_graph.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_gremlin_graph) (resource)
 - [azurerm_cosmosdb_mongo_collection.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_mongo_collection) (resource)
 - [azurerm_cosmosdb_mongo_database.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_mongo_database) (resource)
 - [azurerm_cosmosdb_sql_container.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_container) (resource)
@@ -465,6 +467,123 @@ set(object({
 ```
 
 Default: `null`
+
+### <a name="input_gremlin_databases"></a> [gremlin\_databases](#input\_gremlin\_databases)
+
+Description:   Defaults to `{}`. Manages Gremlin Databases within a Cosmos DB Account.
+
+  - `name`       - (Required) - Specifies the name of the Cosmos DB Gremlin Database. Changing this forces a new resource to be created.
+  - `throughput` - (Optional) - Defaults to `null`. The throughput of the Gremlin database (RU/s). Must be set in increments of `100`. The minimum value is `400`. This must be set upon database creation otherwise it cannot be updated without a manual terraform destroy-apply.
+
+  - `autoscale_settings` - (Optional) - Defaults to `null`. This must be set upon database creation otherwise it cannot be updated without a manual terraform destroy-apply.
+    - `max_throughput` - (Required) - The maximum throughput of the Gremlin database (RU/s). Must be between `1,000` and `1,000,000`. Must be set in increments of `1,000`. Conflicts with `throughput`.
+
+  - `graphs` - (Optional) - Defaults to `{}`. Manages a Gremlin Graph within a Cosmos DB Account.
+    - `name`      - (Required) Specifies the name of the Cosmos DB Gremlin Graph. Changing this forces a new resource to be created.
+    - `partition_key_path` - (Required) - The path to use for partitioning data within the Gremlin graph (e.g., `/myPartitionKey`).
+    - `partition_key_version` - (Optional) - Defaults to `null`. The version of the partition key definition. Possible values are `1` or `2`.
+    - `throughput` - (Optional) - Defaults to `null`. The throughput of the Gremlin graph (RU/s). Must be set in increments of 100. The minimum value is 400. This must be set upon graph creation otherwise it cannot be updated without a manual terraform destroy-apply.
+    - `default_ttl` - (Optional) - Defaults to `null`. The default Time To Live in seconds. If the value is -1, items are not automatically expired.
+    - `analytical_storage_ttl` - (Optional) - Defaults to `null`. The time to live of Analytical Storage for this Cosmos DB Gremlin Graph. Possible values are between -1 to 2147483647 not including 0. If present and the value is set to -1, it means never expire.
+    - `autoscale_settings` - (Optional) - Defaults to `null`. This must be set upon graph creation otherwise it cannot be updated without a manual terraform destroy-apply.
+      - `max_throughput` - (Required) - The maximum throughput of the Gremlin graph (RU/s). Must be between 1,000 and 1,000,000. Must be set in increments of 1,000. Conflicts with `throughput`.
+    - `index_policy` - (Optional) - Defaults to `null`. The indexing policy configuration for the Gremlin graph.
+      - `automatic` - (Optional) - Defaults to `true`. Whether automatic indexing is enabled.
+      - `indexing_mode` - (Required) - The indexing mode. Possible values are `consistent`, `lazy`, or `none`.
+      - `included_paths` - (Required) - List of paths to include in the index. Note: The root path "/" must be included in either included\_paths or excluded\_paths.
+      - `excluded_paths` - (Required) - List of paths to exclude from the index.
+      - `composite_index` - (Optional) - Defaults to `null`. List of composite index definitions.
+        - `index` - (Required) - Set of objects specifying `path` and `order` for each composite index (`Ascending` or `Descending`).
+      - `spatial_index` - (Optional) - Defaults to `null`. List of spatial index definitions.
+        - `path` - (Required) - The path for the spatial index.
+    - `conflict_resolution_policy` - (Optional) - Defaults to `null`. The conflict resolution policy for the Gremlin graph.
+      - `mode` - (Required) - The conflict resolution mode. Possible values are `LastWriterWins` or `Custom`.
+      - `conflict_resolution_path` - (Optional) - Defaults to `null`. The path to be used for conflict resolution (required for `LastWriterWins`).
+      - `conflict_resolution_procedure` - (Optional) - Defaults to `null`. The stored procedure to be used for conflict resolution (required for `Custom`).
+    - `unique_key` - (Optional) - Defaults to `null`. The unique key policy for the Gremlin graph.
+      - `paths` - (Required) - List of paths to enforce uniqueness on.
+
+  Example inputs:
+  ```hcl
+  gremlin_databases = {
+    "database_name" = {
+      name = "database_gremlin"
+      throughput = 400
+
+      graphs = {
+        "graph" = {
+          name = "graph"
+          partition_key_path = "/myPartitionKey"
+          partition_key_version = "1"
+          throughput = 400
+          default_ttl = 3600
+          analytical_storage_ttl = -1
+          autoscale_settings = {
+            max_throughput = 1000
+        }
+      }
+    }
+  }
+```
+
+Type:
+
+```hcl
+map(object({
+    name = string
+
+    throughput = optional(number, null)
+
+    autoscale_settings = optional(object({
+      max_throughput = number
+    }), null)
+
+    graphs = optional(map(object({
+      name = string
+
+      partition_key_path    = string
+      partition_key_version = optional(string, null)
+      throughput            = optional(number, null)
+
+      default_ttl            = optional(number, null)
+      analytical_storage_ttl = optional(number, null)
+
+      autoscale_settings = optional(object({
+        max_throughput = number
+      }), null)
+
+      index_policy = optional(object({
+        automatic      = optional(bool, true)
+        indexing_mode  = string
+        included_paths = list(string)
+        excluded_paths = list(string)
+
+        composite_index = optional(list(object({
+          index = set(object({
+            path  = string
+            order = string
+          }))
+        })), null)
+
+        spatial_index = optional(list(object({
+          path = string
+        })), null)
+      }), null)
+
+      conflict_resolution_policy = optional(object({
+        mode                          = string
+        conflict_resolution_path      = optional(string, null)
+        conflict_resolution_procedure = optional(string, null)
+      }), null)
+
+      unique_key = optional(object({
+        paths = list(string)
+      }), null)
+    })), {})
+  }))
+```
+
+Default: `{}`
 
 ### <a name="input_ip_range_filter"></a> [ip\_range\_filter](#input\_ip\_range\_filter)
 
@@ -1115,6 +1234,10 @@ Default: `[]`
 
 The following outputs are exported:
 
+### <a name="output_cosmosdb_gremlin_connection_strings"></a> [cosmosdb\_gremlin\_connection\_strings](#output\_cosmosdb\_gremlin\_connection\_strings)
+
+Description: The Gremlin connection strings for the CosmosDB Account.
+
 ### <a name="output_cosmosdb_keys"></a> [cosmosdb\_keys](#output\_cosmosdb\_keys)
 
 Description: The keys for the CosmosDB Account.
@@ -1126,6 +1249,10 @@ Description: The MongoDB connection strings for the CosmosDB Account.
 ### <a name="output_cosmosdb_sql_connection_strings"></a> [cosmosdb\_sql\_connection\_strings](#output\_cosmosdb\_sql\_connection\_strings)
 
 Description: The SQL connection strings for the CosmosDB Account.
+
+### <a name="output_gremlin_databases"></a> [gremlin\_databases](#output\_gremlin\_databases)
+
+Description: A map of the Gremlin databases created, with the database name as the key and the database id and graphs as the value.
 
 ### <a name="output_mongo_databases"></a> [mongo\_databases](#output\_mongo\_databases)
 
