@@ -1,3 +1,14 @@
+output "cosmosdb_gremlin_connection_strings" {
+  description = "The Gremlin connection strings for the CosmosDB Account."
+  sensitive   = true
+  value = {
+    primary_gremlin_connection_string            = "${azurerm_cosmosdb_account.this.primary_sql_connection_string}ApiKind=Gremlin;"
+    secondary_gremlin_connection_string          = "${azurerm_cosmosdb_account.this.secondary_sql_connection_string}ApiKind=Gremlin;"
+    primary_readonly_gremlin_connection_string   = "${azurerm_cosmosdb_account.this.primary_readonly_sql_connection_string}ApiKind=Gremlin;"
+    secondary_readonly_gremlin_connection_string = "${azurerm_cosmosdb_account.this.secondary_readonly_sql_connection_string}ApiKind=Gremlin;"
+  }
+}
+
 output "cosmosdb_keys" {
   description = "The keys for the CosmosDB Account."
   sensitive   = true
@@ -28,6 +39,21 @@ output "cosmosdb_sql_connection_strings" {
     secondary_sql_connection_string          = azurerm_cosmosdb_account.this.secondary_sql_connection_string
     primary_readonly_sql_connection_string   = azurerm_cosmosdb_account.this.primary_readonly_sql_connection_string
     secondary_readonly_sql_connection_string = azurerm_cosmosdb_account.this.secondary_readonly_sql_connection_string
+  }
+}
+
+output "gremlin_databases" {
+  description = "A map of the Gremlin databases created, with the database name as the key and the database id and graphs as the value."
+  value = { for db in azurerm_cosmosdb_gremlin_database.this : db.name =>
+    {
+      id = db.id
+
+      graphs = {
+        for graph in azurerm_cosmosdb_gremlin_graph.this :
+        graph.name => graph.id
+        if graph.database_name == db.name
+      }
+    }
   }
 }
 
