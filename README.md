@@ -88,28 +88,28 @@ The following input variables are required:
 
 Description:   Specifies the supported Azure location where the resource exists. Changing this forces a new resource to be created.
 
-  Example Inputs: eastus
+  Example Inputs: eastus  
   See more in CLI: az account list-locations -o table --query "[].name"
 
 Type: `string`
 
 ### <a name="input_name"></a> [name](#input\_name)
 
-Description:   Specifies the name of the CosmosDB Account. Changing this forces a new resource to be created.
+Description:   Specifies the name of the CosmosDB Account. Changing this forces a new resource to be created.  
   The name can contain only lowercase letters, numbers and the '-' character, must be between 3 and 44 characters long, and must not start or end with the character '-'.
 
-  Example Inputs: cosmos-sharepoint-prod-westus-001
+  Example Inputs: cosmos-sharepoint-prod-westus-001  
   See more: https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules#microsoftdocumentdb
 
 Type: `string`
 
 ### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
 
-Description:   The name of the resource group in which to create this resource.
-  Changing this forces a new resource to be created.
+Description:   The name of the resource group in which to create this resource.  
+  Changing this forces a new resource to be created.  
   Name must be less than 90 characters long and must only contain underscores, hyphens, periods, parentheses, letters, or digits.
 
-  Example Inputs: rg-sharepoint-prod-westus-001
+  Example Inputs: rg-sharepoint-prod-westus-001  
   See more: https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules#microsoftresources
 
 Type: `string`
@@ -336,7 +336,7 @@ Description:   Defaults to `null`. Ignored for Basic and Standard. Defines a cus
   customer_managed_key = {
     key_name               = "sample-customer-key"
     key_vault_resource_id  = "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/vaults/{keyVaultName}"
-
+    
     user_assigned_identity {
       resource_id = "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{managedIdentityName}"
     }
@@ -417,8 +417,8 @@ Default: `{}`
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
-Description:   Defaults to `true`. This variable controls whether or not telemetry is enabled for the module.
-  For more information see https://aka.ms/avm/telemetryinfo.
+Description:   Defaults to `true`. This variable controls whether or not telemetry is enabled for the module.  
+  For more information see https://aka.ms/avm/telemetryinfo.  
   If it is set to false, then no telemetry will be collected.
 
 Type: `bool`
@@ -607,8 +607,8 @@ Default: `true`
 
 ### <a name="input_lock"></a> [lock](#input\_lock)
 
-Description:   Defaults to `null`. Controls the Resource Lock configuration for this resource.
-  If specified, it will be inherited by child resources unless overriden when creating those child resources.
+Description:   Defaults to `null`. Controls the Resource Lock configuration for this resource.   
+  If specified, it will be inherited by child resources unless overriden when creating those child resources.   
   The following properties can be specified:
 
   - `kind` - (Required) - The type of lock. Possible values are `CanNotDelete` and `ReadOnly`.
