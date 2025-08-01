@@ -36,7 +36,7 @@ locals {
 
 module "regions" {
   source  = "Azure/regions/azurerm"
-  version = ">= 0.3.0"
+  version = "0.3.0"
 
   recommended_regions_only = true
 }
@@ -48,12 +48,20 @@ resource "random_integer" "region_index" {
 
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = ">= 0.3.0"
+  version = "0.3.0"
 }
 
 resource "azurerm_resource_group" "example" {
   location = "northeurope"
   name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
+}
+
+resource "azurerm_log_analytics_workspace" "example" {
+  location            = azurerm_resource_group.example.location
+  name                = module.naming.log_analytics_workspace.name_unique
+  resource_group_name = azurerm_resource_group.example.name
+  retention_in_days   = 30
+  sku                 = "PerGB2018"
 }
 
 module "cosmos" {
@@ -86,6 +94,12 @@ module "cosmos" {
     exposed_headers    = ["*"]
     allowed_headers    = ["Authorization"]
     allowed_methods    = ["GET", "POST", "PUT"]
+  }
+  diagnostic_settings = {
+    cosmosdb = {
+      name                  = "diag"
+      workspace_resource_id = azurerm_log_analytics_workspace.example.id
+    }
   }
   enable_telemetry = false
   geo_locations = [
@@ -133,6 +147,7 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
+- [azurerm_log_analytics_workspace.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace) (resource)
 - [azurerm_resource_group.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 - [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
@@ -164,13 +179,13 @@ Version:
 
 Source: Azure/naming/azurerm
 
-Version: >= 0.3.0
+Version: 0.3.0
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
 Source: Azure/regions/azurerm
 
-Version: >= 0.3.0
+Version: 0.3.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
