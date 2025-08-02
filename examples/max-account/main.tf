@@ -92,7 +92,7 @@ module "cosmos" {
     cosmosdb = {
       name                  = "diag"
       workspace_resource_id = azurerm_log_analytics_workspace.example.id
-      metric_categories = ["SLI", "Requests"]
+      metric_categories     = ["SLI", "Requests"]
     }
   }
   enable_telemetry = false
