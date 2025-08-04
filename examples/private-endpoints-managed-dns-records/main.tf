@@ -29,7 +29,7 @@ locals {
 
 module "regions" {
   source  = "Azure/regions/azurerm"
-  version = ">= 0.3.0"
+  version = "0.3.0"
 
   recommended_regions_only = true
 }
@@ -41,7 +41,7 @@ resource "random_integer" "region_index" {
 
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = ">= 0.3.0"
+  version = "0.3.0"
 }
 
 resource "azurerm_resource_group" "example" {

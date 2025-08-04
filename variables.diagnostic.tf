@@ -45,7 +45,7 @@ variable "diagnostic_settings" {
       storage_account_resource_id = "/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Storage/storageAccounts/{storageAccountName}"
     }
   }
-  ```  
+  ```
   DESCRIPTION
   nullable    = false
 
@@ -54,10 +54,10 @@ variable "diagnostic_settings" {
       for _, v in var.diagnostic_settings :
       alltrue([
         for c in v.metric_categories :
-        c == null ? false : contains(["AllMetrics"], c)
+        c == null ? false : contains(["SLI", "Requests"], c)
       ])
     ])
-    error_message = "The metric_categories parameter if specified can only be 'AllMetrics'."
+    error_message = "The metric_categories parameter if specified can only be 'SLI' and 'Requests'."
   }
   validation {
     condition = alltrue([

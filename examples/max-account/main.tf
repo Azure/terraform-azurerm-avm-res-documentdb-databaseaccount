@@ -29,7 +29,7 @@ locals {
 
 module "regions" {
   source  = "Azure/regions/azurerm"
-  version = ">= 0.3.0"
+  version = "0.3.0"
 
   recommended_regions_only = true
 }
@@ -41,12 +41,20 @@ resource "random_integer" "region_index" {
 
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = ">= 0.3.0"
+  version = "0.3.0"
 }
 
 resource "azurerm_resource_group" "example" {
   location = "northeurope"
   name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
+}
+
+resource "azurerm_log_analytics_workspace" "example" {
+  location            = azurerm_resource_group.example.location
+  name                = module.naming.log_analytics_workspace.name_unique
+  resource_group_name = azurerm_resource_group.example.name
+  retention_in_days   = 30
+  sku                 = "PerGB2018"
 }
 
 module "cosmos" {
@@ -79,6 +87,13 @@ module "cosmos" {
     exposed_headers    = ["*"]
     allowed_headers    = ["Authorization"]
     allowed_methods    = ["GET", "POST", "PUT"]
+  }
+  diagnostic_settings = {
+    cosmosdb = {
+      name                  = "diag"
+      workspace_resource_id = azurerm_log_analytics_workspace.example.id
+      metric_categories     = ["SLI", "Requests"]
+    }
   }
   enable_telemetry = false
   geo_locations = [
