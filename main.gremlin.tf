@@ -50,7 +50,7 @@ resource "azurerm_cosmosdb_gremlin_graph" "this" {
     content {
       indexing_mode  = each.value.graph_params.index_policy.indexing_mode
       automatic      = try(each.value.graph_params.index_policy.automatic, true)
-      excluded_paths = try(each.value.graph_params.index_policy.excluded_paths, [])
+      excluded_paths = distinct(concat(try(each.value.graph_params.index_policy.excluded_paths, []), ["/\"_etag\"/?"]))
       included_paths = try(each.value.graph_params.index_policy.included_paths, [])
 
       dynamic "composite_index" {
