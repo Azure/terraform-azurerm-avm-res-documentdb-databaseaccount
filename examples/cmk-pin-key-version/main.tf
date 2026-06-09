@@ -33,7 +33,7 @@ locals {
 
 module "regions" {
   source  = "Azure/regions/azurerm"
-  version = "0.3.0"
+  version = "0.8.2"
 
   recommended_regions_only = true
 }
