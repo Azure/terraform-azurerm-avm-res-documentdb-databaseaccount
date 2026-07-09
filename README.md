@@ -328,7 +328,7 @@ Description:   Defaults to `null`. Ignored for Basic and Standard. Defines a cus
   - `key_vault_resource_id`  - (Required) - The full Azure Resource ID of the key\_vault where the customer managed key will be referenced from.
   - `key_version`            - (Unsupported)
 
-  - `user_assigned_identity` - (Required) - The user assigned identity to use when access the key vault
+  - `user_assigned_identity` - (Optional) - The user assigned identity to use when access the key vault
     - `resource_id`          - (Required) - The full Azure Resource ID of the user assigned identity.
 
   > Note: Remember to assign permission to the managed identity to access the key vault key. The Key vault used must have enabled soft delete and purge protection. The minimun required permissions is "Key Vault Crypto Service Encryption User"
