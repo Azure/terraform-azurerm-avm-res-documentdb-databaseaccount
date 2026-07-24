@@ -256,7 +256,7 @@ output "resource_id" {
 }
 
 output "resource_locks" {
-  description = "A map of the management locks created, with the lock name as the key and the lock ID as the value."
+  description = "A map of the management locks created, with the lock name as the key and the lock ID as the value. Private endpoint locks will have '-pe-{pe_name}' appended to ensure unique keys."
   value       = { for locks in azurerm_management_lock.this : locks.name => locks.id }
 }
 
