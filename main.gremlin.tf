@@ -35,6 +35,7 @@ resource "azurerm_cosmosdb_gremlin_graph" "this" {
       max_throughput = each.value.graph_params.autoscale_settings.max_throughput
     }
   }
+
   dynamic "conflict_resolution_policy" {
     for_each = each.value.graph_params.conflict_resolution_policy != null ? [1] : []
 
@@ -44,6 +45,7 @@ resource "azurerm_cosmosdb_gremlin_graph" "this" {
       conflict_resolution_procedure = try(each.value.graph_params.conflict_resolution_policy.conflict_resolution_procedure, null)
     }
   }
+
   dynamic "index_policy" {
     for_each = each.value.graph_params.index_policy != null ? [1] : []
 
@@ -76,6 +78,7 @@ resource "azurerm_cosmosdb_gremlin_graph" "this" {
       }
     }
   }
+
   dynamic "unique_key" {
     for_each = each.value.graph_params.unique_key != null ? [1] : []
 

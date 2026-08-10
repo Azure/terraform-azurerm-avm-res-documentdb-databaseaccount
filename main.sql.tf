@@ -42,6 +42,7 @@ resource "azurerm_cosmosdb_sql_container" "this" {
       max_throughput = each.value.container_params.autoscale_settings.max_throughput
     }
   }
+
   dynamic "conflict_resolution_policy" {
     for_each = each.value.container_params.conflict_resolution_policy != null ? [1] : []
 
@@ -51,6 +52,7 @@ resource "azurerm_cosmosdb_sql_container" "this" {
       conflict_resolution_procedure = each.value.container_params.conflict_resolution_policy.mode == "Custom" ? "dbs/{${each.value.db_name}}/colls/{${each.value.container_name}}/sprocs/{${each.value.container_params.conflict_resolution_policy.conflict_resolution_procedure}}" : null
     }
   }
+
   dynamic "indexing_policy" {
     for_each = each.value.container_params.indexing_policy != null ? [1] : []
 
@@ -94,6 +96,7 @@ resource "azurerm_cosmosdb_sql_container" "this" {
       }
     }
   }
+
   dynamic "unique_key" {
     for_each = each.value.container_params.unique_keys
 
