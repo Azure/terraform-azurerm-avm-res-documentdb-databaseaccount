@@ -1,5 +1,6 @@
 # Additional comprehensive outputs for the CosmosDB account resource
 
+
 output "access_key_metadata_writes_enabled" {
   description = "Whether access key metadata writes are enabled for the CosmosDB Account."
   value       = azurerm_cosmosdb_account.this.access_key_metadata_writes_enabled

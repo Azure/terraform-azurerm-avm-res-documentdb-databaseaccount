@@ -27,6 +27,7 @@ resource "azurerm_cosmosdb_account" "this" {
     max_interval_in_seconds = var.consistency_policy.consistency_level == local.bounded_staleness_consistency ? var.consistency_policy.max_interval_in_seconds : null
     max_staleness_prefix    = var.consistency_policy.consistency_level == local.bounded_staleness_consistency ? var.consistency_policy.max_staleness_prefix : null
   }
+
   dynamic "geo_location" {
     for_each = local.normalized_geo_locations
 
@@ -36,6 +37,7 @@ resource "azurerm_cosmosdb_account" "this" {
       zone_redundant    = geo_location.value.zone_redundant
     }
   }
+
   dynamic "analytical_storage" {
     for_each = var.analytical_storage_config != null ? [1] : []
 
@@ -43,6 +45,7 @@ resource "azurerm_cosmosdb_account" "this" {
       schema_type = var.analytical_storage_config.schema_type
     }
   }
+
   backup {
     type                = var.backup.type
     interval_in_minutes = var.backup.type == local.periodic_backup_policy ? var.backup.interval_in_minutes : null
@@ -50,6 +53,7 @@ resource "azurerm_cosmosdb_account" "this" {
     storage_redundancy  = var.backup.type == local.periodic_backup_policy ? var.backup.storage_redundancy : null
     tier                = var.backup.type == local.continuous_backup_policy ? var.backup.tier : null
   }
+
   dynamic "capabilities" {
     for_each = var.capabilities
 
@@ -57,9 +61,11 @@ resource "azurerm_cosmosdb_account" "this" {
       name = capabilities.value.name
     }
   }
+
   capacity {
     total_throughput_limit = var.capacity.total_throughput_limit
   }
+
   dynamic "cors_rule" {
     for_each = var.cors_rule != null ? [1] : []
 
@@ -71,6 +77,7 @@ resource "azurerm_cosmosdb_account" "this" {
       max_age_in_seconds = var.cors_rule.max_age_in_seconds
     }
   }
+
   dynamic "identity" {
     for_each = local.managed_identities.system_assigned_user_assigned
 
@@ -79,6 +86,7 @@ resource "azurerm_cosmosdb_account" "this" {
       identity_ids = identity.value.user_assigned_resource_ids
     }
   }
+
   dynamic "virtual_network_rule" {
     for_each = var.virtual_network_rules
 
