@@ -286,6 +286,13 @@ variable "multiple_write_locations_enabled" {
   nullable    = false
 }
 
+variable "burst_capacity_enabled" {
+  type        = bool
+  default     = false
+  description = "Defaults to `false`. Enable burst capacity for this Cosmos DB account."
+  nullable    = false
+}
+
 variable "partition_merge_enabled" {
   type        = bool
   default     = false

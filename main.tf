@@ -16,6 +16,7 @@ resource "azurerm_cosmosdb_account" "this" {
   minimal_tls_version                   = var.minimal_tls_version
   mongo_server_version                  = length(var.mongo_databases) > 0 ? var.mongo_server_version : null
   multiple_write_locations_enabled      = var.backup.type == local.periodic_backup_policy ? var.multiple_write_locations_enabled : false
+  burst_capacity_enabled                = var.burst_capacity_enabled
   network_acl_bypass_for_azure_services = var.network_acl_bypass_for_azure_services
   network_acl_bypass_ids                = var.network_acl_bypass_resource_ids
   partition_merge_enabled               = var.partition_merge_enabled
