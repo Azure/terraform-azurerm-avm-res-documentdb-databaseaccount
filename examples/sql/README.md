@@ -295,7 +295,6 @@ module "cosmos" {
     instance_size  = "Cosmos.D4s"
   }
 }
-
 ```
 
 <!-- markdownlint-disable MD033 -->
