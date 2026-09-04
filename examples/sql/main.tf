@@ -288,4 +288,3 @@ module "cosmos" {
     instance_size  = "Cosmos.D4s"
   }
 }
-
