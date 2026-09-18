@@ -54,6 +54,7 @@ module "cosmos" {
   name                       = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
   resource_group_name        = azurerm_resource_group.example.name
   analytical_storage_enabled = true
+  enable_telemetry           = var.enable_telemetry
   geo_locations = [ #Sql Gateway in a region with zone redundant enabled require a support ticket to allow it
     {
       failover_priority = 0

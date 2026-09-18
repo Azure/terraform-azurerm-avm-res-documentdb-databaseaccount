@@ -58,4 +58,5 @@ module "cosmos" {
       name = "EnableServerless"
     }
   ]
+  enable_telemetry = var.enable_telemetry
 }

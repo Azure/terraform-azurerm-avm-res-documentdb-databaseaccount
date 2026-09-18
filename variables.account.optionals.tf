@@ -96,6 +96,13 @@ variable "backup" {
   }
 }
 
+variable "burst_capacity_enabled" {
+  type        = bool
+  default     = false
+  description = "Defaults to `false`. Enable burst capacity for this Cosmos DB account."
+  nullable    = false
+}
+
 variable "capabilities" {
   type = set(object({
     name = string
@@ -283,13 +290,6 @@ variable "multiple_write_locations_enabled" {
   type        = bool
   default     = false
   description = "Defaults to `false`. Ignored when `backup.type` is `Continuous`. Enable multi-region writes for this Cosmos DB account."
-  nullable    = false
-}
-
-variable "burst_capacity_enabled" {
-  type        = bool
-  default     = false
-  description = "Defaults to `false`. Enable burst capacity for this Cosmos DB account."
   nullable    = false
 }
 

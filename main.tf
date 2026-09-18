@@ -6,6 +6,7 @@ resource "azurerm_cosmosdb_account" "this" {
   access_key_metadata_writes_enabled    = var.access_key_metadata_writes_enabled
   analytical_storage_enabled            = var.analytical_storage_enabled
   automatic_failover_enabled            = var.automatic_failover_enabled
+  burst_capacity_enabled                = var.burst_capacity_enabled
   default_identity_type                 = local.normalized_cmk_default_identity_type
   free_tier_enabled                     = var.free_tier_enabled
   ip_range_filter                       = local.trimmed_ip_range_filter
@@ -16,7 +17,6 @@ resource "azurerm_cosmosdb_account" "this" {
   minimal_tls_version                   = var.minimal_tls_version
   mongo_server_version                  = length(var.mongo_databases) > 0 ? var.mongo_server_version : null
   multiple_write_locations_enabled      = var.backup.type == local.periodic_backup_policy ? var.multiple_write_locations_enabled : false
-  burst_capacity_enabled                = var.burst_capacity_enabled
   network_acl_bypass_for_azure_services = var.network_acl_bypass_for_azure_services
   network_acl_bypass_ids                = var.network_acl_bypass_resource_ids
   partition_merge_enabled               = var.partition_merge_enabled
