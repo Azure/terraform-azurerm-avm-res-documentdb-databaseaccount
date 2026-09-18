@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Azure/azure-verified-modules-tools/main/src/Avm.Authoring/Resources/Schemas/v1/avm-module-metadata.schema.json",
+  "moduleDisplayName": "CosmosDB Database Account",
+  "moduleDescription": "AVM Resource Module for CosmosDB Database Account",
+  "canonicalType": "Microsoft.DocumentDB/databaseAccounts",
+  "owners": [
+    "cmaneu"
+  ],
+  "telemetryIdPrefix": "46d3xtrf.res.2aae271"
+}
