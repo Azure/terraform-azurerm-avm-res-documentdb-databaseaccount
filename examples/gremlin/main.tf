@@ -57,6 +57,7 @@ module "cosmos" {
   capabilities = [{
     name = "EnableGremlin"
   }]
+  enable_telemetry = var.enable_telemetry
   gremlin_databases = {
     empty_database = {
       name       = "empty_database"
