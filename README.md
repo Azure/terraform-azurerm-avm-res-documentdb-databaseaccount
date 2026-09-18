@@ -208,6 +208,14 @@ object({
 
 Default: `{}`
 
+### <a name="input_burst_capacity_enabled"></a> [burst\_capacity\_enabled](#input\_burst\_capacity\_enabled)
+
+Description: Defaults to `false`. Enable burst capacity for this Cosmos DB account.
+
+Type: `bool`
+
+Default: `false`
+
 ### <a name="input_capabilities"></a> [capabilities](#input\_capabilities)
 
 Description:   Defaults to `[]`. The capabilities which should be enabled for this Cosmos DB account.

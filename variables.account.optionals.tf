@@ -96,6 +96,13 @@ variable "backup" {
   }
 }
 
+variable "burst_capacity_enabled" {
+  type        = bool
+  default     = false
+  description = "Defaults to `false`. Enable burst capacity for this Cosmos DB account."
+  nullable    = false
+}
+
 variable "capabilities" {
   type = set(object({
     name = string

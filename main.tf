@@ -6,6 +6,7 @@ resource "azurerm_cosmosdb_account" "this" {
   access_key_metadata_writes_enabled    = var.access_key_metadata_writes_enabled
   analytical_storage_enabled            = var.analytical_storage_enabled
   automatic_failover_enabled            = var.automatic_failover_enabled
+  burst_capacity_enabled                = var.burst_capacity_enabled
   default_identity_type                 = local.normalized_cmk_default_identity_type
   free_tier_enabled                     = var.free_tier_enabled
   ip_range_filter                       = local.trimmed_ip_range_filter

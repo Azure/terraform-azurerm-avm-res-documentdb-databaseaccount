@@ -74,7 +74,6 @@ module "cosmos" {
   analytical_storage_config = {
     schema_type = "WellDefined"
   }
-  analytical_storage_enabled = true
   automatic_failover_enabled = false
   backup = {
     retention_in_hours  = 8
