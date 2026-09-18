@@ -61,6 +61,7 @@ module "cosmos" {
   name                       = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
   resource_group_name        = azurerm_resource_group.example.name
   analytical_storage_enabled = true
+  enable_telemetry           = var.enable_telemetry
   geo_locations = [ #Sql Gateway in a region with zone redundant enabled require a support ticket to allow it
     {
       failover_priority = 0
@@ -322,7 +323,17 @@ No required inputs.
 
 ## Optional Inputs
 
-No optional inputs.
+The following input variables are optional (have default values):
+
+### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
+
+Description: This variable controls whether or not telemetry is enabled for the module.  
+For more information see <https://aka.ms/avm/telemetryinfo>.  
+If it is set to false, then no telemetry will be collected.
+
+Type: `bool`
+
+Default: `false`
 
 ## Outputs
 

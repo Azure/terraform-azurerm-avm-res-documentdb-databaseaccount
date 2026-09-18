@@ -115,6 +115,7 @@ module "cosmos" {
       resource_id = azurerm_user_assigned_identity.example.id
     }
   }
+  enable_telemetry = var.enable_telemetry
   managed_identities = {
     user_assigned_resource_ids = [azurerm_user_assigned_identity.example.id]
   }

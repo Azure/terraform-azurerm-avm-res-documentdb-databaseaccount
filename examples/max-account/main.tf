@@ -95,7 +95,7 @@ module "cosmos" {
       metric_categories     = ["SLI", "Requests"]
     }
   }
-  enable_telemetry = false
+  enable_telemetry = var.enable_telemetry
   geo_locations = [
     {
       failover_priority = 0
