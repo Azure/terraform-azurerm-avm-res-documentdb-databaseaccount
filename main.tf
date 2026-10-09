@@ -13,7 +13,7 @@ resource "azurerm_cosmosdb_account" "this" {
   is_virtual_network_filter_enabled     = length(var.virtual_network_rules) > 0 ? true : false
   key_vault_key_id                      = local.normalized_cmk_key_url
   kind                                  = length(var.mongo_databases) > 0 ? "MongoDB" : "GlobalDocumentDB"
-  local_authentication_disabled         = (length(var.mongo_databases) > 0 || length(var.gremlin_databases) > 0) ? false : var.local_authentication_disabled
+  local_authentication_disabled         = (length(var.mongo_databases) > 0 || length(var.gremlin_databases) > 0 || length(var.cassandra_keyspaces) > 0) ? false : var.local_authentication_disabled
   minimal_tls_version                   = var.minimal_tls_version
   mongo_server_version                  = length(var.mongo_databases) > 0 ? var.mongo_server_version : null
   multiple_write_locations_enabled      = var.backup.type == local.periodic_backup_policy ? var.multiple_write_locations_enabled : false
@@ -113,6 +113,15 @@ resource "azurerm_cosmosdb_account" "this" {
     precondition {
       condition     = !(length(var.sql_databases) > 0 && length(var.mongo_databases) > 0)
       error_message = "You can only create either SQL or MongoDB databases, not both."
+    }
+    precondition {
+      condition = length(var.cassandra_keyspaces) == 0 || (
+        length(var.sql_databases) == 0 &&
+        length(var.mongo_databases) == 0 &&
+        length(var.gremlin_databases) == 0 &&
+        contains([for capability in var.capabilities : capability.name], "EnableCassandra")
+      )
+      error_message = "Cassandra keyspaces require the EnableCassandra capability and cannot be combined with SQL, MongoDB, or Gremlin databases."
     }
   }
 }

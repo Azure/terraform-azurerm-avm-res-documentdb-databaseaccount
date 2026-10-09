@@ -11,6 +11,7 @@ This Terraform module is designed to create Azure Cosmos DB accounts, its relate
 
 * Creation of accounts with NoSQL API with its databases and containers.
 * Creation of accounts with Gremlin API with its databases and graphs.
+* Creation of Cassandra API keyspaces and tables.
 * EntraID authentication instead of access keys
 * Support for customer-managed keys.
 * Enable private endpoint, providing secure access over a private network.
@@ -23,13 +24,41 @@ This Terraform module is designed to create Azure Cosmos DB accounts, its relate
 
 * The module does not support auto rotation of Customer Managed keys (CosmosDB doesn't support it yet)
 * The module does not support the Table API yet
-* The module does not support the Cassandra API yet
 
 ## Examples
 * [Use only defaults values](examples/default/main.tf)
 * [Specifying all possible parameters at account level](examples/max-account/main.tf)
 * [Creation of sql api](examples/sql/main.tf)
 * [Creation of gremlin api](examples/gremlin/main.tf)
+* Cassandra API keyspaces and tables can be configured with `cassandra_keyspaces`:
+
+  ```hcl
+  capabilities = [
+    {
+      name = "EnableCassandra"
+    }
+  ]
+
+  cassandra_keyspaces = {
+    application = {
+      name = "application"
+
+      tables = {
+        events = {
+          name = "events"
+
+          schema = {
+            columns = [
+              { name = "event_id", type = "uuid" },
+              { name = "payload", type = "text" }
+            ]
+            partition_keys = [{ name = "event_id" }]
+          }
+        }
+      }
+    }
+  }
+  ```
 * [Creation of a serverless account](examples/serverless/main.tf)
 * [Customer managed key pinning to a specific key version](examples/cmk-pin-key-version/main.tf)
 * [Enable managed identities](examples/managed-identities/main.tf)
@@ -58,6 +87,8 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
+- [azapi_resource.cassandra_keyspaces](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.cassandra_tables](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azurerm_cosmosdb_account.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_account) (resource)
 - [azurerm_cosmosdb_gremlin_database.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_gremlin_database) (resource)
 - [azurerm_cosmosdb_gremlin_graph.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_gremlin_graph) (resource)
@@ -260,6 +291,63 @@ Type:
 object({
     total_throughput_limit = optional(number, -1)
   })
+```
+
+Default: `{}`
+
+### <a name="input_cassandra_keyspaces"></a> [cassandra\_keyspaces](#input\_cassandra\_keyspaces)
+
+Description: A map of Cassandra keyspaces to create in the Cosmos DB account. The map keys identify keyspaces in the output. Cassandra resources require the account's `EnableCassandra` capability and cannot be combined with SQL, MongoDB, or Gremlin database inputs.
+
+- `name` - The Cassandra keyspace name.
+- `throughput` - Optional provisioned request units per second. Conflicts with `autoscale_settings`.
+- `autoscale_settings.max_throughput` - Optional autoscale maximum throughput. Conflicts with `throughput`.
+- `tables` - A map of Cassandra tables in the keyspace, keyed by the table identifiers used in the output.
+- `tables.name` - The Cassandra table name.
+- `tables.default_ttl` - Optional default time to live, in seconds.
+- `tables.analytical_storage_ttl` - Optional analytical storage time to live, in seconds.
+- `tables.throughput` - Optional provisioned request units per second. Conflicts with `tables.autoscale_settings`.
+- `tables.autoscale_settings.max_throughput` - Optional autoscale maximum throughput. Conflicts with `tables.throughput`.
+- `tables.schema.columns` - Cassandra column definitions; each column has a `name` and Cassandra `type`.
+- `tables.schema.partition_keys` - Cassandra partition key column names. At least one partition key is required.
+- `tables.schema.cluster_keys` - Optional clustering key definitions; each has a `name` and `order_by` (`Asc` or `Desc`).
+
+Provisioned throughput must be at least 400 RU/s. Autoscale maximum throughput must be between 1,000 and 1,000,000 RU/s in increments of 1,000.
+
+Type:
+
+```hcl
+map(object({
+    name = string
+
+    throughput = optional(number)
+    autoscale_settings = optional(object({
+      max_throughput = number
+    }))
+
+    tables = optional(map(object({
+      name                   = string
+      default_ttl            = optional(number)
+      analytical_storage_ttl = optional(number)
+      throughput             = optional(number)
+      autoscale_settings = optional(object({
+        max_throughput = number
+      }))
+      schema = object({
+        columns = list(object({
+          name = string
+          type = string
+        }))
+        partition_keys = list(object({
+          name = string
+        }))
+        cluster_keys = optional(list(object({
+          name     = string
+          order_by = string
+        })), [])
+      })
+    })), {})
+  }))
 ```
 
 Default: `{}`
@@ -596,6 +684,24 @@ map(object({
 
 Default: `{}`
 
+### <a name="input_ignore_body_changes"></a> [ignore\_body\_changes](#input\_ignore\_body\_changes)
+
+Description: Body-relative dot-notation paths ignored on each Cassandra resource. Ignored configuration is not sent to Azure, and changes take effect only after apply.
+
+- `documentdb_database_accounts_cassandra_keyspaces` - Paths ignored on Cassandra keyspace resources.
+- `documentdb_database_accounts_cassandra_keyspaces_tables` - Paths ignored on Cassandra table resources.
+
+Type:
+
+```hcl
+object({
+    documentdb_database_accounts_cassandra_keyspaces        = optional(list(string), [])
+    documentdb_database_accounts_cassandra_keyspaces_tables = optional(list(string), [])
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_ip_range_filter"></a> [ip\_range\_filter](#input\_ip\_range\_filter)
 
 Description:   Defaults to `[]`. CosmosDB Firewall Support: This value specifies the set of IP addresses or IP address ranges in CIDR form to be included as the allowed list of client IPs for a given database account.
@@ -886,6 +992,44 @@ Description: Defaults to `false`. Whether or not public network access is allowe
 Type: `bool`
 
 Default: `false`
+
+### <a name="input_resource_types"></a> [resource\_types](#input\_resource\_types)
+
+Description: AzAPI resource types and API versions used by the Cassandra resources.
+
+- `documentdb_database_accounts_cassandra_keyspaces` - Resource type and API-version override for Cassandra keyspaces.
+- `documentdb_database_accounts_cassandra_keyspaces_tables` - Resource type and API-version override for Cassandra tables.
+
+Type:
+
+```hcl
+object({
+    documentdb_database_accounts_cassandra_keyspaces        = optional(string, "Microsoft.DocumentDB/databaseAccounts/cassandraKeyspaces@2026-03-15")
+    documentdb_database_accounts_cassandra_keyspaces_tables = optional(string, "Microsoft.DocumentDB/databaseAccounts/cassandraKeyspaces/tables@2026-03-15")
+  })
+```
+
+Default: `{}`
+
+### <a name="input_retry"></a> [retry](#input\_retry)
+
+Description: Retry configuration applied to the Cassandra keyspace and table resources. Defaults to `null` (provider defaults).
+
+- `error_message_regex` - Optional list of error-message patterns that trigger retries.
+- `interval_seconds` - Optional initial retry interval, in seconds.
+- `max_interval_seconds` - Optional maximum retry interval, in seconds.
+
+Type:
+
+```hcl
+object({
+    error_message_regex  = optional(list(string))
+    interval_seconds     = optional(number)
+    max_interval_seconds = optional(number)
+  })
+```
+
+Default: `null`
 
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
@@ -1214,6 +1358,28 @@ Type: `map(string)`
 
 Default: `null`
 
+### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
+
+Description: Default operation timeouts applied to the Cassandra keyspace and table resources. Values are Go duration strings; `null` uses provider defaults.
+
+- `create` - Optional create timeout.
+- `read` - Optional read timeout.
+- `update` - Optional update timeout.
+- `delete` - Optional delete timeout.
+
+Type:
+
+```hcl
+object({
+    create = optional(string)
+    read   = optional(string)
+    update = optional(string)
+    delete = optional(string)
+  })
+```
+
+Default: `null`
+
 ### <a name="input_virtual_network_rules"></a> [virtual\_network\_rules](#input\_virtual\_network\_rules)
 
 Description:   Defaults to `[]`. Used to define which subnets are allowed to access this CosmosDB account.
@@ -1272,6 +1438,10 @@ Description: The capabilities enabled for the CosmosDB Account.
 ### <a name="output_capacity"></a> [capacity](#output\_capacity)
 
 Description: The capacity configuration for the CosmosDB Account.
+
+### <a name="output_cassandra_keyspaces"></a> [cassandra\_keyspaces](#output\_cassandra\_keyspaces)
+
+Description: A map of the Cassandra keyspaces created, with each keyspace's resource ID and table IDs, keyed by the input maps.
 
 ### <a name="output_consistency_policy"></a> [consistency\_policy](#output\_consistency\_policy)
 
