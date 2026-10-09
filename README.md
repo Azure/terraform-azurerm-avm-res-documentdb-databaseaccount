@@ -223,13 +223,13 @@ Description:   Defaults to `[]`. The capabilities which should be enabled for th
   - `name - (Required) - The capability to enable - Possible values are `AllowSelfServeUpgradeToMongo36`, `DeleteAllItemsByPartitionKey`, `DisableRateLimitingResponses`, `EnableAggregationPipeline`, `EnableCassandra`, `EnableGremlin`, `EnableMongo`, `EnableMongo16MBDocumentSupport`, `EnableMongoRetryableWrites`, `EnableMongoRoleBasedAccessControl`, `EnableNoSQLVectorSearch`, `EnableNoSQLFullTextSearch`, `EnablePartialUniqueIndex`, `EnableServerless`, `EnableTable`, `EnableTtlOnCustomPath`, `EnableUniqueCompoundNestedDocs`, `MongoDBv3.4`, `mongoEnableDocLevelTTL`.
 
   Example inputs:
-  ````hcl
+  ```hcl
   capabilities = [
     {
       name = "DisableRateLimitingResponses"
     }
   ]
-```
+  ```
 
 Type:
 
