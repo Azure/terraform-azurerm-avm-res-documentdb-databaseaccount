@@ -4,6 +4,8 @@
 
 This example deploys the module with system and user assigned managed identities.
 
+It also grants the user assigned identity a role on the account. The role assignment sets `principal_type = "ServicePrincipal"`, which Azure requires when the deploying identity is constrained by ABAC conditions that filter on principal type.
+
 ```hcl
 terraform {
   required_version = ">= 1.9, < 2.0"
@@ -70,6 +72,14 @@ module "cosmos" {
   managed_identities = {
     system_assigned            = true
     user_assigned_resource_ids = [azurerm_user_assigned_identity.example.id]
+  }
+  role_assignments = {
+    user_assigned_identity_reader = {
+      role_definition_id_or_name = "Cosmos DB Account Reader Role"
+      principal_id               = azurerm_user_assigned_identity.example.principal_id
+      principal_type             = "ServicePrincipal"
+      description                = "Grants the user assigned identity read access to the account"
+    }
   }
 }
 ```
