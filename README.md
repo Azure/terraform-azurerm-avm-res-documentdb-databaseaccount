@@ -224,7 +224,7 @@ Description:   Defaults to `[]`. The capabilities which should be enabled for th
       name = "DisableRateLimitingResponses"
     }
   ]
-```
+  ```
 
 Type:
 
