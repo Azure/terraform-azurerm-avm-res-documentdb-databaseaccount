@@ -34,7 +34,7 @@ locals {
 
 module "regions" {
   source  = "Azure/regions/azurerm"
-  version = "0.3.0"
+  version = "0.8.2"
 
   recommended_regions_only = true
 }
@@ -155,7 +155,7 @@ Version: 0.2.0
 
 Source: Azure/regions/azurerm
 
-Version: 0.3.0
+Version: 0.8.2
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
