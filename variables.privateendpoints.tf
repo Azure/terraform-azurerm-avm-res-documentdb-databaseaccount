@@ -31,10 +31,9 @@ variable "private_endpoints" {
       description                            = optional(string, null)
       skip_service_principal_aad_check       = optional(bool, false)
       delegated_managed_identity_resource_id = optional(string, null)
-
-      principal_type    = optional(string, null) # forced to be here by lint, not supported
-      condition         = optional(string, null) # forced to be here by lint, not supported
-      condition_version = optional(string, null) # forced to be here by lint, not supported
+      principal_type                         = optional(string, null)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
     })), {})
   }))
   default     = {}
@@ -63,6 +62,25 @@ variable "private_endpoints" {
   > Note: See more related to subresource_name in: https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-overview#private-link-resource
   DESCRIPTION
   nullable    = false
+
+  validation {
+    condition = alltrue(flatten([
+      for pe in values(var.private_endpoints) : [
+        for ra in values(pe.role_assignments) :
+        ra.principal_type == null ? true : contains(["User", "Group", "ServicePrincipal"], ra.principal_type)
+      ]
+    ]))
+    error_message = "'role_assignments[*].principal_type' must be one of 'User', 'Group' or 'ServicePrincipal', or null"
+  }
+  validation {
+    condition = alltrue(flatten([
+      for pe in values(var.private_endpoints) : [
+        for ra in values(pe.role_assignments) :
+        ra.condition_version == null || ra.condition != null
+      ]
+    ]))
+    error_message = "'role_assignments[*].condition_version' can only be set when 'condition' is also set"
+  }
 }
 
 variable "private_endpoints_manage_dns_zone_group" {
