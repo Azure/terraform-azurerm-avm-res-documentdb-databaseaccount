@@ -45,12 +45,12 @@ resource "random_integer" "region_index" {
 }
 
 module "naming" {
-  source  = "Azure/naming/azurerm"
-  version = "0.3.0"
+  source  = "Azure/avm-utl-naming/azure"
+  version = "0.2.0"
 }
 
 resource "azurerm_resource_group" "example" {
-  location = "northeurope"
+  location = "spaincentral"
   name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
 }
 
@@ -61,7 +61,7 @@ module "cosmos" {
   name                = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
   resource_group_name = azurerm_resource_group.example.name
   enable_telemetry    = var.enable_telemetry
-  geo_locations = [ #Sql Gateway in a region with zone redundant enabled require a support ticket to allow it
+  geo_locations = [
     {
       failover_priority = 0
       zone_redundant    = false
@@ -142,18 +142,6 @@ module "cosmos" {
           autoscale_settings = {
             max_throughput = 4000
           }
-        }
-
-        container_infinite_analytical_ttl = {
-          name                   = "container_infinite_analytical_ttl"
-          partition_key_paths    = ["/id"]
-          analytical_storage_ttl = -1
-        }
-
-        container_fixed_analytical_ttl = {
-          name                   = "container_fixed_analytical_ttl"
-          partition_key_paths    = ["/id"]
-          analytical_storage_ttl = 1000
         }
 
         container_document_ttl = {
@@ -290,10 +278,6 @@ module "cosmos" {
       }
     }
   }
-  sql_dedicated_gateway = {
-    instance_count = 1
-    instance_size  = "Cosmos.D4s"
-  }
 }
 ```
 
@@ -354,9 +338,9 @@ Version:
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
-Source: Azure/naming/azurerm
+Source: Azure/avm-utl-naming/azure
 
-Version: 0.3.0
+Version: 0.2.0
 
 ### <a name="module_regions"></a> [regions](#module\_regions)
 
