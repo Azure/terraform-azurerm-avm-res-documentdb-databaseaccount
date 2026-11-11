@@ -40,12 +40,12 @@ resource "random_integer" "region_index" {
 }
 
 module "naming" {
-  source  = "Azure/naming/azurerm"
-  version = "0.3.0"
+  source  = "Azure/avm-utl-naming/azure"
+  version = "0.2.0"
 }
 
 resource "azurerm_resource_group" "example" {
-  location = "northeurope"
+  location = "spaincentral"
   name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
 }
 
@@ -71,7 +71,7 @@ module "cosmos" {
   backup = {
     retention_in_hours  = 8
     interval_in_minutes = 1440
-    storage_redundancy  = "Geo"
+    storage_redundancy  = "Zone"
     type                = "Periodic"
   }
   capacity = {
