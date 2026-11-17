@@ -6,44 +6,20 @@ This example deploys the module with all configurations at the account level whi
 
 ```hcl
 terraform {
-  required_version = ">= 1.9, < 2.0"
+  required_version = ">= 1.16, < 2.0"
 
   required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.6"
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.12"
     }
   }
 }
 
-provider "azurerm" {
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
-}
-
-data "azurerm_client_config" "current" {}
+data "azapi_client_config" "current" {}
 
 locals {
   prefix = "max"
-}
-
-module "regions" {
-  source  = "Azure/regions/azurerm"
-  version = "0.3.0"
-
-  recommended_regions_only = true
-}
-
-resource "random_integer" "region_index" {
-  max = length(module.regions.regions) - 1
-  min = 0
 }
 
 module "naming" {
@@ -51,25 +27,33 @@ module "naming" {
   version = "0.2.0"
 }
 
-resource "azurerm_resource_group" "example" {
+resource "azapi_resource" "resource_group" {
   location = "spaincentral"
   name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
+  type     = "Microsoft.Resources/resourceGroups@2024-03-01"
 }
 
-resource "azurerm_log_analytics_workspace" "example" {
-  location            = azurerm_resource_group.example.location
-  name                = module.naming.log_analytics_workspace.name_unique
-  resource_group_name = azurerm_resource_group.example.name
-  retention_in_days   = 30
-  sku                 = "PerGB2018"
+resource "azapi_resource" "log_analytics_workspace" {
+  location  = azapi_resource.resource_group.location
+  name      = module.naming.log_analytics_workspace.name_unique
+  parent_id = azapi_resource.resource_group.id
+  type      = "Microsoft.OperationalInsights/workspaces@2023-09-01"
+  body = {
+    properties = {
+      retentionInDays = 30
+      sku = {
+        name = "PerGB2018"
+      }
+    }
+  }
 }
 
 module "cosmos" {
   source = "../../"
 
-  location                           = azurerm_resource_group.example.location
+  location                           = azapi_resource.resource_group.location
   name                               = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
-  resource_group_name                = azurerm_resource_group.example.name
+  parent_id                          = azapi_resource.resource_group.id
   access_key_metadata_writes_enabled = true
   analytical_storage_config = {
     schema_type = "WellDefined"
@@ -97,7 +81,7 @@ module "cosmos" {
   diagnostic_settings = {
     cosmosdb = {
       name                  = "diag"
-      workspace_resource_id = azurerm_log_analytics_workspace.example.id
+      workspace_resource_id = azapi_resource.log_analytics_workspace.id
       metric_categories     = ["SLI", "Requests"]
     }
   }
@@ -106,7 +90,7 @@ module "cosmos" {
     {
       failover_priority = 0
       zone_redundant    = false
-      location          = azurerm_resource_group.example.location
+      location          = azapi_resource.resource_group.location
     }
   ]
   local_authentication_disabled = false
@@ -122,7 +106,7 @@ module "cosmos" {
       skip_service_principal_aad_check = false
       role_definition_id_or_name       = "Contributor"
       description                      = "This is a test role assignment"
-      principal_id                     = data.azurerm_client_config.current.object_id
+      principal_id                     = data.azapi_client_config.current.object_id
     }
   }
   tags = {
@@ -137,20 +121,17 @@ module "cosmos" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.16, < 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
-
-- <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.6)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
 ## Resources
 
 The following resources are used by this module:
 
-- [azurerm_log_analytics_workspace.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/log_analytics_workspace) (resource)
-- [azurerm_resource_group.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
-- [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
-- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
+- [azapi_resource.log_analytics_workspace](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.resource_group](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_client_config.current](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -190,12 +171,6 @@ Version:
 Source: Azure/avm-utl-naming/azure
 
 Version: 0.2.0
-
-### <a name="module_regions"></a> [regions](#module\_regions)
-
-Source: Azure/regions/azurerm
-
-Version: 0.3.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
