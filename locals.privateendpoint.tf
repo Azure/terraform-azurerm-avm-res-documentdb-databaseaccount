@@ -26,6 +26,15 @@ locals {
     { for k, v in azapi_resource.private_endpoints_unmanaged : k => v.id },
   )
   private_endpoint_names = { for k, v in var.private_endpoints : k => v.name != null ? v.name : "pep-${var.name}" }
+  # The AzureRM provider's private endpoint timeouts, unless `var.timeouts` sets them. The private endpoints of an
+  # account are created one at a time, and the time waiting for the others counts towards the timeout, so the AzAPI
+  # provider's 30 minute default is too short for three of them.
+  private_endpoint_timeouts = {
+    create = coalesce(try(var.timeouts.create, null), "60m")
+    delete = coalesce(try(var.timeouts.delete, null), "60m")
+    read   = try(var.timeouts.read, null)
+    update = coalesce(try(var.timeouts.update, null), "60m")
+  }
   # The resource group of each private endpoint. As before, a resource group given by ID is used by name, in the
   # subscription of the account.
   private_endpoint_parent_ids = {

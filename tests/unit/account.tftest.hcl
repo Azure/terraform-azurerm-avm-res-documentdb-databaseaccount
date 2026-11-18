@@ -349,9 +349,18 @@ run "private_endpoints_match_earlier_versions" {
           }
         }
       }
+      plain = {
+        name               = "pep-plain"
+        subnet_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-unit-test/providers/Microsoft.Network/virtualNetworks/vnet/subnets/snet"
+        subresource_name   = "Sql"
+      }
     }
   }
 
+  assert {
+    condition     = output.resource_private_endpoints == { "pep-cosmos-unit-test" = azapi_resource.private_endpoints["pe"].id, "pep-plain" = azapi_resource.private_endpoints["plain"].id }
+    error_message = "The output must list private endpoints whose settings differ."
+  }
   assert {
     condition     = azapi_resource.private_endpoints["pe"].name == "pep-cosmos-unit-test" && azapi_resource.private_endpoints["pe"].parent_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network" && azapi_resource.private_endpoints["pe"].tags["environment"] == "test"
     error_message = "The private endpoint must keep the default name, resource group and inherited tags of earlier versions."

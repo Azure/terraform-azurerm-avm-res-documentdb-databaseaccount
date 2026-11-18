@@ -48,7 +48,7 @@ Other changes:
 - The `EnableMongo` capability, which Azure adds to MongoDB accounts, is sent with the configured capabilities.
 - Changing the failover priority of a region other than the write region updates it in place. The AzureRM provider removed the region and added it back.
 - Locks on the account and private endpoints are removed 30 seconds before the resources they protect, because Azure keeps enforcing a deleted lock for a few seconds.
-- The private endpoints of an account are created, changed and deleted one at a time, as with the AzureRM provider, and no longer at the same time as the databases, containers, collections, graphs or throughput settings. Azure fails a private endpoint operation while another operation on the account is in progress.
+- The private endpoints of an account are created, changed and deleted one at a time, as with the AzureRM provider, and no longer at the same time as the databases, containers, collections, graphs or throughput settings. Azure fails a private endpoint operation while another operation on the account is in progress. As with the AzureRM provider, they default to 60-minute timeouts, which include the wait for the others. Set `timeouts` higher for more than five or so private endpoints.
 
 ## Features
 

@@ -25,7 +25,7 @@ resource "azapi_resource" "private_endpoints" {
   tags                             = local.private_endpoint_tags[each.key]
 
   dynamic "timeouts" {
-    for_each = var.timeouts == null ? [] : [var.timeouts]
+    for_each = [local.private_endpoint_timeouts]
 
     content {
       create = timeouts.value.create
@@ -81,7 +81,7 @@ resource "azapi_resource" "private_endpoints_unmanaged" {
   tags                             = local.private_endpoint_tags[each.key]
 
   dynamic "timeouts" {
-    for_each = var.timeouts == null ? [] : [var.timeouts]
+    for_each = [local.private_endpoint_timeouts]
 
     content {
       create = timeouts.value.create

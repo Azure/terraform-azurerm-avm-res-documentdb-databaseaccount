@@ -256,7 +256,10 @@ output "resource_locks" {
 
 output "resource_private_endpoints" {
   description = "A map of the private endpoints created, with the private endpoint name as the key and the private endpoint ID as the value."
-  value       = { for endpoint in var.private_endpoints_manage_dns_zone_group ? azapi_resource.private_endpoints : azapi_resource.private_endpoints_unmanaged : endpoint.name => endpoint.id }
+  value = merge(
+    { for endpoint in azapi_resource.private_endpoints : endpoint.name => endpoint.id },
+    { for endpoint in azapi_resource.private_endpoints_unmanaged : endpoint.name => endpoint.id },
+  )
 }
 
 output "resource_private_endpoints_application_security_group_association" {
