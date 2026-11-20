@@ -6,44 +6,20 @@ This example deploys the module with public network access restricted and multip
 
 ```hcl
 terraform {
-  required_version = ">= 1.9, < 2.0"
+  required_version = ">= 1.16, < 2.0"
 
   required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.6"
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.12"
     }
   }
 }
 
-provider "azurerm" {
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
-    }
-  }
-}
-
-data "azurerm_client_config" "current" {}
+data "azapi_client_config" "current" {}
 
 locals {
   prefix = "pe-mng"
-}
-
-module "regions" {
-  source  = "Azure/regions/azurerm"
-  version = "0.3.0"
-
-  recommended_regions_only = true
-}
-
-resource "random_integer" "region_index" {
-  max = length(module.regions.regions) - 1
-  min = 0
 }
 
 module "naming" {
@@ -51,50 +27,70 @@ module "naming" {
   version = "0.2.0"
 }
 
-resource "azurerm_resource_group" "example" {
+resource "azapi_resource" "resource_group" {
   location = "spaincentral"
   name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
+  type     = "Microsoft.Resources/resourceGroups@2024-03-01"
 }
 
-resource "azurerm_virtual_network" "example" {
-  location            = azurerm_resource_group.example.location
-  name                = "${module.naming.virtual_network.name_unique}-${local.prefix}"
-  resource_group_name = azurerm_resource_group.example.name
-  address_space       = ["10.0.0.0/16"]
+resource "azapi_resource" "virtual_network" {
+  location  = azapi_resource.resource_group.location
+  name      = "${module.naming.virtual_network.name_unique}-${local.prefix}"
+  parent_id = azapi_resource.resource_group.id
+  type      = "Microsoft.Network/virtualNetworks@2024-05-01"
+  body = {
+    properties = {
+      addressSpace = {
+        addressPrefixes = ["10.0.0.0/16"]
+      }
+      subnets = [
+        {
+          name = module.naming.subnet.name_unique
+          properties = {
+            addressPrefix = "10.0.0.0/24"
+          }
+        }
+      ]
+    }
+  }
 }
 
-resource "azurerm_subnet" "example" {
-  name                 = module.naming.subnet.name_unique
-  resource_group_name  = azurerm_resource_group.example.name
-  virtual_network_name = azurerm_virtual_network.example.name
-  address_prefixes     = ["10.0.0.0/24"]
+resource "azapi_resource" "private_dns_zone" {
+  location  = "global"
+  name      = "privatelink.documents.azure.com"
+  parent_id = azapi_resource.resource_group.id
+  type      = "Microsoft.Network/privateDnsZones@2024-06-01"
 }
 
-resource "azurerm_private_dns_zone" "example" {
-  name                = "privatelink.documents.azure.com"
-  resource_group_name = azurerm_resource_group.example.name
+resource "azapi_resource" "private_dns_zone_virtual_network_link" {
+  location  = "global"
+  name      = "vnet-link"
+  parent_id = azapi_resource.private_dns_zone.id
+  type      = "Microsoft.Network/privateDnsZones/virtualNetworkLinks@2024-06-01"
+  body = {
+    properties = {
+      registrationEnabled = false
+      virtualNetwork = {
+        id = azapi_resource.virtual_network.id
+      }
+    }
+  }
 }
 
-resource "azurerm_private_dns_zone_virtual_network_link" "private_links" {
-  name                  = "vnet-link"
-  private_dns_zone_name = azurerm_private_dns_zone.example.name
-  resource_group_name   = azurerm_resource_group.example.name
-  virtual_network_id    = azurerm_virtual_network.example.id
-}
-
-resource "azurerm_application_security_group" "example" {
-  location            = azurerm_resource_group.example.location
-  name                = "tf-appsecuritygroup-${local.prefix}"
-  resource_group_name = azurerm_resource_group.example.name
+resource "azapi_resource" "application_security_group" {
+  location  = azapi_resource.resource_group.location
+  name      = "tf-appsecuritygroup-${local.prefix}"
+  parent_id = azapi_resource.resource_group.id
+  type      = "Microsoft.Network/applicationSecurityGroups@2024-05-01"
 }
 
 module "cosmos" {
   source = "../../"
 
-  location            = azurerm_resource_group.example.location
-  name                = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
-  resource_group_name = azurerm_resource_group.example.name
-  enable_telemetry    = var.enable_telemetry
+  location         = azapi_resource.resource_group.location
+  name             = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
+  parent_id        = azapi_resource.resource_group.id
+  enable_telemetry = var.enable_telemetry
   private_endpoints = {
     max = {
       name                            = "max"
@@ -102,14 +98,14 @@ module "cosmos" {
       network_interface_name          = "max_nic1"
       private_dns_zone_group_name     = "max_dns_group"
       private_service_connection_name = "max_connection"
-      subnet_resource_id              = azurerm_subnet.example.id
-      private_dns_zone_resource_ids   = [azurerm_private_dns_zone.example.id]
+      subnet_resource_id              = "${azapi_resource.virtual_network.id}/subnets/${module.naming.subnet.name_unique}"
+      private_dns_zone_resource_ids   = [azapi_resource.private_dns_zone.id]
 
       role_assignments = {
         key = {
           role_definition_id_or_name = "Contributor"
           description                = "This is a test role assignment"
-          principal_id               = data.azurerm_client_config.current.object_id
+          principal_id               = data.azapi_client_config.current.object_id
         }
       }
 
@@ -124,21 +120,21 @@ module "cosmos" {
       }
 
       application_security_group_associations = {
-        asg1 = azurerm_application_security_group.example.id
+        asg1 = azapi_resource.application_security_group.id
       }
     }
 
     noDnsGroup = {
       name               = "no-dns-group"
       subresource_name   = "SQL"
-      subnet_resource_id = azurerm_subnet.example.id
+      subnet_resource_id = "${azapi_resource.virtual_network.id}/subnets/${module.naming.subnet.name_unique}"
     }
 
     withDnsGroup = {
       name                          = "with-dns-group"
       subresource_name              = "SQL"
-      subnet_resource_id            = azurerm_subnet.example.id
-      private_dns_zone_resource_ids = [azurerm_private_dns_zone.example.id]
+      subnet_resource_id            = "${azapi_resource.virtual_network.id}/subnets/${module.naming.subnet.name_unique}"
+      private_dns_zone_resource_ids = [azapi_resource.private_dns_zone.id]
     }
   }
   private_endpoints_manage_dns_zone_group = true
@@ -151,24 +147,20 @@ module "cosmos" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.16, < 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
-
-- <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.6)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
 ## Resources
 
 The following resources are used by this module:
 
-- [azurerm_application_security_group.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/application_security_group) (resource)
-- [azurerm_private_dns_zone.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone) (resource)
-- [azurerm_private_dns_zone_virtual_network_link.private_links](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone_virtual_network_link) (resource)
-- [azurerm_resource_group.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
-- [azurerm_subnet.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
-- [azurerm_virtual_network.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
-- [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
-- [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) (data source)
+- [azapi_resource.application_security_group](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.private_dns_zone](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.private_dns_zone_virtual_network_link](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.resource_group](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.virtual_network](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_client_config.current](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -208,12 +200,6 @@ Version:
 Source: Azure/avm-utl-naming/azure
 
 Version: 0.2.0
-
-### <a name="module_regions"></a> [regions](#module\_regions)
-
-Source: Azure/regions/azurerm
-
-Version: 0.3.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

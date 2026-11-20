@@ -1,50 +1,85 @@
-resource "azurerm_cosmosdb_mongo_database" "this" {
+# Azure accepts tags on this Cosmos DB resource but does not store them, so setting them would show a change on
+# every plan.
+# tflint-ignore: avm_azapi_resource_tags_required
+resource "azapi_resource" "mongo_databases" {
   for_each = var.mongo_databases
 
-  account_name        = azurerm_cosmosdb_account.this.name
-  name                = each.value.name
-  resource_group_name = azurerm_cosmosdb_account.this.resource_group_name
-  throughput          = each.value.throughput
+  name      = each.value.name
+  parent_id = azapi_resource.this.id
+  type      = var.resource_types.documentdb_database_accounts_mongodb_databases
+  body = {
+    properties = {
+      options = local.throughput_options["mongo_database|${each.key}"]
+      resource = {
+        id = each.value.name
+      }
+    }
+  }
+  ignore_body_changes    = length(var.ignore_body_changes.documentdb_database_accounts_mongodb_databases) > 0 ? var.ignore_body_changes.documentdb_database_accounts_mongodb_databases : null
+  ignore_null_property   = true
+  response_export_values = []
+  retry                  = var.retry
 
-  dynamic "autoscale_settings" {
-    for_each = try(each.value.autoscale_settings.max_throughput, null) != null ? [1] : []
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
 
     content {
-      max_throughput = each.value.autoscale_settings.max_throughput
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
     }
+  }
+
+  lifecycle {
+    # Throughput is set when the database is created. Later changes go through `throughputSettings`, as with the
+    # AzureRM provider.
+    ignore_changes = [body.properties.options]
   }
 }
 
-resource "azurerm_cosmosdb_mongo_collection" "this" {
+# Azure accepts tags on this Cosmos DB resource but does not store them, so setting them would show a change on
+# every plan.
+# tflint-ignore: avm_azapi_resource_tags_required
+resource "azapi_resource" "mongo_collections" {
   for_each = local.mongodb_collections
 
-  account_name        = azurerm_cosmosdb_account.this.name
-  database_name       = azurerm_cosmosdb_mongo_database.this[each.value.db_name].name
-  name                = each.value.collection_name
-  resource_group_name = azurerm_cosmosdb_account.this.resource_group_name
-  default_ttl_seconds = each.value.collection_params.default_ttl_seconds
-  shard_key           = each.value.collection_params.shard_key
-  throughput          = each.value.collection_params.throughput
+  name      = each.value.collection_name
+  parent_id = azapi_resource.mongo_databases[each.value.db_name].id
+  type      = var.resource_types.documentdb_database_accounts_mongodb_databases_collections
+  body = {
+    properties = {
+      options  = local.throughput_options["mongo_collection|${each.key}"]
+      resource = local.mongo_collection_resources[each.key]
+    }
+  }
+  ignore_body_changes  = length(var.ignore_body_changes.documentdb_database_accounts_mongodb_databases_collections) > 0 ? var.ignore_body_changes.documentdb_database_accounts_mongodb_databases_collections : null
+  ignore_null_property = true
+  # The AzureRM provider replaced the collection when its shard key changed. While the prior value is null, as it is
+  # straight after upgrading from AzureRM, nothing is replaced.
+  replace_triggers_external_values = {
+    shard_key = each.value.collection_params.shard_key
+  }
+  response_export_values = []
+  retry                  = var.retry
 
-  dynamic "autoscale_settings" {
-    for_each = try(each.value.collection_params.autoscale_settings.max_throughput, null) != null ? [1] : []
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
 
     content {
-      max_throughput = each.value.collection_params.autoscale_settings.max_throughput
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
     }
   }
 
-  dynamic "index" {
-    for_each = each.value.collection_params.index != null ? [each.value.collection_params.index] : []
-
-    content {
-      keys   = index.value.keys
-      unique = index.value.unique
-    }
-  }
-  index {
-    # We need to create a default unique one for the _id field
-    keys   = ["_id"]
-    unique = true
+  lifecycle {
+    # Throughput is set when the collection is created. Later changes go through `throughputSettings`, as with the
+    # AzureRM provider. Azure cannot change the shard key, so updates send back the one Azure has.
+    ignore_changes = [
+      body.properties.options,
+      body.properties.resource.shardKey,
+    ]
   }
 }

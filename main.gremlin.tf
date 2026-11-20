@@ -1,89 +1,98 @@
-resource "azurerm_cosmosdb_gremlin_database" "this" {
+# Azure accepts tags on this Cosmos DB resource but does not store them, so setting them would show a change on
+# every plan.
+# tflint-ignore: avm_azapi_resource_tags_required
+resource "azapi_resource" "gremlin_databases" {
   for_each = var.gremlin_databases
 
-  account_name        = azurerm_cosmosdb_account.this.name
-  name                = each.value.name
-  resource_group_name = azurerm_cosmosdb_account.this.resource_group_name
-  throughput          = each.value.throughput
+  name      = each.value.name
+  parent_id = azapi_resource.this.id
+  type      = var.resource_types.documentdb_database_accounts_gremlin_databases
+  body = {
+    properties = {
+      options = local.throughput_options["gremlin_database|${each.key}"]
+      resource = {
+        id = each.value.name
+      }
+    }
+  }
+  ignore_body_changes    = length(var.ignore_body_changes.documentdb_database_accounts_gremlin_databases) > 0 ? var.ignore_body_changes.documentdb_database_accounts_gremlin_databases : null
+  ignore_null_property   = true
+  response_export_values = []
+  retry                  = var.retry
 
-  dynamic "autoscale_settings" {
-    for_each = try(each.value.autoscale_settings.max_throughput, null) != null ? [1] : []
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
 
     content {
-      max_throughput = each.value.autoscale_settings.max_throughput
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
     }
+  }
+
+  lifecycle {
+    # Throughput is set when the database is created. Later changes go through `throughputSettings`, as with the
+    # AzureRM provider.
+    ignore_changes = [body.properties.options]
   }
 }
 
-resource "azurerm_cosmosdb_gremlin_graph" "this" {
+# Azure accepts tags on this Cosmos DB resource but does not store them, so setting them would show a change on
+# every plan.
+# tflint-ignore: avm_azapi_resource_tags_required
+resource "azapi_resource" "gremlin_graphs" {
   for_each = local.gremlin_graphs
 
-  account_name           = azurerm_cosmosdb_account.this.name
-  database_name          = azurerm_cosmosdb_gremlin_database.this[each.value.db_name].name
-  name                   = each.value.graph_params.name
-  partition_key_path     = each.value.graph_params.partition_key_path
-  resource_group_name    = azurerm_cosmosdb_account.this.resource_group_name
-  analytical_storage_ttl = each.value.graph_params.analytical_storage_ttl
-  default_ttl            = each.value.graph_params.default_ttl
-  partition_key_version  = each.value.graph_params.partition_key_version
-  throughput             = each.value.graph_params.throughput
+  name      = each.value.graph_params.name
+  parent_id = azapi_resource.gremlin_databases[each.value.db_name].id
+  type      = var.resource_types.documentdb_database_accounts_gremlin_databases_graphs
+  body = {
+    properties = {
+      options  = local.throughput_options["gremlin_graph|${each.key}"]
+      resource = local.gremlin_graph_resources[each.key]
+    }
+  }
+  ignore_body_changes  = length(var.ignore_body_changes.documentdb_database_accounts_gremlin_databases_graphs) > 0 ? var.ignore_body_changes.documentdb_database_accounts_gremlin_databases_graphs : null
+  ignore_casing        = true
+  ignore_null_property = true
+  # The AzureRM provider sent the included and excluded paths in the order of its hash sets, and Azure kept that
+  # order. The paths are matched by value, so a different order is not a change.
+  list_unique_id_property = {
+    "properties.resource.indexingPolicy.excludedPaths"  = "path"
+    "properties.resource.indexingPolicy.includedPaths"  = "path"
+    "properties.resource.indexingPolicy.spatialIndexes" = "path"
+  }
+  # The AzureRM provider replaced the graph when one of these settings changed, because Azure cannot change them in
+  # place. While the prior value is null, as it is straight after upgrading from AzureRM, nothing is replaced.
+  replace_triggers_external_values = {
+    conflict_resolution_policy = each.value.graph_params.conflict_resolution_policy
+    partition_key_path         = each.value.graph_params.partition_key_path
+    partition_key_version      = each.value.graph_params.partition_key_version
+    unique_key                 = each.value.graph_params.unique_key == null ? null : sort(each.value.graph_params.unique_key.paths)
+  }
+  response_export_values = []
+  retry                  = var.retry
 
-  dynamic "autoscale_settings" {
-    for_each = try(each.value.graph_params.autoscale_settings.max_throughput, null) != null ? [1] : []
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
 
     content {
-      max_throughput = each.value.graph_params.autoscale_settings.max_throughput
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
     }
   }
 
-  dynamic "conflict_resolution_policy" {
-    for_each = each.value.graph_params.conflict_resolution_policy != null ? [1] : []
-
-    content {
-      mode                          = each.value.graph_params.conflict_resolution_policy.mode
-      conflict_resolution_path      = try(each.value.graph_params.conflict_resolution_policy.conflict_resolution_path, null)
-      conflict_resolution_procedure = try(each.value.graph_params.conflict_resolution_policy.conflict_resolution_procedure, null)
-    }
-  }
-
-  dynamic "index_policy" {
-    for_each = each.value.graph_params.index_policy != null ? [1] : []
-
-    content {
-      indexing_mode  = each.value.graph_params.index_policy.indexing_mode
-      automatic      = try(each.value.graph_params.index_policy.automatic, true)
-      excluded_paths = distinct(concat(try(each.value.graph_params.index_policy.excluded_paths, []), ["/\"_etag\"/?"]))
-      included_paths = try(each.value.graph_params.index_policy.included_paths, [])
-
-      dynamic "composite_index" {
-        for_each = try(each.value.graph_params.index_policy.composite_index, [])
-
-        content {
-          dynamic "index" {
-            for_each = composite_index.value.index
-
-            content {
-              order = index.value.order
-              path  = index.value.path
-            }
-          }
-        }
-      }
-      dynamic "spatial_index" {
-        for_each = try(each.value.graph_params.index_policy.spatial_index, [])
-
-        content {
-          path = spatial_index.value.path
-        }
-      }
-    }
-  }
-
-  dynamic "unique_key" {
-    for_each = each.value.graph_params.unique_key != null ? [1] : []
-
-    content {
-      paths = each.value.graph_params.unique_key.paths
-    }
+  lifecycle {
+    # Throughput is set when the graph is created, and later changes go through `throughputSettings`. Azure cannot
+    # change the conflict resolution policy or the unique keys, so updates send back the values Azure has, and a
+    # change replaces the graph.
+    ignore_changes = [
+      body.properties.options,
+      body.properties.resource.conflictResolutionPolicy,
+      body.properties.resource.uniqueKeyPolicy,
+    ]
   }
 }

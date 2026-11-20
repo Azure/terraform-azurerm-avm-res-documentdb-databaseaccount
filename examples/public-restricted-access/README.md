@@ -6,24 +6,12 @@ This example deploys the module with public network access enabled, but restrict
 
 ```hcl
 terraform {
-  required_version = ">= 1.9, < 2.0"
+  required_version = ">= 1.16, < 2.0"
 
   required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.6"
-    }
-  }
-}
-
-provider "azurerm" {
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.12"
     }
   }
 }
@@ -32,50 +20,51 @@ locals {
   prefix = "respub"
 }
 
-module "regions" {
-  source  = "Azure/regions/azurerm"
-  version = "0.3.0"
-
-  recommended_regions_only = true
-}
-
-resource "random_integer" "region_index" {
-  max = length(module.regions.regions) - 1
-  min = 0
-}
-
 module "naming" {
   source  = "Azure/avm-utl-naming/azure"
   version = "0.2.0"
 }
 
-resource "azurerm_resource_group" "example" {
+resource "azapi_resource" "resource_group" {
   location = "spaincentral"
   name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
+  type     = "Microsoft.Resources/resourceGroups@2024-03-01"
 }
 
-resource "azurerm_virtual_network" "example" {
-  location            = azurerm_resource_group.example.location
-  name                = "${module.naming.virtual_network.name_unique}-${local.prefix}"
-  resource_group_name = azurerm_resource_group.example.name
-  address_space       = ["10.0.0.0/16"]
-}
-
-resource "azurerm_subnet" "example" {
-  name                 = module.naming.subnet.name_unique
-  resource_group_name  = azurerm_resource_group.example.name
-  virtual_network_name = azurerm_virtual_network.example.name
-  address_prefixes     = ["10.0.0.0/24"]
-  service_endpoints    = ["Microsoft.AzureCosmosDB"]
+resource "azapi_resource" "virtual_network" {
+  location  = azapi_resource.resource_group.location
+  name      = "${module.naming.virtual_network.name_unique}-${local.prefix}"
+  parent_id = azapi_resource.resource_group.id
+  type      = "Microsoft.Network/virtualNetworks@2024-05-01"
+  body = {
+    properties = {
+      addressSpace = {
+        addressPrefixes = ["10.0.0.0/16"]
+      }
+      subnets = [
+        {
+          name = module.naming.subnet.name_unique
+          properties = {
+            addressPrefix = "10.0.0.0/24"
+            serviceEndpoints = [
+              {
+                service = "Microsoft.AzureCosmosDB"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
 }
 
 module "cosmos" {
   source = "../../"
 
-  location            = azurerm_resource_group.example.location
-  name                = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
-  resource_group_name = azurerm_resource_group.example.name
-  enable_telemetry    = var.enable_telemetry
+  location         = azapi_resource.resource_group.location
+  name             = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
+  parent_id        = azapi_resource.resource_group.id
+  enable_telemetry = var.enable_telemetry
   ip_range_filter = [
     "168.125.123.255",
     "170.0.0.0/24",
@@ -86,7 +75,7 @@ module "cosmos" {
   public_network_access_enabled         = true
   virtual_network_rules = [
     {
-      subnet_id = azurerm_subnet.example.id
+      subnet_id = "${azapi_resource.virtual_network.id}/subnets/${module.naming.subnet.name_unique}"
     }
   ]
 }
@@ -97,20 +86,16 @@ module "cosmos" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.16, < 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
-
-- <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.6)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
 ## Resources
 
 The following resources are used by this module:
 
-- [azurerm_resource_group.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
-- [azurerm_subnet.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
-- [azurerm_virtual_network.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
-- [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
+- [azapi_resource.resource_group](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.virtual_network](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -150,12 +135,6 @@ Version:
 Source: Azure/avm-utl-naming/azure
 
 Version: 0.2.0
-
-### <a name="module_regions"></a> [regions](#module\_regions)
-
-Source: Azure/regions/azurerm
-
-Version: 0.3.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

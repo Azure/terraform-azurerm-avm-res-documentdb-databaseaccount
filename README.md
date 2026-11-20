@@ -7,21 +7,50 @@ This Terraform module is designed to create Azure Cosmos DB accounts, its relate
 > [!WARNING]
 > Major version Zero (0.y.z) is for initial development. Anything MAY change at any time. A module SHOULD NOT be considered stable till at least it is major version one (1.0.0) or greater. Changes will always be via new versions being published and no changes will be made to existing published versions. For more details please go to <https://semver.org/>
 
-## Upgrade notes
+## Upgrading from 0.12.x or earlier
 
-### Role assignment fields now reach Azure (upgrading from v0.12.x or earlier)
+The account and the resources around it are now AzAPI resources, and the module no longer uses the AzureRM provider. `moved` blocks carry the account, its databases, containers, collections, graphs, stored procedures, triggers and user-defined functions, the dedicated gateway, the locks, diagnostic settings, role assignments and private endpoints to their new addresses in the state, so nothing is recreated. Terraform 1.16 or later is required.
 
-> [!IMPORTANT]
-> This is a breaking change. Run `terraform plan` and check `azurerm_role_assignment.this` for `must be replaced` before you apply.
+1. `resource_group_name` is replaced by `parent_id`, the resource ID of the resource group. Spell the resource group name exactly as you did in `resource_group_name`, including its case, for example by passing the resource group's `id`. A different spelling plans replacements.
+1. Keep the AzureRM provider's `provider` block in your root module until the upgrade has been applied. Terraform needs it to remove the application security group associations from the state.
+1. A `ReadOnly` lock blocks the upgrade, because the account, the resources under it and the private endpoints are updated, and the keys are read. With your current version, change it to `CanNotDelete` or remove it before upgrading, and restore it afterwards.
+1. Set `avm_managed_migration_enabled = true` for the upgrade apply. The module then reads the keys and connection strings during plan, so resources that use the `cosmosdb_keys` or connection string outputs are not changed. It also imports the private DNS zone groups that the private endpoints had, which are now separate resources, rather than failing with `Resource already exists`. Remove the flag after the upgrade. Leave it unset on a new deployment, because a zone group that does not exist yet cannot be imported.
+1. `principal_type`, `condition`, `condition_version` and `description` in `role_assignments` and `private_endpoints[*].role_assignments` now reach Azure. Earlier versions accepted them but never sent them. Role assignments that set them are updated in place, not recreated. `principal_type` changes nothing if it matches the principal's actual type. `principal_type` must be `User`, `Group` or `ServicePrincipal`, and `condition_version` requires `condition`.
+1. Cross-tenant role assignments, which set `delegated_managed_identity_resource_id`, need extra steps. The AzureRM provider stored their ID with a `|<tenant-id>` suffix that the `moved` block cannot convert. Before planning, remove each one from the state, then import it at its new address with an `import` block in your root module:
 
-Earlier versions accepted `principal_type`, `condition`, `condition_version`, and `description` in `role_assignments` and `private_endpoints[*].role_assignments`, but never sent them to Azure. The module now applies them. With AzureRM 4.x, changing any of these fields replaces the role assignment.
+   ```pwsh
+   terraform state rm 'module.<module-name>.azurerm_role_assignment.this["<key>"]'
+   ```
 
-* `principal_type`: no change if unset, or if it matches the principal's actual type. Azure already records the type in state.
-* `description` or `condition`: if you already set either, those role assignments are destroyed and recreated. The principal loses that access between the delete and the create.
-* `condition_version`: changes only together with `condition`.
-* Validation is stricter. `principal_type` must be `User`, `Group`, or `ServicePrincipal`, and `condition_version` requires `condition`.
+   ```hcl
+   import {
+     to = module.<module-name>.azapi_resource.role_assignments["<key>"]
+     id = "<role assignment resource ID, without the |<tenant-id> suffix>"
+   }
+   ```
 
-To keep existing role assignments in place, remove `description` and `condition` from them before upgrading. Otherwise, plan the apply for a window when a brief loss of access is acceptable.
+1. Run `terraform init -upgrade`, then `terraform plan`. The plan must not destroy or replace anything, except the AVM telemetry deployment, whose name includes the module version. It updates the moved resources in place with the same settings. Outputs stay known in this plan, except `read_endpoints` and `write_endpoints`. The plan also adds:
+   - `azapi_resource_action.secrets`, which reads the keys and connection strings;
+   - an `azapi_update_resource` for the throughput of each database, container, collection and graph that sets one, which sends the throughput that is already set;
+   - a `random_uuid` for each role assignment, which only exists in the state. The assignments keep their names;
+   - a `time_sleep` for each lock, which pauses for 30 seconds when the lock is removed;
+   - the imported private DNS zone groups, when `avm_managed_migration_enabled` is set.
+
+   The application security group associations are removed from the state without being changed in Azure. Application security groups are now set on the private endpoints.
+1. Apply the plan. Later plans report no changes, except that, when telemetry is enabled, each plan updates the AVM telemetry deployment to record the apply.
+
+Other changes:
+
+- `resource_types`, `retry`, `timeouts` and `ignore_body_changes` cover all the module's resources.
+- `lock` accepts `notes` and `role_assignments` accepts `name`, also within `private_endpoints`. `private_endpoints[*].ip_configurations` accepts `member_name`, and `private_endpoints[*].resource_group_name` accepts a name or a resource ID. The resource IDs in `private_endpoints` are validated during plan.
+- The `resource` output keeps the attribute names of the `azurerm_cosmosdb_account` resource. `resource_diagnostic_settings` returns the diagnostic settings' resource IDs rather than the `<account ID>|<name>` IDs of the AzureRM provider, and `sql_databases` now lists the functions of each container, which earlier versions left empty.
+- Role names are matched, ignoring case, against the role definitions that can be assigned in the resource group, and an unknown name fails during plan. A role definition ID that starts with `/providers/` no longer replaces its role assignment on every apply.
+- The keys and connection strings are read when the account is created, rather than on every refresh, so a `ReadOnly` lock on the account no longer breaks every plan. Keys regenerated outside Terraform are not picked up until you replace the matching read, for example with `terraform apply -replace='module.<module-name>.azapi_resource_action.secrets["keys"]'`. The others are `readonly_keys` and `connection_strings`.
+- Changes that Azure cannot reverse now fail at apply, instead of recreating the account with its data as the AzureRM provider did: switching from continuous to periodic backups, turning off analytical storage, and removing a capability that Azure cannot remove. Turning off the analytical store of a container or graph is not sent, rather than recreating it. Changes that recreated a resource before still do, such as the kind, free tier, customer-managed key, a capability that cannot be added in place, a partition key, unique keys, a conflict resolution policy or a shard key.
+- The `EnableMongo` capability, which Azure adds to MongoDB accounts, is sent with the configured capabilities.
+- Changing the failover priority of a region other than the write region updates it in place. The AzureRM provider removed the region and added it back.
+- Locks on the account and private endpoints are removed 30 seconds before the resources they protect, because Azure keeps enforcing a deleted lock for a few seconds.
+- The private endpoints of an account are created, changed and deleted one at a time, as with the AzureRM provider, and no longer at the same time as the databases, containers, collections, graphs or throughput settings. Azure fails a private endpoint operation while another operation on the account is in progress.
 
 ## Features
 
@@ -58,11 +87,9 @@ To keep existing role assignments in place, remove `description` and `condition`
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.9, < 2.0)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.16, < 2.0)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
-
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
 - <a name="requirement_time"></a> [time](#requirement\_time) (~> 0.12)
 
@@ -70,27 +97,39 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
+- [azapi_resource.diagnostic_settings](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.gremlin_databases](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.gremlin_graphs](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.locks](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.mongo_collections](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.mongo_databases](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.private_dns_zone_groups](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.private_endpoints](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.private_endpoints_unmanaged](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.role_assignments](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.sql_containers](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.sql_databases](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.sql_dedicated_gateway](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.sql_functions](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.sql_stored_procedures](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.sql_triggers](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
-- [azurerm_cosmosdb_account.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_account) (resource)
-- [azurerm_cosmosdb_gremlin_database.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_gremlin_database) (resource)
-- [azurerm_cosmosdb_gremlin_graph.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_gremlin_graph) (resource)
-- [azurerm_cosmosdb_mongo_collection.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_mongo_collection) (resource)
-- [azurerm_cosmosdb_mongo_database.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_mongo_database) (resource)
-- [azurerm_cosmosdb_sql_container.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_container) (resource)
-- [azurerm_cosmosdb_sql_database.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_database) (resource)
-- [azurerm_cosmosdb_sql_dedicated_gateway.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_dedicated_gateway) (resource)
-- [azurerm_cosmosdb_sql_function.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_function) (resource)
-- [azurerm_cosmosdb_sql_stored_procedure.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_stored_procedure) (resource)
-- [azurerm_cosmosdb_sql_trigger.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_trigger) (resource)
-- [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
-- [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
-- [azurerm_private_endpoint.this_managed_dns_zone_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
-- [azurerm_private_endpoint.this_unmanaged_dns_zone_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) (resource)
-- [azurerm_private_endpoint_application_security_group_association.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint_application_security_group_association) (resource)
-- [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azapi_resource.this](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource_action.secrets](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action) (resource)
+- [azapi_update_resource.gremlin_database_throughput](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.gremlin_graph_throughput](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.mongo_collection_throughput](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.mongo_database_throughput](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.sql_container_throughput](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
+- [azapi_update_resource.sql_database_throughput](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/update_resource) (resource)
 - [terraform_data.telemetry](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
+- [time_sleep.lock_removal](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [time_sleep.wait_180_seconds_for_destroy](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
+- [azapi_resource.account](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource) (data source)
+- [azapi_resource_action.locations](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
+- [azapi_resource_action.secrets](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_action) (data source)
+- [azapi_resource_list.role_definitions](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -116,14 +155,9 @@ Description:   Specifies the name of the CosmosDB Account. Changing this forces 
 
 Type: `string`
 
-### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
 
-Description:   The name of the resource group in which to create this resource.  
-  Changing this forces a new resource to be created.  
-  Name must be less than 90 characters long and must only contain underscores, hyphens, periods, parentheses, letters, or digits.
-
-  Example Inputs: rg-sharepoint-prod-westus-001  
-  See more: https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules#microsoftresources
+Description: (Required) The resource ID of the resource group in which to create the Cosmos DB account, for example `/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/example-rg`. Changing this forces a new resource to be created.
 
 Type: `string`
 
@@ -177,6 +211,18 @@ Description: Defaults to `true`. Enable automatic failover for this Cosmos DB ac
 Type: `bool`
 
 Default: `true`
+
+### <a name="input_avm_managed_migration_enabled"></a> [avm\_managed\_migration\_enabled](#input\_avm\_managed\_migration\_enabled)
+
+Description: (Optional) Set to `true` for the apply that upgrades from version 0.12.x or earlier. The module then reads the account's keys and connection strings during plan, so that resources that use them are not changed, and adopts the private DNS zone groups that earlier versions created inside the private endpoints, instead of failing with `Resource already exists`.
+
+Leave this `false` on a new deployment. An import cannot adopt a zone group that does not exist yet, so enabling it before the zone groups exist fails at plan time.
+
+Terraform skips an import whose target is already in state, so the flag is a no-op for the zone groups it adopted. Remove it after the upgrade, before adding private endpoints with new zone groups or a `ReadOnly` lock, which blocks reading the keys.
+
+Type: `bool`
+
+Default: `false`
 
 ### <a name="input_backup"></a> [backup](#input\_backup)
 
@@ -607,6 +653,55 @@ map(object({
 
 Default: `{}`
 
+### <a name="input_ignore_body_changes"></a> [ignore\_body\_changes](#input\_ignore\_body\_changes)
+
+Description: Body-relative dot paths to ignore on AzAPI resources that support this argument.  
+The provider does not support this setting on `azapi_update_resource`, which this module uses for throughput.  
+Changes take effect only after apply.  
+Ignored configuration is not sent to Azure until its path is removed.
+
+- `authorization_locks` - Paths ignored on the management locks of the account and private endpoints.
+- `authorization_role_assignments` - Paths ignored on the role assignments of the account and private endpoints.
+- `documentdb_database_accounts` - Paths ignored on the Cosmos DB account.
+- `documentdb_database_accounts_gremlin_databases` - Paths ignored on Gremlin databases.
+- `documentdb_database_accounts_gremlin_databases_graphs` - Paths ignored on Gremlin graphs.
+- `documentdb_database_accounts_mongodb_databases` - Paths ignored on MongoDB databases.
+- `documentdb_database_accounts_mongodb_databases_collections` - Paths ignored on MongoDB collections.
+- `documentdb_database_accounts_services` - Paths ignored on the SQL dedicated gateway.
+- `documentdb_database_accounts_sql_databases` - Paths ignored on SQL databases.
+- `documentdb_database_accounts_sql_databases_containers` - Paths ignored on SQL containers.
+- `documentdb_database_accounts_sql_databases_containers_stored_procedures` - Paths ignored on SQL stored procedures.
+- `documentdb_database_accounts_sql_databases_containers_triggers` - Paths ignored on SQL triggers.
+- `documentdb_database_accounts_sql_databases_containers_user_defined_functions` - Paths ignored on SQL user-defined functions.
+- `insights_diagnostic_settings` - Paths ignored on diagnostic settings.
+- `network_private_endpoints` - Paths ignored on private endpoints.
+- `network_private_endpoints_private_dns_zone_groups` - Paths ignored on private DNS zone groups.
+
+Type:
+
+```hcl
+object({
+    authorization_locks                                                          = optional(list(string), [])
+    authorization_role_assignments                                               = optional(list(string), [])
+    documentdb_database_accounts                                                 = optional(list(string), [])
+    documentdb_database_accounts_gremlin_databases                               = optional(list(string), [])
+    documentdb_database_accounts_gremlin_databases_graphs                        = optional(list(string), [])
+    documentdb_database_accounts_mongodb_databases                               = optional(list(string), [])
+    documentdb_database_accounts_mongodb_databases_collections                   = optional(list(string), [])
+    documentdb_database_accounts_services                                        = optional(list(string), [])
+    documentdb_database_accounts_sql_databases                                   = optional(list(string), [])
+    documentdb_database_accounts_sql_databases_containers                        = optional(list(string), [])
+    documentdb_database_accounts_sql_databases_containers_stored_procedures      = optional(list(string), [])
+    documentdb_database_accounts_sql_databases_containers_triggers               = optional(list(string), [])
+    documentdb_database_accounts_sql_databases_containers_user_defined_functions = optional(list(string), [])
+    insights_diagnostic_settings                                                 = optional(list(string), [])
+    network_private_endpoints                                                    = optional(list(string), [])
+    network_private_endpoints_private_dns_zone_groups                            = optional(list(string), [])
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_ip_range_filter"></a> [ip\_range\_filter](#input\_ip\_range\_filter)
 
 Description:   Defaults to `[]`. CosmosDB Firewall Support: This value specifies the set of IP addresses or IP address ranges in CIDR form to be included as the allowed list of client IPs for a given database account.
@@ -634,8 +729,9 @@ Description:   Defaults to `null`. Controls the Resource Lock configuration for 
 
   - `kind` - (Required) - The type of lock. Possible values are `CanNotDelete` and `ReadOnly`.
   - `name` - (Optional) - The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
+  - `notes` - (Optional) - Notes about the lock. This value maps to `Microsoft.Authorization/locks.properties.notes`. If not specified, a note describing the lock `kind` is used.
 
-  > Note: If you use `ReadOnly` kind lock, you must configure Terraform to use EntraId authentication, as the access of the account keys will be blocked thus terraform won't be to do its job.
+  > Note: A `ReadOnly` lock blocks reading the account keys, and changing the databases, containers and other resources under the account. The keys and connection strings are read when the account is created, before the lock is.
 
   Example Inputs:
   ```hcl
@@ -649,8 +745,9 @@ Type:
 
 ```hcl
 object({
-    kind = string
-    name = optional(string, null)
+    kind  = string
+    name  = optional(string, null)
+    notes = optional(string, null)
   })
 ```
 
@@ -814,37 +911,62 @@ Default: `false`
 
 ### <a name="input_private_endpoints"></a> [private\_endpoints](#input\_private\_endpoints)
 
-Description:   Default to `{}`. A map of private endpoints to create. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+Description: A map of private endpoints to create on the Cosmos DB account. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
-  - `subnet_resource_id`                      - (Required) - The resource ID of the subnet to deploy the private endpoint in.
-  - `subresource_name`                        - (Required) - The service name of the private endpoint. Possible value are `SQL`, `SqlDedicated`, `Cassandra`, `MongoDB`, `Gremlin` or `Table`.
-  - `name`                                    - (Optional) - The name of the private endpoint. One will be generated if not set.
-  - `private_dns_zone_group_name`             - (Optional) - The name of the private DNS zone group. One will be generated if not set.
-  - `private_dns_zone_resource_ids`           - (Optional) - A set of resource IDs of private DNS zones to associate with the private endpoint. If not set, no zone groups will be created and the private endpoint will not be associated with any private DNS zones. DNS records must be managed external to this module.
-  - `application_security_group_associations` - (Optional) - A map of resource IDs of application security groups to associate with the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-  - `private_service_connection_name`         - (Optional) - The name of the private service connection. One will be generated if not set.
-  - `network_interface_name`                  - (Optional) - The name of the network interface. One will be generated if not set.
-  - `location`                                - (Optional) - The Azure location where the resources will be deployed. Defaults to the location of the resource group.
-  - `resource_group_name`                     - (Optional) - The resource group where the resources will be deployed. Defaults to the resource group of the resource.
-
-  - `ip_configurations` - (Optional) - A map of IP configurations to create on the private endpoint. If not specified the platform will create one. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-    - `name`               - (Required) - The name of the IP configuration.
-    - `private_ip_address` - (Required) - The private IP address of the IP configuration.
-
-  - `role_assignments` - (Optional) - A map of role assignments to create on the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time. See `var.role_assignments` for more information.
-  - `lock`             - (Optional) - The lock level to apply to the private endpoint. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.
-  - `tags`             - (Optional) - A mapping of tags to assign to the private endpoint.
-
-  > Note: See more related to subresource\_name in: https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-overview#private-link-resource
+- `name` - (Optional) The name of the private endpoint. One will be generated if not set.
+- `role_assignments` - (Optional) A map of role assignments to create on the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time. See `var.role_assignments` for more information.
+  - `name` - (Optional) The name of the role assignment. If not set, a random UUID will be generated. Changing this forces the creation of a new resource.
+  - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
+  - `principal_id` - The ID of the principal to assign the role to.
+  - `description` - (Optional) The description of the role assignment.
+  - `skip_service_principal_aad_check` - (Optional) If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to false.
+  - `condition` - (Optional) The condition which will be used to scope the role assignment.
+  - `condition_version` - (Optional) The version of the condition syntax. Leave as `null` if you are not using a condition, if you are then valid values are '2.0'.
+  - `delegated_managed_identity_resource_id` - (Optional) The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created. This field is only used in cross-tenant scenario.
+  - `principal_type` - (Optional) The type of the `principal_id`. Possible values are `User`, `Group` and `ServicePrincipal`. It is necessary to explicitly set this attribute when creating role assignments if the principal creating the assignment is constrained by ABAC rules that filters on the PrincipalType attribute.
+- `lock` - (Optional) The lock level to apply to the private endpoint. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`.
+  - `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
+  - `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
+  - `notes` - (Optional) Notes about the lock. This value maps to `Microsoft.Authorization/locks.properties.notes`.
+- `tags` - (Optional) A mapping of tags to assign to the private endpoint.
+- `subnet_resource_id` - The resource ID of the subnet to deploy the private endpoint in.
+- `subresource_name` - The name of the sub resource for the private endpoint. Required, because a Cosmos DB account exposes several. Possible values are `SQL`, `SqlDedicated`, `Cassandra`, `MongoDB`, `Gremlin` or `Table`. See <https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-overview#private-link-resource>.
+- `private_dns_zone_group_name` - (Optional) The name of the private DNS zone group. One will be generated if not set.
+- `private_dns_zone_resource_ids` - (Optional) A set of resource IDs of private DNS zones to associate with the private endpoint. If not set, no zone groups will be created and the private endpoint will not be associated with any private DNS zones. DNS records must be managed external to this module.
+- `application_security_group_associations` - (Optional) A map of resource IDs of application security groups to associate with the private endpoint. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+- `private_service_connection_name` - (Optional) The name of the private service connection. One will be generated if not set.
+- `network_interface_name` - (Optional) The name of the network interface. One will be generated if not set.
+- `location` - (Optional) The Azure location where the resources will be deployed. Defaults to the location of the Cosmos DB account.
+- `resource_group_name` - (Optional) The resource group where the private endpoint resources will be deployed, by name or resource ID, in the subscription of the account. Defaults to the resource group of the account.
+- `ip_configurations` - (Optional) A map of IP configurations to create on the private endpoint. If not specified the platform will create one. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+  - `name` - The name of the IP configuration.
+  - `private_ip_address` - The private IP address of the IP configuration.
+  - `member_name` - (Optional) The private IP configuration member name. Defaults to `subresource_name`.
 
 Type:
 
 ```hcl
 map(object({
-    subnet_resource_id = string
-    subresource_name   = string
-
-    name                                    = optional(string, null)
+    name = optional(string, null)
+    role_assignments = optional(map(object({
+      name                                   = optional(string, null)
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+      principal_type                         = optional(string, null)
+    })), {})
+    lock = optional(object({
+      kind  = string
+      name  = optional(string, null)
+      notes = optional(string, null)
+    }), null)
+    tags                                    = optional(map(string), null)
+    subnet_resource_id                      = string
+    subresource_name                        = optional(string, null) # required, because a Cosmos DB account exposes more than one private endpoint sub-resource
     private_dns_zone_group_name             = optional(string, "default")
     private_dns_zone_resource_ids           = optional(set(string), [])
     application_security_group_associations = optional(map(string), {})
@@ -852,29 +974,10 @@ map(object({
     network_interface_name                  = optional(string, null)
     location                                = optional(string, null)
     resource_group_name                     = optional(string, null)
-
     ip_configurations = optional(map(object({
       name               = string
       private_ip_address = string
-    })), {})
-
-    tags = optional(map(string), null)
-
-    lock = optional(object({
-      kind = string
-      name = optional(string, null)
-    }), null)
-
-    role_assignments = optional(map(object({
-      role_definition_id_or_name = string
-      principal_id               = string
-
-      description                            = optional(string, null)
-      skip_service_principal_aad_check       = optional(bool, false)
-      delegated_managed_identity_resource_id = optional(string, null)
-      principal_type                         = optional(string, null)
-      condition                              = optional(string, null)
-      condition_version                      = optional(string, null)
+      member_name        = optional(string)
     })), {})
   }))
 ```
@@ -897,11 +1000,91 @@ Type: `bool`
 
 Default: `false`
 
+### <a name="input_resource_types"></a> [resource\_types](#input\_resource\_types)
+
+Description: AzAPI resource types and API versions, in `<provider>/<resource>@<api-version>` form. Each key defaults to a tested value; supply only the keys you want to override.
+
+- `authorization_locks` - The management locks of the account and private endpoints.
+- `authorization_role_assignments` - The role assignments of the account and private endpoints.
+- `documentdb_database_accounts` - The Cosmos DB account, and reading its keys and connection strings.
+- `documentdb_database_accounts_gremlin_databases` - Gremlin databases.
+- `documentdb_database_accounts_gremlin_databases_graphs` - Gremlin graphs.
+- `documentdb_database_accounts_gremlin_databases_graphs_throughput_settings` - Throughput changes of Gremlin graphs.
+- `documentdb_database_accounts_gremlin_databases_throughput_settings` - Throughput changes of Gremlin databases.
+- `documentdb_database_accounts_mongodb_databases` - MongoDB databases.
+- `documentdb_database_accounts_mongodb_databases_collections` - MongoDB collections.
+- `documentdb_database_accounts_mongodb_databases_collections_throughput_settings` - Throughput changes of MongoDB collections.
+- `documentdb_database_accounts_mongodb_databases_throughput_settings` - Throughput changes of MongoDB databases.
+- `documentdb_database_accounts_services` - The SQL dedicated gateway.
+- `documentdb_database_accounts_sql_databases` - SQL databases.
+- `documentdb_database_accounts_sql_databases_containers` - SQL containers.
+- `documentdb_database_accounts_sql_databases_containers_stored_procedures` - SQL stored procedures.
+- `documentdb_database_accounts_sql_databases_containers_throughput_settings` - Throughput changes of SQL containers.
+- `documentdb_database_accounts_sql_databases_containers_triggers` - SQL triggers.
+- `documentdb_database_accounts_sql_databases_containers_user_defined_functions` - SQL user-defined functions.
+- `documentdb_database_accounts_sql_databases_throughput_settings` - Throughput changes of SQL databases.
+- `insights_diagnostic_settings` - Diagnostic settings.
+- `network_private_endpoints` - Private endpoints.
+- `network_private_endpoints_private_dns_zone_groups` - Private DNS zone groups.
+
+Type:
+
+```hcl
+object({
+    authorization_locks                                                            = optional(string, "Microsoft.Authorization/locks@2020-05-01")
+    authorization_role_assignments                                                 = optional(string, "Microsoft.Authorization/roleAssignments@2022-04-01")
+    documentdb_database_accounts                                                   = optional(string, "Microsoft.DocumentDB/databaseAccounts@2026-03-15")
+    documentdb_database_accounts_gremlin_databases                                 = optional(string, "Microsoft.DocumentDB/databaseAccounts/gremlinDatabases@2026-03-15")
+    documentdb_database_accounts_gremlin_databases_graphs                          = optional(string, "Microsoft.DocumentDB/databaseAccounts/gremlinDatabases/graphs@2026-03-15")
+    documentdb_database_accounts_gremlin_databases_graphs_throughput_settings      = optional(string, "Microsoft.DocumentDB/databaseAccounts/gremlinDatabases/graphs/throughputSettings@2026-03-15")
+    documentdb_database_accounts_gremlin_databases_throughput_settings             = optional(string, "Microsoft.DocumentDB/databaseAccounts/gremlinDatabases/throughputSettings@2026-03-15")
+    documentdb_database_accounts_mongodb_databases                                 = optional(string, "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases@2026-03-15")
+    documentdb_database_accounts_mongodb_databases_collections                     = optional(string, "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/collections@2026-03-15")
+    documentdb_database_accounts_mongodb_databases_collections_throughput_settings = optional(string, "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/collections/throughputSettings@2026-03-15")
+    documentdb_database_accounts_mongodb_databases_throughput_settings             = optional(string, "Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/throughputSettings@2026-03-15")
+    documentdb_database_accounts_services                                          = optional(string, "Microsoft.DocumentDB/databaseAccounts/services@2026-03-15")
+    documentdb_database_accounts_sql_databases                                     = optional(string, "Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2026-03-15")
+    documentdb_database_accounts_sql_databases_containers                          = optional(string, "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2026-03-15")
+    documentdb_database_accounts_sql_databases_containers_stored_procedures        = optional(string, "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/storedProcedures@2026-03-15")
+    documentdb_database_accounts_sql_databases_containers_throughput_settings      = optional(string, "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/throughputSettings@2026-03-15")
+    documentdb_database_accounts_sql_databases_containers_triggers                 = optional(string, "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/triggers@2026-03-15")
+    documentdb_database_accounts_sql_databases_containers_user_defined_functions   = optional(string, "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers/userDefinedFunctions@2026-03-15")
+    documentdb_database_accounts_sql_databases_throughput_settings                 = optional(string, "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/throughputSettings@2026-03-15")
+    insights_diagnostic_settings                                                   = optional(string, "Microsoft.Insights/diagnosticSettings@2021-05-01-preview")
+    network_private_endpoints                                                      = optional(string, "Microsoft.Network/privateEndpoints@2025-01-01")
+    network_private_endpoints_private_dns_zone_groups                              = optional(string, "Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2025-01-01")
+  })
+```
+
+Default: `{}`
+
+### <a name="input_retry"></a> [retry](#input\_retry)
+
+Description: Retry configuration applied to every supported AzAPI resource declared by this module.  
+Defaults to null (no custom retry).
+
+- `error_message_regex` - Error-message patterns that trigger a retry.
+- `interval_seconds` - Initial interval between retries in seconds.
+- `max_interval_seconds` - Maximum interval between retries in seconds.
+
+Type:
+
+```hcl
+object({
+    error_message_regex  = optional(list(string))
+    interval_seconds     = optional(number)
+    max_interval_seconds = optional(number)
+  })
+```
+
+Default: `null`
+
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
 Description:   Defaults to `{}`. A map of role assignments to create. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
-  - `role_definition_id_or_name`             - (Required) - The ID or name of the role definition to assign to the principal.
+  - `name`                                   - (Optional) - The name of the role assignment. If not set, a random UUID will be generated. Changing this forces the creation of a new resource. Role assignments created by earlier versions of this module keep their existing name.
+  - `role_definition_id_or_name`             - (Required) - The ID or name of the role definition to assign to the principal. A name is matched, ignoring case, against the role definitions that can be assigned in the resource group. For a custom role that can only be assigned on this account, use its ID.
   - `principal_id`                           - (Required) - The ID of the principal to assign the role to.
   - `description`                            - (Optional) - The description of the role assignment. Changing this forces a new resource to be created.
   - `skip_service_principal_aad_check`       - (Optional) - If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to false.
@@ -929,6 +1112,7 @@ Type:
 
 ```hcl
 map(object({
+    name                                   = optional(string, null)
     role_definition_id_or_name             = string
     principal_id                           = string
     description                            = optional(string, null)
@@ -1223,6 +1407,29 @@ Type: `map(string)`
 
 Default: `null`
 
+### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
+
+Description: Per-operation timeouts applied to every supported AzAPI resource declared by this module.  
+Defaults to null (provider defaults). Values are Go duration strings.
+
+- `create` - Create timeout.
+- `read` - Read timeout.
+- `update` - Update timeout.
+- `delete` - Delete timeout.
+
+Type:
+
+```hcl
+object({
+    create = optional(string)
+    read   = optional(string)
+    update = optional(string)
+    delete = optional(string)
+  })
+```
+
+Default: `null`
+
 ### <a name="input_virtual_network_rules"></a> [virtual\_network\_rules](#input\_virtual\_network\_rules)
 
 Description:   Defaults to `[]`. Used to define which subnets are allowed to access this CosmosDB account.
@@ -1392,7 +1599,7 @@ Description: A list of read endpoints available for this CosmosDB account.
 
 ### <a name="output_resource"></a> [resource](#output\_resource)
 
-Description: This is the full output for the resource.
+Description: The CosmosDB account, with the attributes of the `azurerm_cosmosdb_account` resource that earlier versions of this module returned.
 
 ### <a name="output_resource_diagnostic_settings"></a> [resource\_diagnostic\_settings](#output\_resource\_diagnostic\_settings)
 
@@ -1412,15 +1619,15 @@ Description: A map of the management locks created, with the lock name as the ke
 
 ### <a name="output_resource_private_endpoints"></a> [resource\_private\_endpoints](#output\_resource\_private\_endpoints)
 
-Description: A map of the management locks created, with the lock name as the key and the lock ID as the value.
+Description: A map of the private endpoints created, with the private endpoint name as the key and the private endpoint ID as the value.
 
 ### <a name="output_resource_private_endpoints_application_security_group_association"></a> [resource\_private\_endpoints\_application\_security\_group\_association](#output\_resource\_private\_endpoints\_application\_security\_group\_association)
 
-Description: The IDs of the private endpoint application security group associations created.
+Description: The private endpoint application security group associations, in the `<private endpoint ID>|<application security group ID>` form of the association IDs that earlier versions of this module returned.
 
 ### <a name="output_resource_role_assignments"></a> [resource\_role\_assignments](#output\_resource\_role\_assignments)
 
-Description: A map of the role assignments created, with the assignment key as the map key and the assignment value as the map value.
+Description: A map of the role assignments created, with the assignment name as the map key and the assignment ID as the map value.
 
 ### <a name="output_sql_databases"></a> [sql\_databases](#output\_sql\_databases)
 
@@ -1444,7 +1651,13 @@ Description: A list of write endpoints available for this CosmosDB account.
 
 ## Modules
 
-No modules.
+The following Modules are called:
+
+### <a name="module_avm_interfaces"></a> [avm\_interfaces](#module\_avm\_interfaces)
+
+Source: Azure/avm-utl-interfaces/azure
+
+Version: 0.9.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection

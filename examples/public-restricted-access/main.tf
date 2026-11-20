@@ -1,22 +1,10 @@
 terraform {
-  required_version = ">= 1.9, < 2.0"
+  required_version = ">= 1.16, < 2.0"
 
   required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.6"
-    }
-  }
-}
-
-provider "azurerm" {
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.12"
     }
   }
 }
@@ -25,50 +13,51 @@ locals {
   prefix = "respub"
 }
 
-module "regions" {
-  source  = "Azure/regions/azurerm"
-  version = "0.3.0"
-
-  recommended_regions_only = true
-}
-
-resource "random_integer" "region_index" {
-  max = length(module.regions.regions) - 1
-  min = 0
-}
-
 module "naming" {
   source  = "Azure/avm-utl-naming/azure"
   version = "0.2.0"
 }
 
-resource "azurerm_resource_group" "example" {
+resource "azapi_resource" "resource_group" {
   location = "spaincentral"
   name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
+  type     = "Microsoft.Resources/resourceGroups@2024-03-01"
 }
 
-resource "azurerm_virtual_network" "example" {
-  location            = azurerm_resource_group.example.location
-  name                = "${module.naming.virtual_network.name_unique}-${local.prefix}"
-  resource_group_name = azurerm_resource_group.example.name
-  address_space       = ["10.0.0.0/16"]
-}
-
-resource "azurerm_subnet" "example" {
-  name                 = module.naming.subnet.name_unique
-  resource_group_name  = azurerm_resource_group.example.name
-  virtual_network_name = azurerm_virtual_network.example.name
-  address_prefixes     = ["10.0.0.0/24"]
-  service_endpoints    = ["Microsoft.AzureCosmosDB"]
+resource "azapi_resource" "virtual_network" {
+  location  = azapi_resource.resource_group.location
+  name      = "${module.naming.virtual_network.name_unique}-${local.prefix}"
+  parent_id = azapi_resource.resource_group.id
+  type      = "Microsoft.Network/virtualNetworks@2024-05-01"
+  body = {
+    properties = {
+      addressSpace = {
+        addressPrefixes = ["10.0.0.0/16"]
+      }
+      subnets = [
+        {
+          name = module.naming.subnet.name_unique
+          properties = {
+            addressPrefix = "10.0.0.0/24"
+            serviceEndpoints = [
+              {
+                service = "Microsoft.AzureCosmosDB"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
 }
 
 module "cosmos" {
   source = "../../"
 
-  location            = azurerm_resource_group.example.location
-  name                = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
-  resource_group_name = azurerm_resource_group.example.name
-  enable_telemetry    = var.enable_telemetry
+  location         = azapi_resource.resource_group.location
+  name             = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
+  parent_id        = azapi_resource.resource_group.id
+  enable_telemetry = var.enable_telemetry
   ip_range_filter = [
     "168.125.123.255",
     "170.0.0.0/24",
@@ -79,7 +68,7 @@ module "cosmos" {
   public_network_access_enabled         = true
   virtual_network_rules = [
     {
-      subnet_id = azurerm_subnet.example.id
+      subnet_id = "${azapi_resource.virtual_network.id}/subnets/${module.naming.subnet.name_unique}"
     }
   ]
 }

@@ -34,24 +34,26 @@ variable "name" {
   }
 }
 
-variable "resource_group_name" {
+variable "parent_id" {
   type        = string
-  description = <<DESCRIPTION
-  The name of the resource group in which to create this resource.
-  Changing this forces a new resource to be created.
-  Name must be less than 90 characters long and must only contain underscores, hyphens, periods, parentheses, letters, or digits.
-
-  Example Inputs: rg-sharepoint-prod-westus-001
-  See more: https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/resource-name-rules#microsoftresources
-  DESCRIPTION
+  description = "(Required) The resource ID of the resource group in which to create the Cosmos DB account, for example `/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/example-rg`. Changing this forces a new resource to be created."
   nullable    = false
 
   validation {
-    condition     = length(var.resource_group_name) <= 90
-    error_message = "The resource_group_name variable must be less than 90 characters long."
+    condition     = can(provider::azapi::parse_resource_id("Microsoft.Resources/resourceGroups", var.parent_id))
+    error_message = "`parent_id` must be a valid Azure resource group resource ID."
   }
-  validation {
-    condition     = can(regex("^[().a-zA-Z0-9_-]+$", var.resource_group_name))
-    error_message = "The resource_group_name variable must only contain underscores, hyphens, periods, parentheses, letters, or digits."
-  }
+}
+
+variable "avm_managed_migration_enabled" {
+  type        = bool
+  default     = false
+  description = <<DESCRIPTION
+(Optional) Set to `true` for the apply that upgrades from version 0.12.x or earlier. The module then reads the account's keys and connection strings during plan, so that resources that use them are not changed, and adopts the private DNS zone groups that earlier versions created inside the private endpoints, instead of failing with `Resource already exists`.
+
+Leave this `false` on a new deployment. An import cannot adopt a zone group that does not exist yet, so enabling it before the zone groups exist fails at plan time.
+
+Terraform skips an import whose target is already in state, so the flag is a no-op for the zone groups it adopted. Remove it after the upgrade, before adding private endpoints with new zone groups or a `ReadOnly` lock, which blocks reading the keys.
+DESCRIPTION
+  nullable    = false
 }

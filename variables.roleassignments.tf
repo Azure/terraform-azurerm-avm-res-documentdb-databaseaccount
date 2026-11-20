@@ -1,5 +1,6 @@
 variable "role_assignments" {
   type = map(object({
+    name                                   = optional(string, null)
     role_definition_id_or_name             = string
     principal_id                           = string
     description                            = optional(string, null)
@@ -13,7 +14,8 @@ variable "role_assignments" {
   description = <<DESCRIPTION
   Defaults to `{}`. A map of role assignments to create. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
-  - `role_definition_id_or_name`             - (Required) - The ID or name of the role definition to assign to the principal.
+  - `name`                                   - (Optional) - The name of the role assignment. If not set, a random UUID will be generated. Changing this forces the creation of a new resource. Role assignments created by earlier versions of this module keep their existing name.
+  - `role_definition_id_or_name`             - (Required) - The ID or name of the role definition to assign to the principal. A name is matched, ignoring case, against the role definitions that can be assigned in the resource group. For a custom role that can only be assigned on this account, use its ID.
   - `principal_id`                           - (Required) - The ID of the principal to assign the role to.
   - `description`                            - (Optional) - The description of the role assignment. Changing this forces a new resource to be created.
   - `skip_service_principal_aad_check`       - (Optional) - If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to false.

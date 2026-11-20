@@ -1,22 +1,10 @@
 terraform {
-  required_version = ">= 1.9, < 2.0"
+  required_version = ">= 1.16, < 2.0"
 
   required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.6"
-    }
-  }
-}
-
-provider "azurerm" {
-  features {
-    resource_group {
-      prevent_deletion_if_contains_resources = false
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.12"
     }
   }
 }
@@ -25,34 +13,23 @@ locals {
   prefix = "mongo"
 }
 
-module "regions" {
-  source  = "Azure/regions/azurerm"
-  version = "0.3.0"
-
-  recommended_regions_only = true
-}
-
-resource "random_integer" "region_index" {
-  max = length(module.regions.regions) - 1
-  min = 0
-}
-
 module "naming" {
   source  = "Azure/avm-utl-naming/azure"
   version = "0.2.0"
 }
 
-resource "azurerm_resource_group" "example" {
+resource "azapi_resource" "resource_group" {
   location = "spaincentral"
   name     = "${module.naming.resource_group.name_unique}-${local.prefix}"
+  type     = "Microsoft.Resources/resourceGroups@2024-03-01"
 }
 
 module "cosmos" {
   source = "../../"
 
-  location                   = azurerm_resource_group.example.location
+  location                   = azapi_resource.resource_group.location
   name                       = "${module.naming.cosmosdb_account.name_unique}-${local.prefix}"
-  resource_group_name        = azurerm_resource_group.example.name
+  parent_id                  = azapi_resource.resource_group.id
   analytical_storage_enabled = true
   enable_telemetry           = var.enable_telemetry
   mongo_databases = {
