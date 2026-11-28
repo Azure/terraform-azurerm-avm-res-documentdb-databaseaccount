@@ -21,3 +21,15 @@ locals {
   }
   total_locks = merge(local.filtered_pe_locks, local.account_lock)
 }
+
+locals {
+  # The notes this module has always written, so that upgrading leaves existing locks unchanged.
+  lock_notes = {
+    CanNotDelete = "Cannot delete the resource or its child resources."
+    ReadOnly     = "Cannot delete or modify the resource or its child resources."
+  }
+  # The scope of each lock: the account, or one of its private endpoints.
+  lock_scopes = {
+    for key, lock in local.total_locks : key => lock.scope_type == local.private_endpoint_scope_type ? local.private_endpoint_ids[lock.pe_name] : azapi_resource.this.id
+  }
+}

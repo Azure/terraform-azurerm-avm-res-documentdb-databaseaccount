@@ -1,99 +1,56 @@
-resource "azurerm_cosmosdb_account" "this" {
-  location                              = var.location
-  name                                  = var.name
-  offer_type                            = "Standard"
-  resource_group_name                   = var.resource_group_name
-  access_key_metadata_writes_enabled    = var.access_key_metadata_writes_enabled
-  analytical_storage_enabled            = var.analytical_storage_enabled
-  automatic_failover_enabled            = var.automatic_failover_enabled
-  burst_capacity_enabled                = var.burst_capacity_enabled
-  default_identity_type                 = local.normalized_cmk_default_identity_type
-  free_tier_enabled                     = var.free_tier_enabled
-  ip_range_filter                       = local.trimmed_ip_range_filter
-  is_virtual_network_filter_enabled     = length(var.virtual_network_rules) > 0 ? true : false
-  key_vault_key_id                      = local.normalized_cmk_key_url
-  kind                                  = length(var.mongo_databases) > 0 ? "MongoDB" : "GlobalDocumentDB"
-  local_authentication_disabled         = (length(var.mongo_databases) > 0 || length(var.gremlin_databases) > 0) ? false : var.local_authentication_disabled
-  minimal_tls_version                   = var.minimal_tls_version
-  mongo_server_version                  = length(var.mongo_databases) > 0 ? var.mongo_server_version : null
-  multiple_write_locations_enabled      = var.backup.type == local.periodic_backup_policy ? var.multiple_write_locations_enabled : false
-  network_acl_bypass_for_azure_services = var.network_acl_bypass_for_azure_services
-  network_acl_bypass_ids                = var.network_acl_bypass_resource_ids
-  partition_merge_enabled               = var.partition_merge_enabled
-  public_network_access_enabled         = var.public_network_access_enabled
-  tags                                  = var.tags
-
-  consistency_policy {
-    consistency_level       = var.consistency_policy.consistency_level
-    max_interval_in_seconds = var.consistency_policy.consistency_level == local.bounded_staleness_consistency ? var.consistency_policy.max_interval_in_seconds : null
-    max_staleness_prefix    = var.consistency_policy.consistency_level == local.bounded_staleness_consistency ? var.consistency_policy.max_staleness_prefix : null
+resource "azapi_resource" "this" {
+  location  = var.location
+  name      = var.name
+  parent_id = var.parent_id
+  type      = var.resource_types.documentdb_database_accounts
+  body = {
+    kind       = local.kind
+    properties = local.account_properties
   }
-
-  dynamic "geo_location" {
-    for_each = local.normalized_geo_locations
-
-    content {
-      failover_priority = geo_location.value.failover_priority
-      location          = geo_location.value.location
-      zone_redundant    = geo_location.value.zone_redundant
-    }
+  ignore_body_changes  = length(var.ignore_body_changes.documentdb_database_accounts) > 0 ? var.ignore_body_changes.documentdb_database_accounts : null
+  ignore_casing        = true
+  ignore_null_property = true
+  # The AzureRM provider sent these lists in the order of its hash sets, and Azure kept that order. The items
+  # are matched by these properties, so a different order is not a change.
+  list_unique_id_property = {
+    "properties.capabilities"        = "name"
+    "properties.ipRules"             = "ipAddressOrRange"
+    "properties.locations"           = "locationName"
+    "properties.virtualNetworkRules" = "id"
   }
-
-  dynamic "analytical_storage" {
-    for_each = var.analytical_storage_config != null ? [1] : []
-
-    content {
-      schema_type = var.analytical_storage_config.schema_type
-    }
+  # The AzureRM provider replaced the account when one of these settings changed, because Azure cannot change
+  # them in place. While the prior value is null, as it is straight after upgrading from AzureRM, nothing is
+  # replaced.
+  replace_triggers_external_values = local.account_replace_triggers
+  response_export_values = {
+    analytical_storage_schema_type = "properties.analyticalStorageConfiguration.schemaType"
+    document_endpoint              = "properties.documentEndpoint"
+    read_endpoints                 = "properties.readLocations[].documentEndpoint"
+    write_endpoints                = "properties.writeLocations[].documentEndpoint"
   }
-
-  backup {
-    type                = var.backup.type
-    interval_in_minutes = var.backup.type == local.periodic_backup_policy ? var.backup.interval_in_minutes : null
-    retention_in_hours  = var.backup.type == local.periodic_backup_policy ? var.backup.retention_in_hours : null
-    storage_redundancy  = var.backup.type == local.periodic_backup_policy ? var.backup.storage_redundancy : null
-    tier                = var.backup.type == local.continuous_backup_policy ? var.backup.tier : null
-  }
-
-  dynamic "capabilities" {
-    for_each = var.capabilities
-
-    content {
-      name = capabilities.value.name
-    }
-  }
-
-  capacity {
-    total_throughput_limit = var.capacity.total_throughput_limit
-  }
-
-  dynamic "cors_rule" {
-    for_each = var.cors_rule != null ? [1] : []
-
-    content {
-      allowed_headers    = var.cors_rule.allowed_headers
-      allowed_methods    = var.cors_rule.allowed_methods
-      allowed_origins    = var.cors_rule.allowed_origins
-      exposed_headers    = var.cors_rule.exposed_headers
-      max_age_in_seconds = var.cors_rule.max_age_in_seconds
-    }
-  }
+  retry = var.retry
+  # The AzAPI provider sends both identity types as `SystemAssigned, UserAssigned`, which Azure accepts but the
+  # embedded schema does not, so the schema is not checked for an account with both.
+  schema_validation_enabled = !(var.managed_identities.system_assigned && length(var.managed_identities.user_assigned_resource_ids) > 0)
+  tags                      = var.tags
 
   dynamic "identity" {
     for_each = local.managed_identities.system_assigned_user_assigned
 
     content {
       type         = identity.value.type
-      identity_ids = identity.value.user_assigned_resource_ids
+      identity_ids = tolist(identity.value.user_assigned_resource_ids)
     }
   }
 
-  dynamic "virtual_network_rule" {
-    for_each = var.virtual_network_rules
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
 
     content {
-      id                                   = virtual_network_rule.value.subnet_id
-      ignore_missing_vnet_service_endpoint = false
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
     }
   }
 
@@ -117,11 +74,112 @@ resource "azurerm_cosmosdb_account" "this" {
   }
 }
 
+# Azure returns the display names of the account's regions, for example `West US 2`. The configured regions are
+# sent with the same names, so that they compare equal.
+data "azapi_resource_action" "locations" {
+  action      = "locations"
+  method      = "GET"
+  resource_id = "/subscriptions/${local.subscription_id}"
+  type        = "Microsoft.Resources/subscriptions@2022-12-01"
+  response_export_values = {
+    locations = "value[].{name: name, display_name: displayName}"
+  }
+  retry = var.retry
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+
+    content {
+      read = timeouts.value.read
+    }
+  }
+}
+
+# The account's document endpoint does not change, so it is read from Azure when the account already exists,
+# rather than from the account resource, whose outputs are unknown while the account has changes pending. This
+# keeps `endpoint` known when planning the upgrade from an earlier version, so resources that use it are not
+# changed. An account that is about to be created, or recreated in another region, uses the resource's value.
+data "azapi_resource" "account" {
+  name             = var.name
+  parent_id        = var.parent_id
+  type             = var.resource_types.documentdb_database_accounts
+  ignore_not_found = true
+  response_export_values = {
+    document_endpoint = "properties.documentEndpoint"
+    location          = "location"
+  }
+  retry = var.retry
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+
+    content {
+      read = timeouts.value.read
+    }
+  }
+}
+
+# The AzureRM provider read the keys and connection strings with the account. They are read here when the
+# account is created, or upgraded from an earlier version of this module, and not on later plans: reading them
+# is a POST, which a `ReadOnly` lock blocks. The lock is created after them.
+resource "azapi_resource_action" "secrets" {
+  for_each = local.secret_actions
+
+  action                           = each.value.action
+  method                           = "POST"
+  resource_id                      = azapi_resource.this.id
+  type                             = var.resource_types.documentdb_database_accounts
+  response_export_values           = []
+  retry                            = var.retry
+  sensitive_response_export_values = each.value.exports
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
+
+  lifecycle {
+    # Recreating the account, for example in another region, keeps its resource ID and creates new keys.
+    replace_triggered_by = [
+      azapi_resource.this.location,
+      azapi_resource.this.replace_triggers_external_values,
+    ]
+  }
+}
+
+# While upgrading from an earlier version, the keys and connection strings are also read during plan, so that
+# they are known and resources that use them are not changed.
+data "azapi_resource_action" "secrets" {
+  for_each = var.avm_managed_migration_enabled ? local.secret_actions : {}
+
+  action                           = each.value.action
+  method                           = "POST"
+  resource_id                      = local.account_resource_id
+  type                             = var.resource_types.documentdb_database_accounts
+  response_export_values           = []
+  retry                            = var.retry
+  sensitive_response_export_values = each.value.exports
+
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
+
+    content {
+      read = timeouts.value.read
+    }
+  }
+}
+
 resource "time_sleep" "wait_180_seconds_for_destroy" {
   count = length(var.diagnostic_settings) > 0 ? 1 : 0
 
   destroy_duration = "180s"
   triggers = {
-    account_id = azurerm_cosmosdb_account.this.id
+    account_id = azapi_resource.this.id
   }
 }

@@ -1,7 +1,8 @@
 variable "lock" {
   type = object({
-    kind = string
-    name = optional(string, null)
+    kind  = string
+    name  = optional(string, null)
+    notes = optional(string, null)
   })
   default     = null
   description = <<DESCRIPTION
@@ -11,8 +12,9 @@ variable "lock" {
 
   - `kind` - (Required) - The type of lock. Possible values are `CanNotDelete` and `ReadOnly`.
   - `name` - (Optional) - The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
+  - `notes` - (Optional) - Notes about the lock. This value maps to `Microsoft.Authorization/locks.properties.notes`. If not specified, a note describing the lock `kind` is used.
 
-  > Note: If you use `ReadOnly` kind lock, you must configure Terraform to use EntraId authentication, as the access of the account keys will be blocked thus terraform won't be to do its job.
+  > Note: A `ReadOnly` lock blocks reading the account keys, and changing the databases, containers and other resources under the account. The keys and connection strings are read when the account is created, before the lock is.
 
   Example Inputs:
   ```hcl

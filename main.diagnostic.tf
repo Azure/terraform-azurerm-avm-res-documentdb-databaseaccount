@@ -1,35 +1,49 @@
-resource "azurerm_monitor_diagnostic_setting" "this" {
+resource "azapi_resource" "diagnostic_settings" {
   for_each = var.diagnostic_settings
 
-  name                           = coalesce(each.value.name, "diag-${each.key}")
-  target_resource_id             = azurerm_cosmosdb_account.this.id
-  eventhub_authorization_rule_id = each.value.event_hub_authorization_rule_resource_id
-  eventhub_name                  = each.value.event_hub_name
-  log_analytics_destination_type = each.value.log_analytics_destination_type
-  log_analytics_workspace_id     = each.value.workspace_resource_id
-  partner_solution_id            = each.value.marketplace_partner_resource_id
-  storage_account_id             = each.value.storage_account_resource_id
-
-  dynamic "enabled_log" {
-    for_each = each.value.log_categories
-
-    content {
-      category = enabled_log.value
+  name      = coalesce(each.value.name, "diag-${each.key}")
+  parent_id = azapi_resource.this.id
+  type      = var.resource_types.insights_diagnostic_settings
+  body = {
+    properties = {
+      eventHubAuthorizationRuleId = each.value.event_hub_authorization_rule_resource_id
+      eventHubName                = each.value.event_hub_name
+      logAnalyticsDestinationType = each.value.log_analytics_destination_type
+      # As before, log category groups are only sent when no log categories are.
+      logs = length(each.value.log_categories) > 0 ? [
+        for category in each.value.log_categories : { category = category, categoryGroup = null, enabled = true }
+        ] : [
+        for group in each.value.log_groups : { category = null, categoryGroup = group, enabled = true }
+      ]
+      marketplacePartnerId = each.value.marketplace_partner_resource_id
+      # Azure lists every metric category, disabled, when none is sent, so an empty list is not sent.
+      metrics          = length(each.value.metric_categories) > 0 ? [for category in each.value.metric_categories : { category = category, enabled = true }] : null
+      storageAccountId = each.value.storage_account_resource_id
+      workspaceId      = each.value.workspace_resource_id
     }
   }
-  dynamic "enabled_log" {
-    for_each = length(each.value.log_categories) == 0 ? each.value.log_groups : []
-
-    content {
-      category_group = enabled_log.value
-    }
+  ignore_body_changes  = length(var.ignore_body_changes.insights_diagnostic_settings) > 0 ? var.ignore_body_changes.insights_diagnostic_settings : null
+  ignore_casing        = true
+  ignore_null_property = true
+  # Azure returns every log category group and metric category of the account, disabling those that were not sent.
+  # List items are matched by category and items that are not configured are ignored, so they are not reported as
+  # changes.
+  ignore_other_items_in_list = ["properties.logs", "properties.metrics"]
+  list_unique_id_property = {
+    "properties.logs"    = "category, categoryGroup"
+    "properties.metrics" = "category"
   }
+  response_export_values = []
+  retry                  = var.retry
 
-  dynamic "metric" {
-    for_each = each.value.metric_categories
+  dynamic "timeouts" {
+    for_each = var.timeouts == null ? [] : [var.timeouts]
 
     content {
-      category = metric.value
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
     }
   }
 
